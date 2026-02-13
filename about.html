@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <title>TüftelTyp – Über mich</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="site-header">
+    <div class="logo">TüftelTyp</div>
+    <nav class="nav">
+      <a href="index.html">Home</a>
+      <a href="about.html" class="active">Über mich</a>
+      <a href="projects.html">Projekte</a>
+      <a href="contact.html">Kontakt</a>
+    </nav>
+  </header>
+
+  <main>
+    <section class="hero">
+      <h1>Über TüftelTyp</h1>
+      <p>
+        Hier entsteht eine kleine Sammlung aus Gedanken, Ideen und Projekten rund um Technik, Code
+        und alles, was sich auseinander- und wieder zusammenbauen lässt.
+      </p>
+    </section>
+
+    <section class="section">
+      <h2>Wer steckt dahinter?</h2>
+      <p>
+        Schreibe hier ein paar Sätze über dich: Was du beruflich oder hobbymäßig machst, welche
+        Technologien dich interessieren und was dich zum Tüfteln bringt.
+      </p>
+      <p>
+        Du kannst auch erwähnen, welche Programmiersprachen oder Tools du nutzt, oder welche Art
+        Projekte du besonders spannend findest.
+      </p>
+    </section>
+
+    <section class="section">
+      <h2>Was erwartet dich hier?</h2>
+      <p>
+        Zum Beispiel: kleine Experimente, Prototypen, Code-Snippets, Hardware-Basteleien oder
+        Notizen zu Themen, in die du dich gerade einarbeitest.
+      </p>
+      <p>
+        Die Seite soll als zentraler Ort dienen, an dem deine Projekte und Ideen gesammelt,
+        dokumentiert und später wiedergefunden werden können.
+      </p>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <p>© <span id="year"></span> TüftelTyp</p>
+  </footer>
+  <script>
+    document.getElementById('year').textContent = new Date().getFullYear();
+  </script>
+</body>
+</html>

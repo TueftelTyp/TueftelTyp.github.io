@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <title>TüftelTyp – Home</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="site-header">
+    <div class="logo">TüftelTyp</div>
+    <nav class="nav">
+      <a href="index.html">Home</a>
+      <a href="about.html">Über mich</a>
+      <a href="projects.html">Projekte</a>
+      <a href="contact.html">Kontakt</a>
+    </nav>
+  </header>
+
+  <main>
+    <section class="hero">
+      <h1>Willkommen bei TüftelTyp</h1>
+      <p>Experimente, Projekte und kleine Basteleien rund um Technik, Code und Ideen.</p>
+      <a class="btn-primary" href="projects.html">Zu meinen Projekten</a>
+    </section>
+
+    <section class="section">
+      <h2>Über mich</h2>
+      <p>Hier könntest du kurz etwas über dich schreiben.</p>
+    </section>
+
+    <section class="section">
+      <h2>Projekte</h2>
+      <div class="cards">
+        <article class="card">
+          <h3>Projekt 1</h3>
+          <p>Kurzbeschreibung deines Projekts.</p>
+        </article>
+        <article class="card">
+          <h3>Projekt 2</h3>
+          <p>Noch ein Projekt.</p>
+        </article>
+      </div>
+    </section>
+
+    <section class="section">
+      <h2>Kontakt</h2>
+      <p><a href="https://github.com/TueftelTyp" target="_blank">github.com/TueftelTyp</a></p>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <p>© <span id="year"></span> TüftelTyp</p>
+  </footer>
+
+  <script>
+    document.getElementById('year').textContent = new Date().getFullYear();
+
+    document.addEventListener('DOMContentLoaded', function() {
+      const currentPath = window.location.pathname.split('/').pop() || 'index.html';
+      const currentPage = currentPath.replace('.html', '') || 'index';
+
+      const navLinks = document.querySelectorAll('.nav a');
+      navLinks.forEach(link => {
+        link.classList.remove('active');
+        const href = link.getAttribute('href') || '';
+        const linkPage = href.replace('.html', '').replace('./', '');
+        if (linkPage === currentPage) {
+          link.classList.add('active');
+        }
+      });
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <title>TüftelTyp – Kontakt</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="site-header">
+    <div class="logo">TüftelTyp</div>
+    <nav class="nav">
+      <a href="index.html">Home</a>
+      <a href="about.html">Über mich</a>
+      <a href="projects.html">Projekte</a>
+      <a href="contact.html" class="active">Kontakt</a>
+    </nav>
+  </header>
+
+  <main>
+    <section class="hero">
+      <h1>Kontakt</h1>
+      <p>
+        Fragen, Feedback oder Lust auf ein gemeinsames Projekt? Hier gibt es die passenden
+        Kontaktmöglichkeiten.
+      </p>
+    </section>
+
+    <section class="section">
+      <h2>GitHub</h2>
+      <p>
+        Am besten erreichst du mich über GitHub:
+        <a href="https://github.com/TueftelTyp" target="_blank">github.com/TueftelTyp</a>
+      </p>
+    </section>
+
+    <section class="section">
+      <h2>E-Mail</h2>
+      <p>
+        Wenn du eine E-Mail-Adresse angeben möchtest, könntest du hier zum Beispiel
+        <code>deine.mail@example.com</code> eintragen:
+      </p>
+      <p>
+        E-Mail:
+        <a href="mailto:deine.mail@example.com">deine.mail@example.com</a>
+      </p>
+    </section>
+
+    <section class="section">
+      <h2>Weitere Links</h2>
+      <p>
+        Hier ist Platz für weitere Profile wie Mastodon, LinkedIn, persönliche Blogs oder andere
+        Seiten, auf denen man dich finden kann.
+      </p>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <p>© <span id="year"></span> TüftelTyp</p>
+  </footer>
+  <script>
+    document.getElementById('year').textContent = new Date().getFullYear();
+  </script>
+</body>
+</html>
