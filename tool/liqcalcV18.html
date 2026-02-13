@@ -1,0 +1,782 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Liquidrechner Pro mit Aromen-DB</title>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background: #f5f5f5; }
+    .input-group { display: flex; align-items: center; margin: 20px 0; gap: 10px; }
+    .input-group label { flex: 1; font-weight: 600; }
+    input[type="range"] { flex: 3; height: 8px; border-radius: 5px; background: #ddd; outline: none; -webkit-appearance: none; }
+    input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; height: 25px; width: 25px; border-radius: 50%; background: #007aff; cursor: pointer; }
+    input[type="range"]::-moz-range-thumb { height: 25px; width: 25px; border-radius: 50%; background: #007aff; cursor: pointer; border: none; }
+    input[type="number"] { flex: 1.5; padding: 10px; border: 2px solid #ddd; border-radius: 8px; font-size: 1.1em; text-align: center; }
+    input[type="number"]:focus { border-color: #007aff; box-shadow: 0 0 0 3px rgba(0,122,255,0.1); }
+    button { background: #007aff; color: white; border: none; padding: 15px 30px; border-radius: 25px; font-size: 1.1em; width: 100%; margin: 20px 0; cursor: pointer; }
+    #result { background: white; padding: 20px; border-radius: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+    .amount { font-size: 1.5em; font-weight: bold; color: #28a745; margin: 10px 0; }
+    
+    /* Tabs */
+    .tab-buttons { display: flex; gap: 15px; margin: 30px 0 20px; background: white; padding: 10px; border-radius: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+    .tab-button { flex: 1; background: transparent; border: 3px solid #ddd; padding: 15px 10px; border-radius: 12px; cursor: pointer; transition: all 0.3s; font-weight: 600; font-size: 1em; color: #64748b; }
+    .tab-button.active { background: linear-gradient(135deg, #007aff, #0056cc); color: white; border-color: #007aff; transform: translateY(-2px); box-shadow: 0 6px 15px rgba(0,122,255,0.3); }
+    .tab-button:hover:not(.active) { color: #1e293b; border-color: #007aff; }
+    .tab-content { display: none; background: white; padding: 25px; border-radius: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); margin-bottom: 20px; }
+    .tab-content.active { display: block; }
+    
+    /* Form Styles */
+    .form-row { display: flex; gap: 15px; margin: 15px 0; }
+    .form-row > div { flex: 1; }
+    .slider-container { position: relative; margin: 15px 0; }
+    .slider-label { font-weight: 600; margin-bottom: 5px; display: block; text-align: center;}
+    .stars-display { font-size: 1.5em; color: #fbbf24; margin: 5px 0; text-align: center;}
+    .range-display { font-weight: bold; color: #007aff; text-align: center; margin: 10px 0; font-size: 1.1em; }
+    .dual-range-container { background: #f8f9ff; padding: 20px; border-radius: 15px; margin: 15px 0; border: 1px solid #e1e5e9; }
+    .dual-range-labels { display: flex; justify-content: space-between; font-weight: 500; color: #475569; margin-bottom: 10px; }
+    
+    .aroma-form input, .aroma-form select, .aroma-form textarea { 
+      padding: 15px; border: 2px solid #e0e0e0; border-radius: 12px; margin: 10px 0; 
+      width: 100%; box-sizing: border-box; font-size: 1em; transition: border-color 0.3s; 
+    }
+    .aroma-form input:focus, .aroma-form select:focus, .aroma-form textarea:focus { 
+      border-color: #007aff; box-shadow: 0 0 0 3px rgba(0,122,255,0.1); 
+    }
+    .aroma-form { 
+      background: linear-gradient(135deg, #f0f9ff, #e0f2fe); 
+      padding: 25px; border-radius: 20px; margin-bottom: 25px; 
+      border: 1px solid #b3d9ff; 
+      display: none; /* HIER: Standardmäßig versteckt */
+    }
+    .aroma-form.show { display: block; } /* HIER: Zeigen wenn .show Klasse */
+    
+    /* Toggle Button NEU */
+    .toggle-aroma-btn {
+      background: linear-gradient(135deg, #10b981, #059669);
+      font-size: 1.2em; font-weight: 700;
+      border-radius: 20px; padding: 18px 25px;
+      margin-bottom: 20px; box-shadow: 0 6px 20px rgba(16,185,129,0.3);
+      transition: all 0.3s;
+    }
+    .toggle-aroma-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(16,185,129,0.4); }
+    
+    .manufacturer-input-container { position: relative; }
+    .manufacturer-input { display: none; }
+    .manufacturer-input.show { display: block; }
+    
+    /* Admin Export/Import Styles */
+    .admin-tools { background: linear-gradient(135deg, #fef3c7, #fde68a); padding: 20px; border-radius: 15px; margin-bottom: 25px; border: 2px solid #f59e0b; }
+    .admin-tools h3 { margin-top: 0; color: #92400e; }
+    .export-section, .import-section { margin: 15px 0; }
+    .export-section button { background: #10b981; margin-right: 10px; width: auto; padding: 12px 20px; }
+    .export-section button:hover { background: #059669; }
+    #exportData { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 15px; margin-top: 10px; font-family: monospace; max-height: 200px; overflow-y: auto; display: none; }
+    .file-input-wrapper { position: relative; overflow: hidden; display: inline-block; margin: 10px 0; }
+    .file-input-wrapper input[type=file] { position: absolute; left: -9999px; }
+    .file-input-label { background: #ef4444; color: white; padding: 12px 20px; border-radius: 8px; cursor: pointer; display: inline-block; transition: all 0.3s; }
+    .file-input-label:hover { background: #dc2626; }
+    .import-btn { background: #3b82f6; margin-left: 10px; width: auto; padding: 12px 20px; }
+    .import-btn:hover { background: #2563eb; }
+    
+    /* Modal Styles */
+    .modal { 
+      display: none; position: fixed; z-index: 1000; left: 0; top: 0; 
+      width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); 
+    }
+    .modal-content { 
+      background: white; margin: 5% auto; padding: 0; border-radius: 20px; 
+      width: 90%; max-width: 600px; max-height: 90vh; overflow-y: auto; 
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3); 
+    }
+    .modal-header { 
+      padding: 25px; border-radius: 20px 20px 0 0; background: linear-gradient(135deg, #007aff, #0056cc); 
+      color: white; display: flex; justify-content: space-between; align-items: center; 
+    }
+    .modal-body { padding: 25px; }
+    .modal-footer { 
+      padding: 20px 25px; border-top: 1px solid #e0e0e0; 
+      display: flex; gap: 15px; justify-content: flex-end; 
+    }
+    .close { font-size: 2em; cursor: pointer; }
+    .btn-primary { background: #007aff; color: white; padding: 12px 24px; border: none; border-radius: 12px; cursor: pointer; font-size: 1em; }
+    .btn-secondary { background: #6c757d; color: white; padding: 12px 24px; border: none; border-radius: 12px; cursor: pointer; font-size: 1em; }
+    .btn-danger { background: #dc3545; color: white; padding: 12px 24px; border: none; border-radius: 12px; cursor: pointer; font-size: 1em; }
+    
+    /* DB */
+    .aroma-list { max-height: 500px; overflow-y: auto; }
+    .aroma-item { display: flex; justify-content: space-between; align-items: flex-start; gap: 15px; padding: 20px; margin: 15px 0; border-radius: 20px; background: linear-gradient(135deg, #ffffff, #f8f9ff); box-shadow: 0 6px 20px rgba(0,0,0,0.08); border: 1px solid #e8ecff; transition: all 0.3s; }
+    .aroma-item:hover { transform: translateY(-3px); box-shadow: 0 12px 30px rgba(0,0,0,0.15); }
+    .aroma-left { flex: 1; }
+    .aroma-right { flex: 1.2; text-align: right; color: #64748b; font-style: italic; }
+    .aroma-manufacturer { font-size: 0.8em; color: #94a3b8; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.5px; }
+    .aroma-name { font-weight: 700; font-size: 1.3em; color: #1e293b; }
+    .aroma-rating { font-size: 1.2em; color: #fbbf24; margin-top: 5px; }
+    .aroma-info { font-size: 0.95em; color: #475569; font-weight: 500; margin-top: 8px; }
+    .aroma-actions { margin-top: 10px; }
+    .aroma-actions button { background: #dc3545; color: white; padding: 8px 12px; border: none; border-radius: 8px; cursor: pointer; font-size: 0.9em; margin: 0 3px; transition: all 0.3s; }
+    .aroma-actions button:hover { background: #c82333; transform: scale(1.05); }
+    
+    .search-sort { display: flex; gap: 15px; margin-bottom: 25px; flex-wrap: wrap; background: #f8f9ff; padding: 15px; border-radius: 12px; }
+    .search-sort input, .search-sort select { padding: 15px; border: 2px solid #ddd; border-radius: 12px; flex: 1; min-width: 160px; font-size: 1em; }
+    
+    .admin-status { position: fixed; top: 20px; right: 20px; background: #10b981; color: white; padding: 10px 20px; border-radius: 25px; font-weight: 600; box-shadow: 0 4px 15px rgba(16,185,129,0.4); display: flex; align-items: center; gap: 10px; }
+    
+    /* Footer Styles */
+    footer { 
+      color: #666; text-align: center; padding: 20px; margin-top: 40px; font-size: 0.9em; 
+      border-top: 1px solid #ddd; background: white; border-radius: 15px; 
+      display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;
+    }
+    .footer-admin { 
+      background: transparent !important; 
+      color: #6c757d; 
+      padding: 2px 6px;  
+      border-radius: 5px; 
+      cursor: pointer; 
+      font-size: 0.75em;  
+      transition: all 0.3s; 
+      border: none; 
+      min-height: 20px;  
+      line-height: 1.2;
+    }
+    .footer-admin:hover { 
+      background: rgba(108,117,125,0.1); 
+      transform: translateY(-1px); 
+      color: #495057;
+    }
+    .footer-content { flex: 1; }
+    
+    @media (max-width: 480px) { 
+      .input-group, .search-sort, .form-row { flex-direction: column; } 
+      .aroma-item { flex-direction: column; text-align: center; } 
+      .aroma-right { text-align: center; margin-top: 10px; }
+      .tab-buttons { flex-direction: column; } 
+      footer { flex-direction: column; gap: 15px; }
+      .modal-content { width: 95%; margin: 10% auto; }
+    }
+  </style>
+</head>
+<body>
+  <div id="adminStatus" class="admin-status" style="display: none;">
+    🔐 ADMIN MODUS
+    <button onclick="logoutAdmin()" style="background:#ef4444;border:none;color:white;padding:5px 12px;border-radius:15px;cursor:pointer;font-size:0.9em;">Abmelden</button>
+  </div>
+  
+  <h1>🧪 Liquidrechner Pro</h1>
+    <div class="tab-buttons">
+    <button class="tab-button active" onclick="switchTab('liquidTab')">🧪 Liquid Rechner</button>
+    <button class="tab-button" onclick="switchTab('aromaTab')">🌿 Aromen DB</button>
+  </div>
+  <!-- Liquid Rechner -->
+  <div id="liquidTab" class="tab-content active">
+    <div class="input-group">
+      <label>Gesamtmenge (ml)</label>
+      <input type="range" id="totalRange" min="10" max="500" value="100" step="5">
+      <input type="number" id="totalNum" value="100" min="10" max="500" step="5">
+    </div>
+    <div class="input-group">
+      <label>Ziel-Nikotin (mg/ml)</label>
+      <input type="range" id="targetNicRange" min="0" max="20" value="3" step="0.5">
+      <input type="number" id="targetNicNum" value="3" min="0" max="20" step="0.5">
+    </div>
+    <div class="input-group">
+      <label>Shot-Stärke (mg/ml)</label>
+      <input type="range" id="shotStrengthRange" min="10" max="25" value="18" step="1">
+      <input type="number" id="shotStrengthNum" value="18" min="10" max="25" step="1">
+    </div>
+    <div class="input-group">
+      <label>Aroma (%)</label>
+      <input type="range" id="flavorPercentRange" min="0" max="30" value="10" step="0.5">
+      <input type="number" id="flavorPercentNum" value="10" min="0" max="30" step="0.5">
+    </div>
+    <button onclick="calcLiquid()">🔬 Berechnen</button>
+    <div id="result"></div>
+  </div>
+
+  <!-- Aromen DB -->
+  <div id="aromaTab" class="tab-content">
+    <!-- HIER: Toggle Button NEU HINZUGEFÜGT -->
+    <button class="toggle-aroma-btn" onclick="toggleAromaForm()">➕ Neues Aroma hinzufügen</button>
+    
+    <!-- HIER: Formular jetzt mit ID für Toggle -->
+    <div class="aroma-form" id="aromaForm">
+      <h3>🧺 Neues Aroma</h3>
+      <div class="form-row">
+        <div>
+          <input type="text" id="newName" placeholder="Aroma Name">
+        </div>
+        <div class="manufacturer-input-container">
+          <select id="manufacturerSelect" onchange="toggleManufacturerInput(this)">
+            <option value="">Hersteller wählen...</option>
+            <option value="add-new">➕ Hersteller hinzufügen</option>
+          </select>
+          <input type="text" id="newManufacturerInput" class="manufacturer-input" placeholder="Neuen Hersteller eingeben...">
+        </div>
+      </div>
+      
+      <div class="slider-container">
+        <label class="slider-label">Bewertung</label>
+        <input type="range" id="newRating" min="1" max="5" value="3" step="0.5" oninput="updateStars('newRatingStars', this.value)">
+        <div class="stars-display" id="newRatingStars">⭐⭐⭐</div>
+      </div>
+      
+      <div class="dual-range-container">
+        <div class="dual-range-labels">
+          <span>0%</span>
+          <span>Mischverhältnis</span>
+          <span>30%</span>
+        </div>
+        <div class="form-row">
+          <input type="range" class="dual-slider" id="newMixMin" min="0" max="15" value="8" step="1" oninput="updateDualRange()">
+          <input type="range" class="dual-slider" id="newMixMax" min="15" max="30" value="20" step="1" oninput="updateDualRange()">
+        </div>
+		<div class="range-display"><span id="mixMinVal">0</span> - <span id="mixMaxVal">30</span>%</div>
+      </div>
+      
+      <div class="slider-container">
+        <label class="slider-label">💥 Sweet Spot 💥</label>
+        <input type="range" id="newPerfectMix" min="0" max="30" value="12" step="0.5" oninput="updateSlider('perfectMixVal', this.value)">
+        <div class="range-display" id="perfectMixVal">12%</div>
+      </div>
+      
+      <textarea id="newNote" placeholder="Bemerkungen..." rows="3"></textarea>
+      <button onclick="addAroma()">💾 Aroma speichern</button>
+    </div>
+
+    <!-- Suche & Sortierung zwischen Form und Liste -->
+    <div class="search-sort">
+      <input type="text" id="searchInput" placeholder="🔍 Suche nach Namen oder Hersteller..." oninput="filterAromas()">
+      <select id="sortSelect" onchange="sortAromas()">
+        <option value="name-asc">Name A→Z</option>
+        <option value="name-desc">Name Z→A</option>
+        <option value="rating-desc">Bewertung ⬇</option>
+        <option value="rating-asc">Bewertung ⬆</option>
+        <option value="mix-asc">Mischverh. ⬆</option>
+        <option value="mix-desc">Mischverh. ⬇</option>
+      </select>
+    </div>
+
+    <div id="aromaList" class="aroma-list"></div>
+  </div>
+
+  <!-- Edit Modal -->
+  <div id="editModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>✏️ Aroma bearbeiten</h2>
+        <span class="close" onclick="closeEditModal()">&times;</span>
+      </div>
+      <div class="modal-body">
+        <div class="form-row">
+          <div>
+            <input type="text" id="editName" placeholder="Aroma Name">
+          </div>
+          <div class="manufacturer-input-container">
+            <select id="editManufacturerSelect" onchange="toggleEditManufacturerInput(this)">
+              <option value="">Hersteller wählen...</option>
+              <option value="add-new">➕ Hersteller hinzufügen</option>
+            </select>
+            <input type="text" id="editNewManufacturerInput" class="manufacturer-input" placeholder="Neuen Hersteller eingeben...">
+          </div>
+        </div>
+        
+        <div class="slider-container">
+          <label class="slider-label">Bewertung</label>
+          <input type="range" id="editRating" min="1" max="5" value="3" step="0.5" oninput="updateStars('editRatingStars', this.value)">
+          <div class="stars-display" id="editRatingStars">⭐⭐⭐</div>
+        </div>
+        
+        <div class="dual-range-container">
+          <div class="dual-range-labels">
+            <span>0%</span>
+            <span>Mischverhältnis</span>
+            <span>30%</span>
+          </div>
+          <div class="form-row">
+            <input type="range" class="dual-slider" id="editMixMin" min="0" max="30" value="8" step="1" oninput="updateEditDualRange()">
+            <input type="range" class="dual-slider" id="editMixMax" min="0" max="30" value="15" step="1" oninput="updateEditDualRange()">
+          </div>
+          <div class="range-display">Min: <span id="editMixMinVal">8</span>% - Max: <span id="editMixMaxVal">15</span>%</div>
+        </div>
+        
+        <div class="slider-container">
+          <label class="slider-label">Perfektes Mischungsverhältnis</label>
+          <input type="range" id="editPerfectMix" min="0" max="30" value="12" step="0.5" oninput="updateSlider('editPerfectMixVal', this.value)">
+          <div class="range-display" id="editPerfectMixVal">12%</div>
+        </div>
+        
+        <textarea id="editNote" placeholder="Bemerkungen..." rows="3"></textarea>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-secondary" onclick="closeEditModal()">Abbrechen</button>
+        <button class="btn-primary" onclick="saveEdit()">💾 Speichern</button>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Admin Export/Import Tools -->
+    <div id="adminTools" class="admin-tools" style="display: none;">
+      <h3>💾 Datenbank Backup</h3>
+      <div class="export-section">
+        <button onclick="exportDatabase()">📤 Exportieren (JSON)</button>
+        <button onclick="exportDatabaseCSV()">📤 Exportieren (CSV)</button>
+        <div id="exportData"></div>
+      </div>
+      <div class="import-section">
+        <label class="file-input-label" for="importFile">📥 Datei auswählen</label>
+        <input type="file" id="importFile" accept=".json,.csv" class="file-input-wrapper">
+        <button class="import-btn" onclick="importDatabase()">Importieren</button>
+      </div>
+    </div>
+
+  <!-- Footer mit Admin-Login -->
+  <footer>
+    <div class="footer-content">
+      <p>&copy; <span id="year"></span> <a href="https://github.com/TueftelTyp" style="color: #007aff; text-decoration: none;">Tüftel Typ</a>. Alle Rechte vorbehalten.</p>
+    </div>
+    <button id="footerAdmin" class="footer-admin" onclick="requestAdmin()" title="">.</button>
+  </footer>
+
+  <script>
+    const ADMIN_PASSWORD = 'Dampf2026!';
+    let isAdmin = localStorage.getItem('isAdmin') === 'true';
+    let aromas = JSON.parse(localStorage.getItem('aromas')) || [
+      {id: 1, name: 'Kanzi', manufacturer: 'Twelve Monkeys', rating: 4.8, mixMin: 15, mixMax: 17, perfectMix: 16.66, note: 'Wassermelone, Erdbeere, Kiwi'},
+      {id: 2, name: 'Stardust', manufacturer: 'Antimatter Intense', rating: 4.5, mixMin: 8, mixMax: 16, perfectMix: 8, note: 'Waldfrüchte, Dragees und erfrischender Minze. MTL:16% | DL:8%'},
+      {id: 3, name: 'Maracuja Twist', manufacturer: 'Twisted Mixxed', rating: 3.5, mixMin: 8, mixMax: 13, perfectMix: 10, note: 'Vanilleeis am Stiel, Maracuja, Papaya'}
+    ];
+    let currentEditId = null;
+
+    function saveAromas() {
+      localStorage.setItem('aromas', JSON.stringify(aromas));
+    }
+
+    /* HIER: NEUE TOGGLE FUNKTION HINZUGEFÜGT */
+    function toggleAromaForm() {
+      const form = document.getElementById('aromaForm');
+      const btn = event.target;
+      form.classList.toggle('show');
+      if (form.classList.contains('show')) {
+        btn.textContent = '➖ Aroma-Formular schließen';
+      } else {
+        btn.textContent = '➕ Neues Aroma hinzufügen';
+      }
+    }
+
+    // Export/Import Funktionen
+    function exportDatabase() {
+      const dataStr = JSON.stringify(aromas, null, 2);
+      const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+      
+      const exportFileDefaultName = `aromas-backup-${new Date().toISOString().slice(0,10)}.json`;
+      
+      const linkElement = document.createElement('a');
+      linkElement.setAttribute('href', dataUri);
+      linkElement.setAttribute('download', exportFileDefaultName);
+      linkElement.click();
+      
+      const exportDiv = document.getElementById('exportData');
+      exportDiv.textContent = dataStr;
+      exportDiv.style.display = 'block';
+      setTimeout(() => {
+        exportDiv.style.display = 'none';
+      }, 5000);
+    }
+
+    function exportDatabaseCSV() {
+      const headers = ['ID', 'Name', 'Hersteller', 'Bewertung', 'Mix Min %', 'Mix Max %', 'Perfektes Mix %', 'Notizen'];
+      const csvContent = [
+        headers.join(','),
+        ...aromas.map(row => [
+          row.id,
+          `"${row.name.replace(/"/g, '""')}"`,
+          row.manufacturer ? `"${row.manufacturer.replace(/"/g, '""')}"` : '',
+          row.rating,
+          row.mixMin,
+          row.mixMax,
+          row.perfectMix,
+          row.note ? `"${row.note.replace(/"/g, '""')}"` : ''
+        ].join(','))
+      ].join('\n');
+      
+      const dataUri = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csvContent);
+      const exportFileDefaultName = `aromas-backup-${new Date().toISOString().slice(0,10)}.csv`;
+      
+      const linkElement = document.createElement('a');
+      linkElement.setAttribute('href', dataUri);
+      linkElement.setAttribute('download', exportFileDefaultName);
+      linkElement.click();
+    }
+
+    function importDatabase() {
+      const fileInput = document.getElementById('importFile');
+      const file = fileInput.files[0];
+      
+      if (!file) {
+        alert('Bitte wähle eine Datei aus!');
+        return;
+      }
+      
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        try {
+          if (file.name.endsWith('.csv')) {
+            const csv = parseCSV(e.target.result);
+            aromas = csv.map((row, index) => ({
+              id: row.id ? parseInt(row.id) : Date.now() + index,
+              name: row.name || '',
+              manufacturer: row.manufacturer || null,
+              rating: parseFloat(row.rating) || 0,
+              mixMin: parseInt(row['mix min']) || 8,
+              mixMax: parseInt(row['mix max']) || 15,
+              perfectMix: parseFloat(row['perfektes mix']) || 12,
+              note: row.notizen || ''
+            }));
+          } else {
+            aromas = JSON.parse(e.target.result);
+          }
+          
+          saveAromas();
+          updateManufacturers();
+          renderAromas(aromas);
+          alert(`✅ Erfolgreich ${aromas.length} Aromen importiert!`);
+          fileInput.value = '';
+        } catch (error) {
+          alert('❌ Fehler beim Importieren: ' + error.message);
+        }
+      };
+      reader.readAsText(file);
+    }
+
+    function parseCSV(csv) {
+      const lines = csv.split('\n');
+      const headers = lines[0].split(',').map(h => h.trim().replace(/^"|"$/g, '').toLowerCase().replace(/\s+/g, ' '));
+      return lines.slice(1).map(line => {
+        const values = line.split(',').map(v => v.trim().replace(/^"|"$/g, ''));
+        return headers.reduce((obj, header, i) => {
+          obj[header] = values[i] || '';
+          return obj;
+        }, {});
+      }).filter(row => row.name);
+    }
+
+	function updateStars(elementId, rating) {
+		const fullStars = Math.floor(rating);  
+		const hasHalf = rating % 1 >= 0.5;     
+		let stars = '⭐'.repeat(fullStars);     
+		if (hasHalf) stars += '☆';             
+  		document.getElementById(elementId).textContent = stars;
+	}
+
+    function updateSlider(spanId, value) {
+      document.getElementById(spanId).textContent = value + '%';
+    }
+
+    function updateDualRange() {
+      const min = document.getElementById('newMixMin').value;
+      const max = document.getElementById('newMixMax').value;
+      document.getElementById('mixMinVal').textContent = min;
+      document.getElementById('mixMaxVal').textContent = max;
+    }
+
+    function updateEditDualRange() {
+      const min = document.getElementById('editMixMin').value;
+      const max = document.getElementById('editMixMax').value;
+      document.getElementById('editMixMinVal').textContent = min;
+      document.getElementById('editMixMaxVal').textContent = max;
+    }
+
+    function toggleManufacturerInput(select) {
+      const input = document.getElementById('newManufacturerInput');
+      if (select.value === 'add-new') {
+        input.classList.add('show');
+        input.focus();
+      } else {
+        input.classList.remove('show');
+        input.value = '';
+      }
+    }
+
+    function toggleEditManufacturerInput(select) {
+      const input = document.getElementById('editNewManufacturerInput');
+      if (select.value === 'add-new') {
+        input.classList.add('show');
+        input.focus();
+      } else {
+        input.classList.remove('show');
+        input.value = '';
+      }
+    }
+
+    function updateManufacturers() {
+      const manufacturers = [...new Set(aromas.map(a => a.manufacturer).filter(m => m))];
+      const select = document.getElementById('manufacturerSelect');
+      select.innerHTML = '<option value="">Hersteller wählen...</option><option value="add-new">➕ Hersteller hinzufügen</option>' + 
+        manufacturers.map(m => `<option value="${m}">${m}</option>`).join('');
+      
+      const editSelect = document.getElementById('editManufacturerSelect');
+      editSelect.innerHTML = '<option value="">Hersteller wählen...</option><option value="add-new">➕ Hersteller hinzufügen</option>' + 
+        manufacturers.map(m => `<option value="${m}">${m}</option>`).join('');
+    }
+
+    // Liquid Rechner Sync
+    function syncInputs(rangeId, numId) {
+      const range = document.getElementById(rangeId);
+      const num = document.getElementById(numId);
+      range.addEventListener('input', () => num.value = range.value);
+      num.addEventListener('input', () => {
+        const val = parseFloat(num.value);
+        if (!isNaN(val) && val >= parseFloat(range.min) && val <= parseFloat(range.max)) {
+          range.value = val;
+        } else {
+          num.value = range.value;
+        }
+      });
+    }
+    syncInputs('totalRange', 'totalNum');
+    syncInputs('targetNicRange', 'targetNicNum');
+    syncInputs('shotStrengthRange', 'shotStrengthNum');
+    syncInputs('flavorPercentRange', 'flavorPercentNum');
+
+    function calcLiquid() {
+      const total = parseFloat(document.getElementById('totalRange').value);
+      const targetNic = parseFloat(document.getElementById('targetNicRange').value);
+      const shotStrength = parseFloat(document.getElementById('shotStrengthRange').value);
+      const flavorPercent = parseFloat(document.getElementById('flavorPercentRange').value);
+      const shotMl = (targetNic * total) / shotStrength;
+      const flavorMl = total * (flavorPercent / 100);
+      const baseMl = total - shotMl - flavorMl;
+      if (baseMl < 0) {
+        document.getElementById('result').innerHTML = '<p style="color: #dc3545;">❌ Zu viel Nikotin/Aroma!</p>';
+        return;
+      }
+      document.getElementById('result').innerHTML = `
+        <div class="amount">💉 Nikotinshot: ${shotMl.toFixed(1)} ml</div>
+        <div class="amount">🌿 Aroma: ${flavorMl.toFixed(1)} ml</div>
+        <div class="amount">⚗️ Base: ${baseMl.toFixed(1)} ml</div>
+        <div style="margin-top: 15px; font-size: 0.9em; color: #666;">💡 Tipp: Schüttle gut, 2-7 Tage reifen lassen.</div>
+      `;
+    }
+
+    function switchTab(tabId) {
+      document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+      document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+      document.getElementById(tabId).classList.add('active');
+      event.target.classList.add('active');
+    }
+
+    function renderAromas(aromaList) {
+      const list = document.getElementById('aromaList');
+      list.innerHTML = aromaList.map(aroma => {
+        const fullStars = Math.floor(aroma.rating);
+		const hasDecimal = aroma.rating % 1 > 0;
+		const stars = '⭐'.repeat(fullStars) + (hasDecimal ? '☆' : '');
+		const displayRate = stars + ' (' + aroma.rating.toFixed(1) + ')';
+
+        const mixRange = `${aroma.mixMin || 0}-${aroma.mixMax || 0}% (💥 ${aroma.perfectMix || 0}%)`;
+        return `
+          <div class="aroma-item">
+            <div class="aroma-left">
+              <div class="aroma-manufacturer">${aroma.manufacturer || '–'}</div>
+              <div class="aroma-name">${aroma.name}</div>
+              <div class="aroma-rating">${displayRate}</div>
+              <div class="aroma-info">${mixRange}</div>
+              ${isAdmin ? `
+                <div class="aroma-actions">
+                  <button onclick="editAroma(${aroma.id})" title="Bearbeiten">✏️</button>
+                  <button onclick="deleteAroma(${aroma.id})" title="Löschen">🗑️</button>
+                </div>
+              ` : ''}
+            </div>
+            <div class="aroma-right">${aroma.note || ''}</div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function addAroma() {
+      const name = document.getElementById('newName').value.trim();
+      if (!name) return alert('Name eingeben!');
+      
+      let manufacturer = document.getElementById('manufacturerSelect').value;
+      if (manufacturer === 'add-new') {
+        manufacturer = document.getElementById('newManufacturerInput').value.trim();
+        if (!manufacturer) return alert('Neuen Hersteller eingeben!');
+      }
+      
+      const newAroma = {
+        id: Date.now(),
+        name,
+        manufacturer: manufacturer || null,
+        rating: parseFloat(document.getElementById('newRating').value) || 0,
+        mixMin: parseInt(document.getElementById('newMixMin').value) || 0,
+        mixMax: parseInt(document.getElementById('newMixMax').value) || 0,
+        perfectMix: parseFloat(document.getElementById('newPerfectMix').value) || 0,
+        note: document.getElementById('newNote').value.trim()
+      };
+      
+      aromas.unshift(newAroma);
+      saveAromas();
+      updateManufacturers();
+      renderAromas(aromas);
+      // Form zurücksetzen
+      document.getElementById('newName').value = '';
+      document.getElementById('manufacturerSelect').value = '';
+      document.getElementById('newManufacturerInput').value = '';
+      document.getElementById('newManufacturerInput').classList.remove('show');
+      document.getElementById('newNote').value = '';
+      document.getElementById('newRating').value = 3;
+      document.getElementById('newMixMin').value = 8;
+      document.getElementById('newMixMax').value = 15;
+      document.getElementById('newPerfectMix').value = 12;
+      updateStars('newRatingStars', 3);
+      updateDualRange();
+      updateSlider('perfectMixVal', 12);
+    }
+
+    function editAroma(id) {
+      const aroma = aromas.find(a => a.id === id);
+      if (!aroma) return;
+      
+      currentEditId = id;
+      
+      // Modal mit Daten füllen
+      document.getElementById('editName').value = aroma.name;
+      document.getElementById('editRating').value = aroma.rating;
+      document.getElementById('editMixMin').value = aroma.mixMin || 0;
+      document.getElementById('editMixMax').value = aroma.mixMax || 0;
+      document.getElementById('editPerfectMix').value = aroma.perfectMix || 0;
+      document.getElementById('editNote').value = aroma.note || '';
+      
+      updateStars('editRatingStars', aroma.rating);
+      updateEditDualRange();
+      updateSlider('editPerfectMixVal', aroma.perfectMix);
+      
+      // Hersteller Dropdown füllen
+      const manufacturerSelect = document.getElementById('editManufacturerSelect');
+      manufacturerSelect.value = aroma.manufacturer || '';
+      document.getElementById('editNewManufacturerInput').classList.remove('show');
+      
+      // Modal öffnen
+      document.getElementById('editModal').style.display = 'block';
+    }
+
+    function closeEditModal() {
+      document.getElementById('editModal').style.display = 'none';
+      currentEditId = null;
+    }
+
+    function saveEdit() {
+      if (!currentEditId) return;
+      
+      const aroma = aromas.find(a => a.id === currentEditId);
+      if (!aroma) return;
+      
+      aroma.name = document.getElementById('editName').value.trim();
+      if (!aroma.name) return alert('Name eingeben!');
+      
+      let manufacturer = document.getElementById('editManufacturerSelect').value;
+      if (manufacturer === 'add-new') {
+        manufacturer = document.getElementById('editNewManufacturerInput').value.trim();
+        if (!manufacturer) return alert('Neuen Hersteller eingeben!');
+      }
+      aroma.manufacturer = manufacturer || null;
+      
+      aroma.rating = parseFloat(document.getElementById('editRating').value) || 0;
+      aroma.mixMin = parseInt(document.getElementById('editMixMin').value) || 0;
+      aroma.mixMax = parseInt(document.getElementById('editMixMax').value) || 0;
+      aroma.perfectMix = parseFloat(document.getElementById('editPerfectMix').value) || 0;
+      aroma.note = document.getElementById('editNote').value.trim();
+      
+      saveAromas();
+      updateManufacturers();
+      renderAromas(aromas);
+      closeEditModal();
+    }
+
+    function requestAdmin() {
+      const password = prompt('🔐 Passwort eingeben:');
+      if (password === ADMIN_PASSWORD) {
+        isAdmin = true;
+        localStorage.setItem('isAdmin', 'true');
+        document.getElementById('adminStatus').style.display = 'flex';
+        document.getElementById('footerAdmin').textContent = '🔓';
+        document.getElementById('footerAdmin').style.background = '#10b981';
+        document.getElementById('adminTools').style.display = 'block';
+        renderAromas(aromas);
+      } else if (password) {
+        alert('Falsches Passwort!');
+      }
+    }
+
+    function logoutAdmin() {
+      isAdmin = false;
+      localStorage.removeItem('isAdmin');
+      document.getElementById('adminStatus').style.display = 'none';
+      document.getElementById('footerAdmin').textContent = '🔒';
+      document.getElementById('footerAdmin').style.background = '#6c757d';
+      document.getElementById('adminTools').style.display = 'none';
+      renderAromas(aromas);
+    }
+
+    function deleteAroma(id) {
+      if (confirm('Wirklich löschen?')) {
+        aromas = aromas.filter(a => a.id !== id);
+        saveAromas();
+        updateManufacturers();
+        renderAromas(aromas);
+      }
+    }
+
+    function filterAromas() {
+      const term = document.getElementById('searchInput').value.toLowerCase();
+      const filtered = aromas.filter(a => 
+        a.name.toLowerCase().includes(term) ||
+        (a.manufacturer && a.manufacturer.toLowerCase().includes(term))
+      );
+      renderAromas(filtered);
+    }
+
+    function sortAromas() {
+      const sortBy = document.getElementById('sortSelect').value;
+      let sorted = [...aromas];
+      if (sortBy === 'name-asc') sorted.sort((a,b) => a.name.localeCompare(b.name));
+      if (sortBy === 'name-desc') sorted.sort((a,b) => b.name.localeCompare(a.name));
+      if (sortBy === 'rating-desc') sorted.sort((a,b) => b.rating - a.rating);
+      if (sortBy === 'rating-asc') sorted.sort((a,b) => a.rating - b.rating);
+      if (sortBy === 'mix-asc') sorted.sort((a,b) => a.perfectMix - b.perfectMix);
+      if (sortBy === 'mix-desc') sorted.sort((a,b) => b.perfectMix - a.perfectMix);
+      renderAromas(sorted);
+    }
+
+    // Modal Event Listeners
+    window.onclick = function(event) {
+      const modal = document.getElementById('editModal');
+      if (event.target === modal) {
+        closeEditModal();
+      }
+    }
+
+    // Initialisierung
+    document.addEventListener('DOMContentLoaded', function() {
+      document.getElementById('year').textContent = new Date().getFullYear();
+      
+      if (isAdmin) {
+        document.getElementById('adminStatus').style.display = 'flex';
+        document.getElementById('footerAdmin').textContent = '🔓';
+        document.getElementById('footerAdmin').style.background = '#10b981';
+        document.getElementById('adminTools').style.display = 'block';
+      } else {
+        document.getElementById('footerAdmin').textContent = '🔒';
+        document.getElementById('footerAdmin').style.background = '#6c757d';
+      }
+      
+      updateStars('newRatingStars', 3);
+      updateDualRange();
+      updateSlider('perfectMixVal', 12);
+      updateManufacturers();
+      renderAromas(aromas);
+    });
+  </script>
+</body>
+</html>
