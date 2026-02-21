@@ -2,171 +2,432 @@
 <html lang="de">
 <head>
   <meta charset="UTF-8">
-  <title>Haustier-BMI: Katze & Hund</title>
+  <title>Haustier‑BMI Rechner (Hund & Katze)</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      max-width: 700px;
-      margin: 30px auto;
-      padding: 0 15px;
-      background: #f5f5f5;
+    :root {
+      --bg: #0f172a;
+      --card-bg: #0b1120;
+      --accent: #38bdf8;
+      --accent-soft: rgba(56,189,248,0.16);
+      --text-main: #e5e7eb;
+      --text-muted: #9ca3af;
+      --danger: #f97373;
+      --radius: 16px;
+      --shadow: 0 20px 40px rgba(15,23,42,0.7);
     }
-    h1 {
-      text-align: center;
-    }
-    label {
-      display: block;
-      margin-top: 10px;
-      font-weight: bold;
-    }
-    select, input[type="number"] {
-      width: 100%;
-      padding: 8px;
-      margin-top: 5px;
+
+    * {
       box-sizing: border-box;
     }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: radial-gradient(circle at top, #1d283a 0, #020617 50%, #020617 100%);
+      color: var(--text-main);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+    }
+
+    .app {
+      width: 100%;
+      max-width: 420px;
+    }
+
+    .card {
+      background: radial-gradient(circle at top left, #1e293b 0, #020617 55%);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 20px 18px 18px;
+      border: 1px solid rgba(148,163,184,0.3);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .card::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at top right, rgba(56,189,248,0.12) 0, transparent 55%);
+      pointer-events: none;
+    }
+
+    .card-inner {
+      position: relative;
+      z-index: 1;
+    }
+
+    h1 {
+      margin: 0 0 4px;
+      font-size: 1.35rem;
+      text-align: center;
+      letter-spacing: 0.03em;
+    }
+
+    .subtitle {
+      text-align: center;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      margin-bottom: 18px;
+    }
+
+    .chips {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: rgba(15,23,42,0.8);
+      border: 1px solid rgba(148,163,184,0.35);
+      font-size: 0.75rem;
+      margin: 0 auto 16px;
+      color: var(--text-muted);
+    }
+
+    .chips span.accent {
+      color: var(--accent);
+      font-weight: 600;
+    }
+
+    label {
+      display: block;
+      font-size: 0.8rem;
+      font-weight: 600;
+      margin-bottom: 4px;
+      color: #cbd5f5;
+    }
+
+    .field-group {
+      margin-bottom: 12px;
+    }
+
+    select,
+    input[type="number"] {
+      width: 100%;
+      border-radius: 999px;
+      border: 1px solid rgba(148,163,184,0.7);
+      padding: 9px 12px;
+      background: rgba(15,23,42,0.9);
+      color: var(--text-main);
+      font-size: 0.9rem;
+      outline: none;
+      transition: border-color 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
+      -webkit-appearance: none;
+      appearance: none;
+    }
+
+    select:focus,
+    input[type="number"]:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 1px rgba(56,189,248,0.4);
+      background: rgba(15,23,42,0.95);
+    }
+
+    input::placeholder {
+      color: #6b7280;
+    }
+
+    .fields-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .fields-row .field-group {
+      flex: 1 1 140px;
+      margin-bottom: 0;
+    }
+
+    .hint {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      margin-top: 4px;
+    }
+
     button {
-      margin-top: 15px;
-      padding: 10px 15px;
-      font-size: 16px;
+      width: 100%;
+      margin-top: 16px;
+      padding: 11px 14px;
+      border-radius: 999px;
+      border: none;
+      background: linear-gradient(135deg, #38bdf8, #4ade80);
+      color: #0b1120;
+      font-weight: 600;
+      font-size: 0.95rem;
       cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      box-shadow: 0 14px 30px rgba(34,197,235,0.35);
+      transition: transform 0.12s ease, box-shadow 0.12s ease, filter 0.1s ease;
     }
+
+    button:hover {
+      transform: translateY(-1px);
+      filter: brightness(1.03);
+      box-shadow: 0 18px 35px rgba(34,197,235,0.5);
+    }
+
+    button:active {
+      transform: translateY(0);
+      box-shadow: 0 10px 24px rgba(34,197,235,0.38);
+    }
+
+    button span.icon {
+      font-size: 1.1rem;
+    }
+
     #result {
-      margin-top: 20px;
-      padding: 10px;
-      background: #fff;
-      border-radius: 4px;
-      border: 1px solid #ccc;
+      margin-top: 16px;
+      padding: 10px 12px;
+      border-radius: 14px;
+      background: linear-gradient(135deg, rgba(15,23,42,0.98), rgba(15,23,42,0.9));
+      border: 1px solid rgba(148,163,184,0.5);
+      font-size: 0.85rem;
+      line-height: 1.4;
+      min-height: 40px;
     }
-    .fieldset {
-      margin-top: 15px;
-      padding: 10px;
-      background: #ffffff;
-      border-radius: 4px;
-      border: 1px solid #ccc;
+
+    .result-main {
+      font-size: 0.95rem;
+      margin-bottom: 4px;
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      padding: 3px 9px;
+      border-radius: 999px;
+      font-size: 0.7rem;
+      margin-top: 4px;
+    }
+
+    .pill--ok {
+      background: rgba(52,211,153,0.16);
+      color: #6ee7b7;
+      border: 1px solid rgba(52,211,153,0.5);
+    }
+
+    .pill--warn {
+      background: rgba(234,179,8,0.16);
+      color: #facc15;
+      border: 1px solid rgba(234,179,8,0.55);
+    }
+
+    .pill--bad {
+      background: rgba(248,113,113,0.16);
+      color: #fecaca;
+      border: 1px solid rgba(248,113,113,0.55);
+    }
+
+    .result-note {
+      font-size: 0.74rem;
+      color: var(--text-muted);
+      margin-top: 6px;
+    }
+
+    .error {
+      color: var(--danger);
+      font-size: 0.8rem;
+    }
+
+    .badge-row {
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+      margin-bottom: 10px;
+      flex-wrap: wrap;
+    }
+
+    .badge {
+      font-size: 0.7rem;
+      padding: 4px 8px;
+      border-radius: 999px;
+      background: rgba(15,23,42,0.9);
+      border: 1px solid rgba(148,163,184,0.4);
+      color: var(--text-muted);
+    }
+
+    @media (min-width: 640px) {
+      .card {
+        padding: 22px 22px 20px;
+      }
+
+      h1 {
+        font-size: 1.55rem;
+      }
+
+      .subtitle {
+        font-size: 0.9rem;
+      }
     }
   </style>
 </head>
 <body>
-  <h1>Haustier‑BMI Rechner</h1>
-  <p>Wähle Tierart und gib die benötigten Werte ein.</p>
+  <main class="app">
+    <section class="card">
+      <div class="card-inner">
+        <h1>Haustier‑BMI Rechner</h1>
+        <p class="subtitle">FBMI für Katzen & vereinfachter BMI für Hunde – optimiert für Handy & Desktop.</p>
 
-  <label for="tierart">Tierart</label>
-  <select id="tierart" onchange="wechselTierart()">
-    <option value="katze">Katze (FBMI, Körperfett‑%)</option>
-    <option value="hund">Hund (BMI nach Gewicht & Größe)</option>
-  </select>
+        <div class="badge-row">
+          <div class="badge">🐾 Katze: Körperfett‑%</div>
+          <div class="badge">🐕 Hund: Gewicht / Größe</div>
+        </div>
 
-  <!-- Eingaben für Katze -->
-  <div id="katzeFields" class="fieldset">
-    <label for="brust">Brustkorbumfang (cm)</label>
-    <input type="number" id="brust" min="10" step="0.1">
+        <div class="chips">
+          Für <span class="accent">schnelle Einschätzung</span>, ersetzt keinen Tierarzt‑Check.
+        </div>
 
-    <label for="lim">Unterschenkellänge LIM (cm)</label>
-    <input type="number" id="lim" min="5" step="0.1">
+        <div class="field-group">
+          <label for="tierart">Tierart</label>
+          <select id="tierart" onchange="wechselTierart()">
+            <option value="katze">Katze (FBMI, Körperfett‑%)</option>
+            <option value="hund">Hund (BMI nach Gewicht & Größe)</option>
+          </select>
+        </div>
 
-    <small>
-      Hinweis: FBMI für Katzen nach WALTHAM. Brustkorbumfang auf Höhe der 9. Rippe, LIM von Kniescheibe bis Fersenhöcker.[web:19]
-    </small>
-  </div>
+        <!-- Katze -->
+        <div id="katzeFields">
+          <div class="fields-row">
+            <div class="field-group">
+              <label for="brust">Brustkorbumfang (cm)</label>
+              <input type="number" id="brust" min="10" step="0.1" placeholder="z.B. 40,0">
+            </div>
+            <div class="field-group">
+              <label for="lim">Unterschenkellänge LIM (cm)</label>
+              <input type="number" id="lim" min="5" step="0.1" placeholder="z.B. 15,0">
+            </div>
+          </div>
+          <p class="hint">
+            Brustkorb auf Höhe der 9. Rippe messen, LIM am Hinterbein von Kniescheibe bis Fersenhöcker.[web:19]
+          </p>
+        </div>
 
-  <!-- Eingaben für Hund -->
-  <div id="hundFields" class="fieldset" style="display:none;">
-    <label for="gewichtHund">Gewicht Hund (kg)</label>
-    <input type="number" id="gewichtHund" min="0.5" step="0.1">
+        <!-- Hund -->
+        <div id="hundFields" style="display:none;">
+          <div class="fields-row">
+            <div class="field-group">
+              <label for="gewichtHund">Gewicht (kg)</label>
+              <input type="number" id="gewichtHund" min="0.5" step="0.1" placeholder="z.B. 18,5">
+            </div>
+            <div class="field-group">
+              <label for="groesseHund">Schulterhöhe (cm)</label>
+              <input type="number" id="groesseHund" min="5" step="0.5" placeholder="z.B. 50">
+            </div>
+          </div>
+          <p class="hint">
+            BMI Hund = Gewicht (kg) ÷ (Schulterhöhe in m)² – nur grobe Orientierung, Rasse beachten.[web:37][web:41]
+          </p>
+        </div>
 
-    <label for="groesseHund">Schulterhöhe (cm)</label>
-    <input type="number" id="groesseHund" min="5" step="0.5">
+        <button onclick="berechne()">
+          <span class="icon">⚖️</span>
+          <span>Berechnen</span>
+        </button>
 
-    <small>
-      Hinweis: BMI Hund = Gewicht (kg) ÷ (Schulterhöhe in m)², einfache Orientierung – ersetzt keinen Body Condition Score.[web:37]
-    </small>
-  </div>
-
-  <button onclick="berechne()">Berechnen</button>
-
-  <div id="result"></div>
+        <div id="result"></div>
+      </div>
+    </section>
+  </main>
 
   <script>
     function wechselTierart() {
       const tierart = document.getElementById('tierart').value;
       const katzeFields = document.getElementById('katzeFields');
       const hundFields = document.getElementById('hundFields');
-      document.getElementById('result').innerHTML = '';
+      const resultDiv = document.getElementById('result');
 
-      if (tierart === 'katze') {
-        katzeFields.style.display = 'block';
-        hundFields.style.display = 'none';
+      resultDiv.innerHTML = "";
+
+      if (tierart === "katze") {
+        katzeFields.style.display = "block";
+        hundFields.style.display = "none";
       } else {
-        katzeFields.style.display = 'none';
-        hundFields.style.display = 'block';
+        katzeFields.style.display = "none";
+        hundFields.style.display = "block";
       }
     }
 
     function berechne() {
-      const tierart = document.getElementById('tierart').value;
-      const resultDiv = document.getElementById('result');
+      const tierart = document.getElementById("tierart").value;
+      const resultDiv = document.getElementById("result");
+      resultDiv.classList.remove("error");
+      resultDiv.innerHTML = "";
 
-      if (tierart === 'katze') {
-        const brust = parseFloat(document.getElementById('brust').value);
-        const lim = parseFloat(document.getElementById('lim').value);
+      if (tierart === "katze") {
+        const brust = parseFloat(document.getElementById("brust").value);
+        const lim = parseFloat(document.getElementById("lim").value);
 
         if (isNaN(brust) || isNaN(lim) || brust <= 0 || lim <= 0) {
-          resultDiv.textContent = 'Bitte gültige Werte für Brustkorbumfang und LIM eingeben.';
+          resultDiv.innerHTML = '<span class="error">Bitte gültige Werte für Brustkorbumfang und LIM eingeben.</span>';
           return;
         }
 
-        // FBMI-Formel nach WALTHAM (Körperfett in Prozent)
+        // FBMI-Formel nach WALTHAM: Körperfett in Prozent
         // Körperfett (%) = (((Brustkorb / 0.7062) - LIM) / 0.9156) - LIM
         const wert1 = brust / 0.7062;
         const wert2 = wert1 - lim;
         const wert3 = wert2 / 0.9156;
         const koerperfett = wert3 - lim;
 
-        let kategorie = '';
+        let kategorie = "";
+        let pillClass = "pill--ok";
+
         if (koerperfett < 15) {
-          kategorie = 'untergewichtig (unter ca. 15 %).';
+          kategorie = "untergewichtig (unter ca. 15 %).";
+          pillClass = "pill--warn";
         } else if (koerperfett <= 30) {
-          kategorie = 'normalgewichtig (ca. 15–30 %).';
+          kategorie = "normalgewichtig (ca. 15–30 %).";
+          pillClass = "pill--ok";
         } else {
-          kategorie = 'übergewichtig (über ca. 30 %).';
+          kategorie = "übergewichtig (über ca. 30 %).";
+          pillClass = "pill--bad";
         }
 
         resultDiv.innerHTML =
-          '<strong>Tierart:</strong> Katze<br>' +
-          '<strong>Körperfettanteil (FBMI):</strong> ' + koerperfett.toFixed(1) + ' %<br>' +
-          '<strong>Einschätzung:</strong> ' + kategorie +
-          '<br><small>Der FBMI ist nur eine Orientierung und ersetzt keine tierärztliche Untersuchung.</small>';
+          '<div class="result-main"><strong>Katze – Körperfett (FBMI):</strong> ' +
+          koerperfett.toFixed(1) + ' %</div>' +
+          '<div class="pill ' + pillClass + '">Einschätzung: ' + kategorie + "</div>" +
+          '<p class="result-note">Der FBMI ist ein Orientierungswert und ersetzt keine tierärztliche Untersuchung.</p>';
 
-      } else if (tierart === 'hund') {
-        const gewicht = parseFloat(document.getElementById('gewichtHund').value);
-        const groesseCm = parseFloat(document.getElementById('groesseHund').value);
+      } else if (tierart === "hund") {
+        const gewicht = parseFloat(document.getElementById("gewichtHund").value);
+        const groesseCm = parseFloat(document.getElementById("groesseHund").value);
 
         if (isNaN(gewicht) || isNaN(groesseCm) || gewicht <= 0 || groesseCm <= 0) {
-          resultDiv.textContent = 'Bitte gültige Werte für Gewicht und Schulterhöhe eingeben.';
+          resultDiv.innerHTML = '<span class="error">Bitte gültige Werte für Gewicht und Schulterhöhe eingeben.</span>';
           return;
         }
 
-        // Hunde-BMI als einfache BMI-Analogie:
-        // BMI = Gewicht(kg) / (Schulterhöhe(m))^2
         const groesseM = groesseCm / 100.0;
         const bmiHund = gewicht / (groesseM * groesseM);
 
-        let kategorie = '';
-        // Grobe Orientierung – je nach Rasse stark unterschiedlich.
+        let kategorie = "";
+        let pillClass = "pill--ok";
+
         if (bmiHund < 60) {
-          kategorie = 'eher untergewichtig (für viele mittelgroße Rassen).';
+          kategorie = "eher untergewichtig (für viele mittelgroße Rassen).";
+          pillClass = "pill--warn";
         } else if (bmiHund <= 90) {
-          kategorie = 'ungefähr im Normalbereich (je nach Rasse).';
+          kategorie = "ungefähr im Normalbereich (rasseabhängig).";
+          pillClass = "pill--ok";
         } else {
-          kategorie = 'möglicherweise übergewichtig (je nach Rasse prüfen).';
+          kategorie = "möglicherweise übergewichtig – Rasse & Body Condition Score prüfen.";
+          pillClass = "pill--bad";
         }
 
         resultDiv.innerHTML =
-          '<strong>Tierart:</strong> Hund<br>' +
-          '<strong>BMI (vereinfachter Hunde‑BMI):</strong> ' + bmiHund.toFixed(1) + '<br>' +
-          '<strong>Einschätzung:</strong> ' + kategorie +
-          '<br><small>Der BMI für Hunde ist nur ein grober Richtwert. Wichtiger ist der Body Condition Score durch Tierarzt/Tierärztin.</small>';
+          '<div class="result-main"><strong>Hund – BMI:</strong> ' +
+          bmiHund.toFixed(1) + "</div>" +
+          '<div class="pill ' + pillClass + '">Einschätzung: ' + kategorie + "</div>" +
+          '<p class="result-note">Der BMI für Hunde ist nur ein grober Richtwert. Wichtig ist der Body Condition Score beim Tierarzt.[web:39][web:42]</p>';
       }
     }
   </script>
