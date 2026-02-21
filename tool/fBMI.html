@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <title>Haustier-BMI: Katze & Hund</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 700px;
+      margin: 30px auto;
+      padding: 0 15px;
+      background: #f5f5f5;
+    }
+    h1 {
+      text-align: center;
+    }
+    label {
+      display: block;
+      margin-top: 10px;
+      font-weight: bold;
+    }
+    select, input[type="number"] {
+      width: 100%;
+      padding: 8px;
+      margin-top: 5px;
+      box-sizing: border-box;
+    }
+    button {
+      margin-top: 15px;
+      padding: 10px 15px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+    #result {
+      margin-top: 20px;
+      padding: 10px;
+      background: #fff;
+      border-radius: 4px;
+      border: 1px solid #ccc;
+    }
+    .fieldset {
+      margin-top: 15px;
+      padding: 10px;
+      background: #ffffff;
+      border-radius: 4px;
+      border: 1px solid #ccc;
+    }
+  </style>
+</head>
+<body>
+  <h1>Haustier‑BMI Rechner</h1>
+  <p>Wähle Tierart und gib die benötigten Werte ein.</p>
+
+  <label for="tierart">Tierart</label>
+  <select id="tierart" onchange="wechselTierart()">
+    <option value="katze">Katze (FBMI, Körperfett‑%)</option>
+    <option value="hund">Hund (BMI nach Gewicht & Größe)</option>
+  </select>
+
+  <!-- Eingaben für Katze -->
+  <div id="katzeFields" class="fieldset">
+    <label for="brust">Brustkorbumfang (cm)</label>
+    <input type="number" id="brust" min="10" step="0.1">
+
+    <label for="lim">Unterschenkellänge LIM (cm)</label>
+    <input type="number" id="lim" min="5" step="0.1">
+
+    <small>
+      Hinweis: FBMI für Katzen nach WALTHAM. Brustkorbumfang auf Höhe der 9. Rippe, LIM von Kniescheibe bis Fersenhöcker.[web:19]
+    </small>
+  </div>
+
+  <!-- Eingaben für Hund -->
+  <div id="hundFields" class="fieldset" style="display:none;">
+    <label for="gewichtHund">Gewicht Hund (kg)</label>
+    <input type="number" id="gewichtHund" min="0.5" step="0.1">
+
+    <label for="groesseHund">Schulterhöhe (cm)</label>
+    <input type="number" id="groesseHund" min="5" step="0.5">
+
+    <small>
+      Hinweis: BMI Hund = Gewicht (kg) ÷ (Schulterhöhe in m)², einfache Orientierung – ersetzt keinen Body Condition Score.[web:37]
+    </small>
+  </div>
+
+  <button onclick="berechne()">Berechnen</button>
+
+  <div id="result"></div>
+
+  <script>
+    function wechselTierart() {
+      const tierart = document.getElementById('tierart').value;
+      const katzeFields = document.getElementById('katzeFields');
+      const hundFields = document.getElementById('hundFields');
+      document.getElementById('result').innerHTML = '';
+
+      if (tierart === 'katze') {
+        katzeFields.style.display = 'block';
+        hundFields.style.display = 'none';
+      } else {
+        katzeFields.style.display = 'none';
+        hundFields.style.display = 'block';
+      }
+    }
+
+    function berechne() {
+      const tierart = document.getElementById('tierart').value;
+      const resultDiv = document.getElementById('result');
+
+      if (tierart === 'katze') {
+        const brust = parseFloat(document.getElementById('brust').value);
+        const lim = parseFloat(document.getElementById('lim').value);
+
+        if (isNaN(brust) || isNaN(lim) || brust <= 0 || lim <= 0) {
+          resultDiv.textContent = 'Bitte gültige Werte für Brustkorbumfang und LIM eingeben.';
+          return;
+        }
+
+        // FBMI-Formel nach WALTHAM (Körperfett in Prozent)
+        // Körperfett (%) = (((Brustkorb / 0.7062) - LIM) / 0.9156) - LIM
+        const wert1 = brust / 0.7062;
+        const wert2 = wert1 - lim;
+        const wert3 = wert2 / 0.9156;
+        const koerperfett = wert3 - lim;
+
+        let kategorie = '';
+        if (koerperfett < 15) {
+          kategorie = 'untergewichtig (unter ca. 15 %).';
+        } else if (koerperfett <= 30) {
+          kategorie = 'normalgewichtig (ca. 15–30 %).';
+        } else {
+          kategorie = 'übergewichtig (über ca. 30 %).';
+        }
+
+        resultDiv.innerHTML =
+          '<strong>Tierart:</strong> Katze<br>' +
+          '<strong>Körperfettanteil (FBMI):</strong> ' + koerperfett.toFixed(1) + ' %<br>' +
+          '<strong>Einschätzung:</strong> ' + kategorie +
+          '<br><small>Der FBMI ist nur eine Orientierung und ersetzt keine tierärztliche Untersuchung.</small>';
+
+      } else if (tierart === 'hund') {
+        const gewicht = parseFloat(document.getElementById('gewichtHund').value);
+        const groesseCm = parseFloat(document.getElementById('groesseHund').value);
+
+        if (isNaN(gewicht) || isNaN(groesseCm) || gewicht <= 0 || groesseCm <= 0) {
+          resultDiv.textContent = 'Bitte gültige Werte für Gewicht und Schulterhöhe eingeben.';
+          return;
+        }
+
+        // Hunde-BMI als einfache BMI-Analogie:
+        // BMI = Gewicht(kg) / (Schulterhöhe(m))^2
+        const groesseM = groesseCm / 100.0;
+        const bmiHund = gewicht / (groesseM * groesseM);
+
+        let kategorie = '';
+        // Grobe Orientierung – je nach Rasse stark unterschiedlich.
+        if (bmiHund < 60) {
+          kategorie = 'eher untergewichtig (für viele mittelgroße Rassen).';
+        } else if (bmiHund <= 90) {
+          kategorie = 'ungefähr im Normalbereich (je nach Rasse).';
+        } else {
+          kategorie = 'möglicherweise übergewichtig (je nach Rasse prüfen).';
+        }
+
+        resultDiv.innerHTML =
+          '<strong>Tierart:</strong> Hund<br>' +
+          '<strong>BMI (vereinfachter Hunde‑BMI):</strong> ' + bmiHund.toFixed(1) + '<br>' +
+          '<strong>Einschätzung:</strong> ' + kategorie +
+          '<br><small>Der BMI für Hunde ist nur ein grober Richtwert. Wichtiger ist der Body Condition Score durch Tierarzt/Tierärztin.</small>';
+      }
+    }
+  </script>
+</body>
+</html>
