@@ -273,7 +273,7 @@
   <main class="app">
     <section class="card">
       <div class="card-inner">
-        <h1>Haustier‑BMI Rechner</h1>
+        <h1>Haustier (F)BMI-Rechner</h1>
         <p class="subtitle">FBMI für Katzen & vereinfachter BMI für Hunde</p>
 
         <div class="badge-row">
@@ -306,7 +306,7 @@
             </div>
           </div>
           <p class="hint">
-            Brustkorb auf Höhe der 9. Rippe messen, LIM am Hinterbein von Kniescheibe bis Fersenhöcker.[web:19]
+            Brustkorb auf Höhe der 9. Rippe messen, Unterschenkellänge am Hinterbein von Kniescheibe bis Fersenhöcker.
           </p>
         </div>
 
@@ -323,7 +323,7 @@
             </div>
           </div>
           <p class="hint">
-            BMI Hund = Gewicht (kg) ÷ (Schulterhöhe in m)² – nur grobe Orientierung, Rasse beachten.[web:37][web:41]
+            BMI Hund = Gewicht (kg) ÷ (Schulterhöhe in m)² – nur grobe Orientierung, Rasse beachten.
           </p>
         </div>
 
@@ -366,7 +366,7 @@
         const lim = parseFloat(document.getElementById("lim").value);
 
         if (isNaN(brust) || isNaN(lim) || brust <= 0 || lim <= 0) {
-          resultDiv.innerHTML = '<span class="error">Bitte gültige Werte für Brustkorbumfang und LIM eingeben.</span>';
+          resultDiv.innerHTML = '<span class="error">Bitte gültige Werte für Brustkorbumfang und Unterschenkellänge eingeben.</span>';
           return;
         }
 
@@ -427,7 +427,7 @@
           '<div class="result-main"><strong>Hund – BMI:</strong> ' +
           bmiHund.toFixed(1) + "</div>" +
           '<div class="pill ' + pillClass + '">Einschätzung: ' + kategorie + "</div>" +
-          '<p class="result-note">Der BMI für Hunde ist nur ein grober Richtwert. Wichtig ist der Body Condition Score beim Tierarzt.[web:39][web:42]</p>';
+          '<p class="result-note">Der BMI für Hunde ist nur ein grober Richtwert. Wichtig ist der Body Condition Score beim Tierarzt.</p>';
       }
     }
   </script>
