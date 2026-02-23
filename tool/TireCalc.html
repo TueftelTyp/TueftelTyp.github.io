@@ -1,0 +1,674 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Reifenrechner Pro</title>
+  <style>
+    :root {
+      --bg: #0f172a;
+      --card-bg: #020617;
+      --accent: #22c55e;
+      --accent-soft: rgba(34, 197, 94, 0.15);
+      --text-main: #e5e7eb;
+      --text-muted: #9ca3af;
+      --border-subtle: #1f2937;
+    }
+
+    * { box-sizing: border-box; font-family: system-ui, sans-serif; }
+
+    body {
+      margin: 0; min-height: 100vh;
+      background: radial-gradient(circle at top, #1e293b 0, #020617 45%, #020617 100%);
+      color: var(--text-main); 
+      display: flex; align-items: center; justify-content: center; padding: 16px;
+    }
+
+    .app {
+      width: 100%; max-width: 560px;
+      background: linear-gradient(135deg, rgba(148, 163, 184, 0.2), transparent);
+      border-radius: 24px; padding: 2px;
+      box-shadow: 0 24px 80px rgba(15, 23, 42, 0.8), 0 0 0 1px rgba(15, 23, 42, 0.9);
+    }
+
+    .app-inner {
+      background: radial-gradient(circle at top left, #020617 0, #020617 55%, #020617 100%);
+      border-radius: 22px; padding: 24px 22px;
+      display: flex; flex-direction: column; min-height: 80vh;
+    }
+
+    .header {
+      display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; gap: 12px;
+    }
+
+    .title {
+      font-size: 1.4rem; font-weight: 600; letter-spacing: 0.02em;
+    }
+
+    .title-badge {
+      font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.18em; 
+      color: var(--accent); background: var(--accent-soft); padding: 3px 8px; 
+      border-radius: 999px; border: 1px solid rgba(34, 197, 94, 0.5);
+    }
+
+    .subtitle { font-size: 0.78rem; color: var(--text-muted); margin: 0; }
+
+    .tabs-container {
+      display: flex; gap: 6px; padding: 4px; border-radius: 999px; 
+      background: rgba(15, 23, 42, 0.9); border: 1px solid rgba(31, 41, 55, 0.9); 
+      margin-bottom: 16px; overflow-x: auto;
+    }
+
+    .tab {
+      flex: 1; padding: 8px 12px; border-radius: 999px; border: none; background: transparent;
+      color: var(--text-muted); font-size: 0.85rem; font-weight: 500; cursor: pointer;
+      white-space: nowrap; transition: all 0.15s ease;
+    }
+
+    .tab.active {
+      background: radial-gradient(circle at top, #22c55e 0, #16a34a 65%);
+      color: #0b1120; transform: translateY(-1px); box-shadow: 0 10px 25px rgba(34, 197, 94, 0.35);
+    }
+
+    .dial-container {
+      display: flex; flex-direction: column; align-items: center; gap: 12px; margin-bottom: 20px;
+    }
+
+    .dial {
+      width: 92px; height: 92px; border-radius: 50%; 
+      background: conic-gradient(from 0deg, #22c55e, #16a34a, #22c55e, #16a34a);
+      border: 3px solid rgba(34, 197, 94, 0.3); cursor: pointer; position: relative;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 0 12px 32px rgba(34, 197, 94, 0.3);
+    }
+
+    .dial:hover { transform: scale(1.05) rotate(10deg); }
+    .dial:active { transform: scale(0.98); }
+
+    .dial-label {
+      position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+      font-size: 0.8rem; font-weight: 700; color: #0b1120; text-shadow: 0 1px 2px rgba(0,0,0,0.4);
+      width: 75px; height: 75px; display: flex; align-items: center; justify-content: center;
+      text-align: center; line-height: 1.05; padding: 0 2px;
+    }
+
+    .dial-indicator {
+      position: absolute; top: -8px; right: -8px; width: 22px; height: 22px;
+      background: radial-gradient(circle, #22c55e 0%, #16a34a 70%); border-radius: 50%;
+      box-shadow: 0 4px 12px rgba(34, 197, 94, 0.5);
+    }
+
+    .card {
+      background: radial-gradient(circle at top, #020617 0, #020617 60%);
+      border-radius: 18px; border: 1px solid var(--border-subtle); padding: 20px 16px;
+      margin-bottom: 14px; flex: 1;
+    }
+
+    .card-header, .input-row, .button-row, .results {
+      margin-bottom: 12px;
+    }
+
+    .card-title { 
+      font-size: 0.9rem; font-weight: 500; letter-spacing: 0.05em; 
+      text-transform: uppercase; color: var(--text-muted); 
+    }
+
+    .card-badge { 
+      font-size: 0.7rem; color: var(--accent); background: var(--accent-soft); 
+      border-radius: 999px; padding: 3px 8px; 
+    }
+
+    label { font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 6px; }
+
+    .input-row { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
+    .input-group { flex: 1 1 90px; min-width: 0; }
+
+    .input {
+      width: 100%; padding: 12px 14px; border-radius: 10px; 
+      border: 1px solid rgba(55, 65, 81, 0.9); background: rgba(15, 23, 42, 0.95);
+      color: var(--text-main); font-size: 0.9rem; outline: none; transition: all 0.2s ease;
+    }
+
+    .input:focus {
+      border-color: rgba(34, 197, 94, 0.9); box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.2);
+      background: rgba(15, 23, 42, 1);
+    }
+
+    .input::placeholder { color: rgba(148, 163, 184, 0.6); }
+
+    .hint {
+      font-size: 0.72rem; color: var(--text-muted); margin-top: 8px; line-height: 1.4;
+    }
+
+    .hint code {
+      font-family: ui-monospace, monospace; font-size: 0.72rem; 
+      background: rgba(15, 23, 42, 0.9); padding: 2px 6px; border-radius: 6px;
+      border: 1px solid rgba(31, 41, 55, 0.9); color: #e5e7eb;
+    }
+
+    .button-row { display: flex; gap: 12px; }
+    .btn {
+      border: none; border-radius: 999px; padding: 12px 20px; font-size: 0.9rem;
+      font-weight: 500; cursor: pointer; flex: 1; transition: all 0.2s ease;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #22c55e, #16a34a);
+      color: #0b1120; box-shadow: 0 8px 24px rgba(34, 197, 94, 0.4);
+    }
+
+    .btn-secondary {
+      background: rgba(15, 23, 42, 0.95); color: var(--text-muted);
+      border: 1px solid rgba(55, 65, 81, 0.9);
+    }
+
+    .btn:active { transform: translateY(2px); box-shadow: none; }
+
+    .results { margin-top: 20px; min-height: 120px; }
+
+    .result-card {
+      padding: 20px; border-radius: 16px; background: radial-gradient(circle at top left, rgba(34, 197, 94, 0.08), transparent);
+      border: 2px solid rgba(34, 197, 94, 0.2); position: relative; overflow: hidden;
+    }
+
+    .result-card::before {
+      content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+      background: linear-gradient(90deg, transparent, #22c55e, transparent);
+    }
+
+    .result-label {
+      font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.1em;
+      color: var(--text-muted); margin-bottom: 8px;
+    }
+
+    .result-value {
+      font-size: 2rem; font-weight: 700; letter-spacing: -0.02em; color: var(--text-main);
+    }
+
+    .result-unit {
+      font-size: 1rem; color: var(--accent); font-weight: 500; margin-left: 8px;
+    }
+
+    .result-sub {
+      font-size: 0.8rem; color: var(--text-muted); margin-top: 8px;
+    }
+
+    .error {
+      margin-top: 12px; font-size: 0.8rem; color: #ef4444; background: rgba(239, 68, 68, 0.15);
+      padding: 8px 12px; border-radius: 8px; border-left: 3px solid #ef4444;
+    }
+
+    .hidden { display: none; }
+
+    .footer {
+      margin-top: auto; padding-top: 16px; border-top: 1px dashed rgba(55, 65, 81, 0.5);
+      font-size: 0.7rem; color: var(--text-muted); text-align: center;
+      line-height: 1.5;
+    }
+
+    .footer-copyright {
+      margin-top: 8px;
+      padding-top: 12px;
+      font-size: 0.68rem;
+      color: #6b7280;
+      text-align: center;
+      border-top: 1px solid rgba(55, 65, 81, 0.3);
+    }
+
+    .footer-copyright a {
+      color: var(--accent);
+      text-decoration: none;
+    }
+
+    .footer-copyright a:hover {
+      text-decoration: underline;
+    }
+
+    .panel { display: none; }
+    .panel.active { display: block; }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <div class="app-inner">
+      <header class="header">
+        <div>
+          <h1 class="title">Reifenrechner <span class="title-badge">Pro</span></h1>
+          <p class="subtitle">Quad • Auto • Motorrad</p>
+        </div>
+      </header>
+
+      <div class="tabs-container">
+        <button class="tab active" data-type="quad">🛞 ATV/Quad</button>
+        <button class="tab" data-type="car">🚗 Auto</button>
+        <button class="tab" data-type="moto">🏍️ Motorrad</button>
+      </div>
+
+      <!-- QUAD PANEL -->
+      <section class="card panel active" id="panel-quad">
+        <div class="dial-container">
+          <div class="dial" id="qDial" data-prop="diameter">
+            <div class="dial-indicator"></div>
+            <div class="dial-label" id="qDialLabel">⌀ Durchm.</div>
+          </div>
+          <div style="font-size: 0.75rem; color: var(--text-muted);">Eigenschaft wählen</div>
+        </div>
+        
+        <div class="card-header">
+          <h2 class="card-title">ATV/Quad Reifengröße</h2>
+          <div class="card-badge" id="qBadge">25 × 8 − 12</div>
+        </div>
+        <div class="input-row">
+          <div class="input-group">
+            <label>Höhe (Zoll)</label>
+            <input id="qHeight" class="input" type="number" step="0.1" placeholder="25">
+          </div>
+          <span style="color: var(--text-muted); font-size: 1.2rem; font-weight: bold;">×</span>
+          <div class="input-group">
+            <label>Breite (Zoll)</label>
+            <input id="qWidth" class="input" type="number" step="0.1" placeholder="8">
+          </div>
+          <span style="color: var(--text-muted); font-size: 1.2rem; font-weight: bold;">−</span>
+          <div class="input-group">
+            <label>Felge (Zoll)</label>
+            <input id="qRim" class="input" type="number" step="0.1" placeholder="12">
+          </div>
+        </div>
+        <p class="hint">
+          <code>25 × 8 − 12</code> = Höhe × Breite − Felgendurchmesser (alle in Zoll)
+        </p>
+        <div class="button-row">
+          <button id="qCalcBtn" class="btn btn-primary">🔢 Berechnen</button>
+          <button id="qClearBtn" class="btn btn-secondary">🗑️ Zurücksetzen</button>
+        </div>
+        <p id="qErrorMsg" class="error hidden">Bitte Höhe eingeben</p>
+        <div id="qResultArea" class="results">
+          <div class="result-card">
+            <div class="result-label" id="qResLabel">Durchmesser</div>
+            <div><span id="qResValue" class="result-value">–</span><span id="qResUnit" class="result-unit">mm</span></div>
+            <div class="result-sub" id="qResSub">Eingabe fehlt</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- AUTO PANEL -->
+      <section class="card panel" id="panel-car">
+        <div class="dial-container">
+          <div class="dial" id="cDial" data-prop="diameter">
+            <div class="dial-indicator"></div>
+            <div class="dial-label" id="cDialLabel">⌀ Durchm.</div>
+          </div>
+          <div style="font-size: 0.75rem; color: var(--text-muted);">← → Eigenschaft wählen</div>
+        </div>
+        
+        <div class="card-header">
+          <h2 class="card-title">Pkw Reifengröße</h2>
+          <div class="card-badge" id="cBadge">205/55 R16</div>
+        </div>
+        <div class="input-row">
+          <div class="input-group">
+            <label>Breite (mm)</label>
+            <input id="cWidth" class="input" type="number" step="1" placeholder="205">
+          </div>
+          <span style="color: var(--text-muted); font-size: 1.2rem; font-weight: bold;">/</span>
+          <div class="input-group">
+            <label>Profil (%)</label>
+            <input id="cProfile" class="input" type="number" step="1" placeholder="55">
+          </div>
+          <span style="color: var(--text-muted); font-size: 1.2rem; font-weight: bold;">R</span>
+          <div class="input-group">
+            <label>Felge (Zoll)</label>
+            <input id="cRim" class="input" type="number" step="1" placeholder="16">
+          </div>
+        </div>
+        <p class="hint">
+          <code>205/55 R16</code> = Breite / (Profil%) R Felgendurchmesser
+        </p>
+        <div class="button-row">
+          <button id="cCalcBtn" class="btn btn-primary">🔢 Berechnen</button>
+          <button id="cClearBtn" class="btn btn-secondary">🗑️ Zurücksetzen</button>
+        </div>
+        <p id="cErrorMsg" class="error hidden">Bitte Werte eingeben</p>
+        <div id="cResultArea" class="results">
+          <div class="result-card">
+            <div class="result-label" id="cResLabel">Durchmesser</div>
+            <div><span id="cResValue" class="result-value">–</span><span id="cResUnit" class="result-unit">mm</span></div>
+            <div class="result-sub" id="cResSub">Eingabe fehlt</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- MOTRRAD PANEL -->
+      <section class="card panel" id="panel-moto">
+        <div class="dial-container">
+          <div class="dial" id="mDial" data-prop="diameter">
+            <div class="dial-indicator"></div>
+            <div class="dial-label" id="mDialLabel">⌀ Durchm.</div>
+          </div>
+          <div style="font-size: 0.75rem; color: var(--text-muted);">← → Eigenschaft wählen</div>
+        </div>
+        
+        <div class="card-header">
+          <h2 class="card-title">Motorrad Reifengröße</h2>
+          <div class="card-badge" id="mBadge">120/70 R17</div>
+        </div>
+        <div class="input-row">
+          <div class="input-group">
+            <label>Breite (mm)</label>
+            <input id="mWidth" class="input" type="number" step="1" placeholder="120">
+          </div>
+          <span style="color: var(--text-muted); font-size: 1.2rem; font-weight: bold;">/</span>
+          <div class="input-group">
+            <label>Profil (%)</label>
+            <input id="mProfile" class="input" type="number" step="1" placeholder="70">
+          </div>
+          <span style="color: var(--text-muted); font-size: 1.2rem; font-weight: bold;">R</span>
+          <div class="input-group">
+            <label>Felge (Zoll)</label>
+            <input id="mRim" class="input" type="number" step="1" placeholder="17">
+          </div>
+        </div>
+        <p class="hint">
+          <code>120/70 R17</code> = Breite / (Profil%) R Felgendurchmesser
+        </p>
+        <div class="button-row">
+          <button id="mCalcBtn" class="btn btn-primary">🔢 Berechnen</button>
+          <button id="mClearBtn" class="btn btn-secondary">🗑️ Zurücksetzen</button>
+        </div>
+        <p id="mErrorMsg" class="error hidden">Bitte Werte eingeben</p>
+        <div id="mResultArea" class="results">
+          <div class="result-card">
+            <div class="result-label" id="mResLabel">Durchmesser</div>
+            <div><span id="mResValue" class="result-value">–</span><span id="mResUnit" class="result-unit">mm</span></div>
+            <div class="result-sub" id="mResSub">Eingabe fehlt</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Dynamischer Info-Footer -->
+      <footer class="footer" id="dynamicFooter"></footer>
+
+      <!-- Statischer Copyright-Bereich -->
+      <div class="footer-copyright">
+        © 2025–<span id="currentYear"></span> 
+        <span id="copyrightName">TüftelTyp</span> – 
+        <a href="https://github.com/TueftelTyp" target="_blank" rel="noopener noreferrer">GitHub</a>
+      </div>
+
+    </div>
+  </main>
+
+  <script>
+    const MM_PER_INCH = 25.4;
+    const PI = Math.PI;
+
+    const properties = {
+      diameter: { 
+        dial: '⌀ Durchm.', full: 'Durchmesser', unit: 'mm', 
+        calc: d => Math.round(d), 
+        sub: d => `${(d/MM_PER_INCH).toFixed(1)}"`,
+        footer: 'Durchmesser = Höhe + Felge (Quad) / 2×Flankenhöhe + Felge (Auto/Moto)'
+      },
+      circumference: { 
+        dial: '○ Umfang', full: 'Abrollumfang', unit: 'mm', 
+        calc: d => Math.round(PI * d), 
+        sub: d => `${(PI * d / 10).toFixed(1)} cm`,
+        footer: 'Umfang = π × Durchmesser (Abrollumfang pro Umdrehung)'
+      },
+      radius: { 
+        dial: '⌀ Radius', full: 'Radius', unit: 'mm', 
+        calc: d => Math.round(d/2), 
+        sub: d => `${(d/(2*MM_PER_INCH)).toFixed(1)}"`,
+        footer: 'Radius = Durchmesser ÷ 2'
+      },
+      speed100: { 
+        dial: '📏 100km', full: 'Weg 100km/h', unit: 'm', 
+        calc: d => ((PI * d * 100 / 3.6) / 1000).toFixed(1), 
+        sub: () => 'bei 100 km/h',
+        footer: 'Strecke = Umfang × Fahrzeit (bei 100 km/h)'
+      },
+      revolutions: { 
+        dial: '⭯ U/min', full: 'U/min 100km/h', unit: 'U/min', 
+        calc: d => Math.round((100 / 3.6) * 1000 / (PI * d) * 60), 
+        sub: () => 'bei 100 km/h',
+        footer: 'U/min = (100 km/h × 1000) ÷ (π × D) × 60'
+      },
+      tachometer: { 
+        dial: '% Tacho', full: 'Tachoabweichung', unit: '%', 
+        calc: (oldD, newD) => Math.round(((oldD/newD) - 1) * 100), 
+        sub: () => 'vs. vorherige Reifengröße',
+        footer: '⚠️ Tacho % = (Original- / Neuer Umfang - 1) × 100% vs. zuletzt berechneter Reifen'
+      }
+    };
+
+    let diameters = { q: 0, c: 0, m: 0 };
+    let standards = { q: 0, c: 0, m: 0 };
+    let calculated = { q: false, c: false, m: false };
+    let currentProp = { q: 'diameter', c: 'diameter', m: 'diameter' };
+
+    function formatNumber(v) { 
+      return typeof v === 'number' ? v.toLocaleString('de-DE') : v;
+    }
+
+    function getActiveType() {
+      const activePanel = document.querySelector('.panel.active');
+      if (!activePanel) return 'q';
+      const id = activePanel.id;
+      if (id === 'panel-quad') return 'q';
+      if (id === 'panel-car')  return 'c';
+      if (id === 'panel-moto') return 'm';
+      return 'q';
+    }
+
+    function updateFooter() {
+      const type = getActiveType();
+      const propKey = currentProp[type];
+
+      let footerText = 'Reifenrechner Pro • Wählen Sie eine Eigenschaft aus';
+
+      if (propKey && properties[propKey] && properties[propKey].footer) {
+        const prop = properties[propKey];
+        const tabNames = { q: 'ATV/Quad', c: 'Pkw', m: 'Motorrad' };
+        footerText = prop.footer;
+      }
+
+      document.getElementById('dynamicFooter').textContent = footerText;
+    }
+
+    function setCopyrightYear() {
+      const yearElement = document.getElementById('currentYear');
+      if (yearElement) {
+        const currentYear = new Date().getFullYear();
+        yearElement.textContent = currentYear;
+      }
+    }
+
+    function rotateDial(type, direction) {
+      const propKeys = Object.keys(properties);
+      let currentIndex = propKeys.indexOf(currentProp[type]);
+
+      if (currentIndex === -1) currentIndex = 0;
+
+      const newIndex = (currentIndex + direction + propKeys.length) % propKeys.length;
+      const newPropKey = propKeys[newIndex];
+      
+      currentProp[type] = newPropKey;
+      const prop = properties[newPropKey];
+      
+      document.getElementById(`${type}DialLabel`).textContent = prop.dial;
+      document.getElementById(`${type}Dial`).dataset.prop = newPropKey;
+      
+      updateFooter();
+      
+      if (calculated[type]) {
+        updateResult(type);
+      }
+
+      const dial = document.getElementById(`${type}Dial`);
+      dial.style.transform = `rotate(${direction * 90}deg)`;
+      setTimeout(() => dial.style.transform = '', 200);
+    }
+
+    function updateResult(type) {
+      const propKey = currentProp[type];
+      if (!propKey || !properties[propKey]) {
+        document.getElementById(`${type}ResValue`).textContent = '–';
+        document.getElementById(`${type}ResUnit`).textContent = '';
+        document.getElementById(`${type}ResLabel`).textContent = 'Fehler';
+        document.getElementById(`${type}ResSub`).textContent = 'Ungültige Eigenschaft';
+        updateFooter();
+        return;
+      }
+
+      const prop = properties[propKey];
+      const currentD = diameters[type];
+      const stdD = standards[type];
+      
+      let value;
+      if (propKey === 'tachometer' && stdD > 0) {
+        value = prop.calc(stdD, currentD);
+      } else {
+        value = prop.calc(currentD);
+      }
+      
+      document.getElementById(`${type}ResValue`).textContent = formatNumber(value);
+      document.getElementById(`${type}ResUnit`).textContent = prop.unit;
+      document.getElementById(`${type}ResLabel`).textContent = prop.full;
+      document.getElementById(`${type}ResSub`).textContent = 
+        typeof prop.sub === 'function' ? prop.sub(currentD) : prop.sub;
+      
+      updateFooter();
+    }
+
+    // TAB WECHSEL
+    document.querySelectorAll('.tab').forEach(tab => {
+      tab.onclick = () => {
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+        tab.classList.add('active');
+        document.getElementById(`panel-${tab.dataset.type}`).classList.add('active');
+        updateFooter();
+      };
+    });
+
+    // DIAL KLICK
+    ['qDial', 'cDial', 'mDial'].forEach(dialId => {
+      document.getElementById(dialId).onclick = () => {
+        const type = dialId.replace('Dial', '');
+        rotateDial(type, 1);
+      };
+    });
+
+    // Pfeiltasten
+    document.onkeydown = (e) => {
+      const activePanel = document.querySelector('.panel.active');
+      if (!activePanel) return;
+      const type = activePanel.id.replace('panel-', '');
+      
+      if (e.key === 'ArrowLeft') rotateDial(type, -1);
+      if (e.key === 'ArrowRight') rotateDial(type, 1);
+    };
+
+    // QUAD BERECHNUNG
+    document.getElementById('qCalcBtn').onclick = () => {
+      const height = parseFloat(document.getElementById('qHeight').value) || 0;
+      const rim = parseFloat(document.getElementById('qRim').value) || 0;
+      
+      if (height <= 0) {
+        document.getElementById('qErrorMsg').textContent = 'Bitte Höhe eingeben';
+        document.getElementById('qErrorMsg').classList.remove('hidden');
+        return;
+      }
+      
+      diameters.q = (height + rim) * MM_PER_INCH;
+      standards.q = (25 + 12) * MM_PER_INCH;
+      document.getElementById('qBadge').textContent = 
+        `${height.toFixed(1)} × ${parseFloat(document.getElementById('qWidth').value || 8).toFixed(1)} − ${rim.toFixed(1)}`;
+      calculated.q = true;
+      document.getElementById('qErrorMsg').classList.add('hidden');
+      updateResult('q');
+    };
+
+    document.getElementById('qClearBtn').onclick = () => {
+      document.getElementById('qHeight').value = '';
+      document.getElementById('qWidth').value = '';
+      document.getElementById('qRim').value = '';
+      diameters.q = 0; standards.q = 0; calculated.q = false;
+      document.getElementById('qBadge').textContent = '25 × 8 − 12';
+      document.getElementById('qResValue').textContent = '–';
+      document.getElementById('qResSub').textContent = 'Eingabe fehlt';
+      document.getElementById('qErrorMsg').classList.add('hidden');
+      updateFooter();
+    };
+
+    // AUTO BERECHNUNG
+    document.getElementById('cCalcBtn').onclick = () => {
+      const width = parseFloat(document.getElementById('cWidth').value) || 0;
+      const profile = parseFloat(document.getElementById('cProfile').value) || 0;
+      const rim = parseFloat(document.getElementById('cRim').value) || 0;
+      
+      if (width <= 0 || profile <= 0 || rim <= 0) {
+        document.getElementById('cErrorMsg').textContent = 'Bitte alle Werte eingeben';
+        document.getElementById('cErrorMsg').classList.remove('hidden');
+        return;
+      }
+      
+      const flank = (profile / 100) * width * 2;
+      diameters.c = flank + rim * MM_PER_INCH;
+      standards.c = (0.55 * 205 * 2 + 16 * MM_PER_INCH);
+      document.getElementById('cBadge').textContent = `${width}/${profile} R${rim}`;
+      calculated.c = true;
+      document.getElementById('cErrorMsg').classList.add('hidden');
+      updateResult('c');
+    };
+
+    document.getElementById('cClearBtn').onclick = () => {
+      document.getElementById('cWidth').value = '';
+      document.getElementById('cProfile').value = '';
+      document.getElementById('cRim').value = '';
+      diameters.c = 0; standards.c = 0; calculated.c = false;
+      document.getElementById('cBadge').textContent = '205/55 R16';
+      document.getElementById('cResValue').textContent = '–';
+      document.getElementById('cResSub').textContent = 'Eingabe fehlt';
+      document.getElementById('cErrorMsg').classList.add('hidden');
+      updateFooter();
+    };
+
+    // MOTO BERECHNUNG
+    document.getElementById('mCalcBtn').onclick = () => {
+      const width = parseFloat(document.getElementById('mWidth').value) || 0;
+      const profile = parseFloat(document.getElementById('mProfile').value) || 0;
+      const rim = parseFloat(document.getElementById('mRim').value) || 0;
+      
+      if (width <= 0 || profile <= 0 || rim <= 0) {
+        document.getElementById('mErrorMsg').textContent = 'Bitte alle Werte eingeben';
+        document.getElementById('mErrorMsg').classList.remove('hidden');
+        return;
+      }
+      
+      const flank = (profile / 100) * width * 2;
+      diameters.m = flank + rim * MM_PER_INCH;
+      standards.m = (0.70 * 120 * 2 + 17 * MM_PER_INCH);
+      document.getElementById('mBadge').textContent = `${width}/${profile} R${rim}`;
+      calculated.m = true;
+      document.getElementById('mErrorMsg').classList.add('hidden');
+      updateResult('m');
+    };
+
+    document.getElementById('mClearBtn').onclick = () => {
+      document.getElementById('mWidth').value = '';
+      document.getElementById('mProfile').value = '';
+      document.getElementById('mRim').value = '';
+      diameters.m = 0; standards.m = 0; calculated.m = false;
+      document.getElementById('mBadge').textContent = '120/70 R17';
+      document.getElementById('mResValue').textContent = '–';
+      document.getElementById('mResSub').textContent = 'Eingabe fehlt';
+      document.getElementById('mErrorMsg').classList.add('hidden');
+      updateFooter();
+    };
+
+    // INITIALISIERUNG
+    setCopyrightYear();
+    updateFooter();
+  </script>
+</body>
+</html>
