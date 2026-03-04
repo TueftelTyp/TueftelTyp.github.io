@@ -1,0 +1,785 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Lernpfad Generator</title>
+  <style>
+    :root {
+      --primary: #6366f1;
+      --primary-light: #818cf8;
+      --primary-dark: #4f46e5;
+      --accent: #ec4899;
+      --bg: #f9fafb;
+      --bg-alt: #f3f4f6;
+      --card: #ffffff;
+      --border: #e5e7eb;
+      --text: #111827;
+      --text-light: #4b5563;
+      --shadow-sm: 0 1px 3px rgba(0,0,0,0.1);
+      --shadow-md: 0 4px 12px rgba(0,0,0,0.08);
+      --shadow-lg: 0 8px 24px rgba(0,0,0,0.08);
+      --border-radius: 16px;
+      --border-radius-sm: 12px;
+      --gap: 1.5rem;
+      --gap-sm: 0.75rem;
+      --font-ui: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #0f172a;
+        --bg-alt: #1e293b;
+        --card: #1e3a8a;
+        --border: #334155;
+        --text: #e5e7eb;
+        --text-light: #cbd5e1;
+      }
+    }
+
+    /* Druck-Styles */
+    @media print {
+      body * {
+        visibility: hidden;
+      }
+      #print-content, #print-content * {
+        visibility: visible;
+      }
+      #print-content {
+        position: absolute !important;
+        left: 0;
+        top: 0;
+        width: 100%;
+        background: white !important;
+        color: black !important;
+        padding: 2rem !important;
+        box-shadow: none !important;
+        display: block !important;
+        height: auto !important;
+        z-index: auto !important;
+      }
+      #print-content h1 {
+        font-size: 24pt;
+        margin-bottom: 1rem;
+        color: black !important;
+        page-break-after: avoid;
+      }
+      #print-content h2 {
+        font-size: 16pt;
+        margin: 1.5rem 0 0.5rem 0;
+        color: black !important;
+        page-break-after: avoid;
+      }
+      #print-content h3 {
+        font-size: 14pt;
+        margin: 1rem 0 0.5rem 0;
+        color: black !important;
+        page-break-after: avoid;
+      }
+      #print-content p {
+        margin-bottom: 0.5rem;
+        line-height: 1.6;
+        color: black !important;
+      }
+      .print-step {
+        margin-bottom: 1.5rem;
+        padding-bottom: 1rem;
+        border-bottom: 1px solid #ccc;
+        page-break-inside: avoid;
+        break-inside: avoid;
+      }
+      .print-step:last-child {
+        border-bottom: none;
+      }
+      button, .no-print, .card, nav, header, footer {
+        display: none !important;
+      }
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    body {
+      font-family: var(--font-ui);
+      background-color: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      padding: clamp(1rem, 1.25rem, 2rem);
+    }
+
+    h1 {
+      text-align: center;
+      margin-bottom: var(--gap);
+      font-size: 1.875rem;
+      color: var(--primary-dark);
+      font-weight: 600;
+    }
+    h2 {
+      margin-bottom: var(--gap-sm);
+      font-size: 1.25rem;
+      color: var(--primary-dark);
+      font-weight: 600;
+    }
+
+    section {
+      max-width: 1024px;
+      margin: 0 auto;
+    }
+
+    .card {
+      background: var(--card);
+      border-radius: var(--border-radius);
+      padding: clamp(1rem, 1.5rem, 1.8rem);
+      box-shadow: var(--shadow-md);
+      border: 1px solid var(--border);
+      margin-bottom: var(--gap);
+    }
+
+    .card-title {
+      font-size: 1.125rem;
+      color: var(--primary-dark);
+      margin-bottom: var(--gap-sm);
+      font-weight: 600;
+      letter-spacing: -0.02em;
+    }
+
+    .card-subtitle {
+      font-size: 0.9rem;
+      color: var(--text-light);
+      margin-bottom: var(--gap);
+    }
+
+    .form-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--gap-sm);
+      margin-bottom: var(--gap-sm);
+      align-items: flex-start;
+    }
+    .form-row > * {
+      flex: 1 1 220px;
+    }
+
+    label {
+      display: block;
+      font-size: 0.875rem;
+      margin-bottom: 0.3rem;
+      color: var(--text-light);
+      font-weight: 500;
+    }
+
+    input, textarea, button {
+      width: 100%;
+      padding: 0.75rem 1rem;
+      border-radius: var(--border-radius-sm);
+      border: 1px solid var(--border);
+      font-size: 1rem;
+      color: var(--text);
+      background: var(--bg-alt);
+      font-family: var(--font-ui);
+      transition: all 0.2s ease;
+    }
+    input:focus, textarea:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.25);
+    }
+    textarea {
+      resize: vertical;
+      min-height: 100px;
+    }
+
+    button {
+      cursor: pointer;
+      border: none;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.375rem;
+      transition: all 0.2s ease;
+    }
+
+    button.btn-primary {
+      background-color: var(--primary);
+      color: white;
+      padding: 0.8rem 1.3rem;
+      font-size: 0.95rem;
+      border-radius: var(--border-radius-sm);
+    }
+    button.btn-primary:hover {
+      background-color: var(--primary-dark);
+      box-shadow: var(--shadow-sm);
+      transform: translateY(-1px);
+    }
+    button.btn-primary:active {
+      transform: translateY(0);
+    }
+
+    button.btn-secondary {
+      background-color: var(--bg-alt);
+      color: var(--text);
+      padding: 0.75rem 1.2rem;
+      border: 1px solid var(--border);
+      border-radius: var(--border-radius-sm);
+      font-size: 0.9rem;
+    }
+    button.btn-secondary:hover {
+      background-color: #f1f5f9;
+      border-color: var(--primary-light);
+    }
+
+    button.btn-icon {
+      border-radius: 999px;
+      padding: 0.5rem 0.8rem;
+      font-size: 0.85rem;
+    }
+    button.btn-icon:hover {
+      background-color: var(--primary-light);
+      color: white;
+    }
+
+    .export-btns {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      margin-top: 0.75rem;
+      justify-content: center;
+      align-items: center;
+    }
+    .export-btns button {
+      flex: 1 1 160px;
+    }
+
+    .btn-icon::before {
+      content: "📥";
+      font-size: 0.95rem;
+      margin-right: 0.25rem;
+    }
+    #btn-export-pdf.btn-icon::before {
+      content: "📄";
+    }
+    #btn-export-csv.btn-icon::before {
+      content: "📊";
+    }
+    #btn-export-txt.btn-icon::before {
+      content: "📝";
+    }
+    #btn-print.btn-icon::before {
+      content: "🖨️";
+    }
+
+    .steps-list {
+      list-style: none;
+      margin-top: var(--gap-sm);
+    }
+    .step-item {
+      border-radius: var(--border-radius-sm);
+      border: 1px solid var(--border);
+      padding: 1rem;
+      margin-bottom: 0.75rem;
+      background: var(--bg-alt);
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
+    }
+    .step-item:hover {
+      transform: translateY(-1px);
+      box-shadow: var(--shadow-sm);
+    }
+    .step-header {
+      display: flex;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-bottom: 0.5rem;
+      align-items: center;
+    }
+    .step-title {
+      font-weight: 600;
+      font-size: 1.05rem;
+      color: var(--primary-dark);
+      flex: 1 1 0;
+      word-break: break-word;
+    }
+    .step-shortcode {
+      font-weight: 500;
+      font-size: 0.85rem;
+      color: var(--primary);
+      background: var(--primary-light);
+      padding: 0.2rem 0.5rem;
+      border-radius: 999px;
+    }
+    .step-actions {
+      display: flex;
+      gap: 0.4rem;
+    }
+    .step-actions button {
+      padding: 0.35rem 0.6rem;
+      font-size: 0.85rem;
+      border-radius: 8px;
+    }
+
+    .step-content {
+      margin-top: 0.5rem;
+      font-size: 0.95rem;
+      color: var(--text-light);
+      line-height: 1.6;
+      white-space: pre-wrap;
+      padding-left: 0.2rem;
+      border-left: 3px solid var(--primary-light);
+    }
+
+    /* Versteckte Bereiche */
+    .no-print {
+      display: block;
+    }
+    #print-content {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: white;
+      z-index: 10000;
+      overflow-y: auto;
+    }
+
+    @media (max-width: 480px) {
+      body {
+        padding: 0.75rem;
+      }
+      h1 {
+        font-size: 1.5rem;
+        margin-bottom: 1.25rem;
+      }
+      .card {
+        padding: 1rem;
+        margin-bottom: 1.25rem;
+      }
+      .form-row {
+        flex-direction: column;
+        gap: 0.75rem;
+      }
+      .step-actions {
+        flex-direction: column;
+      }
+      .step-item {
+        padding: 0.9rem;
+      }
+      .export-btns {
+        flex-direction: column;
+        align-items: stretch;
+      }
+      .export-btns button {
+        flex: none;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Versteckter Druckbereich -->
+  <div id="print-content" class="no-print"></div>
+
+  <section>
+    <h1>Lernpfad Generator</h1>
+
+    <div class="card">
+      <div class="card-title">Lernpfad‑Informationen</div>
+      <p class="card-subtitle">
+        Gib einen Titel und eine kurze Beschreibung für deinen Lernpfad ein.
+      </p>
+      <div class="form-row">
+        <div>
+          <label for="pfad-titel">Titel des Lernpfads</label>
+          <input type="text" id="pfad-titel" placeholder="z.B. Lernpfad Web‑Entwicklung" />
+        </div>
+        <div>
+          <label for="pfad-beschreibung">Kurze Beschreibung</label>
+          <input type="text" id="pfad-beschreibung" placeholder="Was lernst du in diesem Pfad?" />
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Neuen Schritt hinzufügen</div>
+      <p class="card-subtitle">
+        Füge Schritte mit Titel, Kurz‑ID und Beschreibung hinzu. <strong>Die Schritte werden automatisch sortiert!</strong>
+      </p>
+      <div class="form-row">
+        <div>
+          <label for="schritt-titel">Titel des Schritts</label>
+          <input type="text" id="schritt-titel" placeholder="Titel deines Schritts" />
+        </div>
+        <div>
+          <label for="schritt-titel-short">Kurz‑ID (z.B. 1.1)</label>
+          <input type="text" id="schritt-titel-short" placeholder="z.B. 1.1" />
+        </div>
+      </div>
+      <div>
+        <label for="schritt-inhalt">Inhalt / Beschreibung</label>
+        <textarea
+          id="schritt-inhalt"
+          rows="4"
+          placeholder="Erkläre hier, was in diesem Schritt gelernt wird, welche Ressourcen wichtig sind usw."
+        ></textarea>
+      </div>
+      <div style="margin-top: 1rem;">
+        <button class="btn-primary" id="btn-hinzufuegen">
+          Schritt hinzufügen
+        </button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Deine Lernschritte</div>
+      <p class="card-subtitle">
+        Neue Schritte erscheinen automatisch sortiert nach Kurz-ID. Du kannst sie jederzeit bearbeiten oder löschen.
+      </p>
+      <ul class="steps-list" id="steps-list"></ul>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Export & Druck</div>
+      <p class="card-subtitle">
+        Speichere deinen Lernpfad oder drucke ihn direkt aus.
+      </p>
+      <div class="export-btns">
+        <button class="btn-secondary btn-icon" id="btn-export-txt">
+          Als TXT exportieren
+        </button>
+        <button class="btn-secondary btn-icon" id="btn-export-csv">
+          Als CSV exportieren
+        </button>
+        <button class="btn-secondary btn-icon" id="btn-export-pdf">
+          Als PDF exportieren
+        </button>
+        <button class="btn-secondary btn-icon" id="btn-print">
+          Drucken
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <script>
+    // Zustand: Liste aller Schritte
+    let schritte = [];
+
+    // Kurze Hilfsfunktionen
+    const $ = (sel) => document.querySelector(sel);
+    const $$ = (sel) => document.querySelectorAll(sel);
+
+    // **NEUE FUNKTION: Numerische Sortierung nach Kurz-ID**
+    function parseNumericSortKey(kurz) {
+      if (!kurz) return Infinity; // Ohne ID ganz nach hinten
+      
+      // Teile in Segmente (z.B. "1.2.3" -> ["1", "2", "3"])
+      const segments = kurz.trim().split('.').map(s => parseFloat(s) || 0);
+      
+      // Erstelle Sortierschlüssel als Dezimalzahl (1.2.3 = 1.23)
+      return segments.reduce((acc, seg, i) => {
+        return acc + seg / Math.pow(10, i + 1);
+      }, 0);
+    }
+
+    // LocalStorage Funktionen
+    function saveToStorage() {
+      localStorage.setItem('lernpfad-schritte', JSON.stringify(schritte));
+      localStorage.setItem('lernpfad-titel', $('#pfad-titel').value);
+      localStorage.setItem('lernpfad-beschreibung', $('#pfad-beschreibung').value);
+    }
+
+    function loadFromStorage() {
+      const savedSchritte = localStorage.getItem('lernpfad-schritte');
+      const savedTitel = localStorage.getItem('lernpfad-titel');
+      const savedBeschreibung = localStorage.getItem('lernpfad-beschreibung');
+      
+      if (savedSchritte) {
+        schritte = JSON.parse(savedSchritte);
+        sortiereSchritte();
+        renderSchritte();
+      }
+      if (savedTitel) $('#pfad-titel').value = savedTitel;
+      if (savedBeschreibung) $('#pfad-beschreibung').value = savedBeschreibung;
+    }
+
+    // **NEUE FUNKTION: Schritte sortieren**
+    function sortiereSchritte() {
+      schritte.sort((a, b) => {
+        const keyA = parseNumericSortKey(a.kurz);
+        const keyB = parseNumericSortKey(b.kurz);
+        return keyA - keyB;
+      });
+    }
+
+    // Beim Laden Daten aus LocalStorage holen
+    loadFromStorage();
+
+    // Bei jeder Änderung speichern
+    document.addEventListener('input', saveToStorage);
+
+    // Schritt hinzufügen - MIT SORTIERUNG
+    $('#btn-hinzufuegen').addEventListener('click', () => {
+      const titel   = $('#schritt-titel').value.trim();
+      const kurz    = $('#schritt-titel-short').value.trim();
+      const inhalt  = $('#schritt-inhalt').value.trim();
+
+      if (!titel || !inhalt) {
+        alert('Bitte Titel und Inhalt eingeben.');
+        return;
+      }
+
+      const id = Date.now();
+      schritte.push({ id, titel, kurz, inhalt });
+      sortiereSchritte(); // **AUTOMATISCH SORTIEREN**
+      renderSchritte();
+      saveToStorage();
+
+      // Eingaben leeren
+      $('#schritt-titel').value = '';
+      $('#schritt-titel-short').value = '';
+      $('#schritt-inhalt').value = '';
+    });
+
+    // Schritte in der Liste anzeigen
+    function renderSchritte() {
+      const list = $('#steps-list');
+      list.innerHTML = '';
+
+      schritte.forEach(schritt => {
+        const li = document.createElement('li');
+        li.className = 'step-item';
+
+        const header = document.createElement('div');
+        header.className = 'step-header';
+
+        const titelDiv = document.createElement('div');
+        titelDiv.className = 'step-title';
+        titelDiv.textContent = schritt.titel;
+
+        if (schritt.kurz) {
+          const shortCode = document.createElement('span');
+          shortCode.className = 'step-shortcode';
+          shortCode.textContent = schritt.kurz;
+          titelDiv.appendChild(shortCode);
+        }
+
+        const actions = document.createElement('div');
+        actions.className = 'step-actions';
+
+        const btnEdit = document.createElement('button');
+        btnEdit.textContent = '✏️';
+        btnEdit.title = 'Bearbeiten';
+        btnEdit.style.background = 'var(--primary-light)';
+        btnEdit.style.color = 'white';
+        btnEdit.addEventListener('click', () => {
+          const neuTitel = prompt('Titel:', schritt.titel);
+          const neuKurz  = prompt('Kurz-ID:', schritt.kurz || '');
+          const neuInhalt = prompt('Inhalt:', schritt.inhalt);
+          if (neuTitel !== null) schritt.titel = neuTitel.trim();
+          if (neuKurz !== null) schritt.kurz = neuKurz.trim();
+          sortiereSchritte(); // **BEIM BEARBEITEN NEU SORTIEREN**
+          renderSchritte();
+          saveToStorage();
+        });
+
+        const btnDel = document.createElement('button');
+        btnDel.textContent = '🗑️';
+        btnDel.title = 'Löschen';
+        btnDel.style.background = '#ef4444';
+        btnDel.style.color = 'white';
+        btnDel.addEventListener('click', () => {
+          if (confirm('Schritt wirklich löschen?')) {
+            schritte = schritte.filter(s => s.id !== schritt.id);
+            renderSchritte();
+            saveToStorage();
+          }
+        });
+
+        actions.appendChild(btnEdit);
+        actions.appendChild(btnDel);
+
+        const inhaltDiv = document.createElement('div');
+        inhaltDiv.className = 'step-content';
+        inhaltDiv.textContent = schritt.inhalt;
+
+        header.appendChild(titelDiv);
+        header.appendChild(actions);
+
+        li.appendChild(header);
+        li.appendChild(inhaltDiv);
+
+        list.appendChild(li);
+      });
+    }
+
+    // Druckfunktion
+    $('#btn-print').addEventListener('click', () => {
+      if (schritte.length === 0) {
+        alert('Keine Schritte zum Drucken vorhanden.');
+        return;
+      }
+
+      const printContent = $('#print-content');
+      const pfadTitel = $('#pfad-titel').value.trim() || 'Unbenannter Lernpfad';
+      const pfadBeschreibung = $('#pfad-beschreibung').value.trim();
+
+      let html = `<h1>${pfadTitel}</h1>`;
+      
+      if (pfadBeschreibung) {
+        html += `<p><strong>Beschreibung:</strong> ${pfadBeschreibung.replace(/\n/g, '<br>')}</p>`;
+      }
+
+      html += `<h2>Schritte</h2>`;
+      
+      schritte.forEach((s, idx) => {
+        const prefix = s.kurz ? s.kurz : (idx + 1);
+        html += `
+          <div class="print-step">
+            <h3>${prefix}. ${s.titel}</h3>
+            <p>${s.inhalt.replace(/\n/g, '<br>')}</p>
+          </div>
+        `;
+      });
+
+      printContent.innerHTML = html;
+      
+      setTimeout(() => {
+        window.print();
+        setTimeout(() => {
+          printContent.style.display = 'none';
+        }, 100);
+      }, 100);
+    });
+
+    // Export: TXT
+    $('#btn-export-txt').addEventListener('click', () => {
+      if (schritte.length === 0) {
+        alert('Keine Schritte zum Export vorhanden.');
+        return;
+      }
+
+      const pfadTitel = $('#pfad-titel').value.trim() || 'Unbenannter Lernpfad';
+      const pfadBeschreibung = $('#pfad-beschreibung').value.trim();
+
+      let text = `Lernpfad: ${pfadTitel}\n\n`;
+      if (pfadBeschreibung) {
+        text += `Beschreibung: ${pfadBeschreibung}\n\n`;
+      }
+      text += `Schritte:\n\n`;
+
+      schritte.forEach((s, idx) => {
+        const prefix = s.kurz ? s.kurz : (idx + 1);
+        text += `${prefix}. ${s.titel}\n   ${s.inhalt}\n\n`;
+      });
+
+      const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${pfadTitel.replace(/[<>:"/\\|?*]/g, '_')}.txt`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    });
+
+    // Export: CSV
+    $('#btn-export-csv').addEventListener('click', () => {
+      if (schritte.length === 0) {
+        alert('Keine Schritte zum Export vorhanden.');
+        return;
+      }
+
+      const pfadTitel = $('#pfad-titel').value.trim() || 'Unbenannter Lernpfad';
+      const pfadBeschreibung = $('#pfad-beschreibung').value.trim();
+
+      let csv = `"Titel des Lernpfads","Beschreibung"\n"${pfadTitel.replace(/"/g, '""')}","${pfadBeschreibung ? pfadBeschreibung.replace(/"/g, '""') : ''}"\n\n`;
+      csv += `"Kurz-ID","Titel","Inhalt"\n`;
+
+      schritte.forEach((s, idx) => {
+        const kurz = s.kurz ? s.kurz : (idx + 1);
+        const escapedInhalt = s.inhalt.replace(/"/g, '""');
+        csv += `"${kurz}","${s.titel.replace(/"/g, '""')}","${escapedInhalt}"\n`;
+      });
+
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${pfadTitel.replace(/[<>:"/\\|?*]/g, '_')}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    });
+
+    // Export: PDF
+    $('#btn-export-pdf').addEventListener('click', async () => {
+      if (schritte.length === 0) {
+        alert('Keine Schritte zum Export vorhanden.');
+        return;
+      }
+
+      if (typeof window.jspdf === 'undefined') {
+        try {
+          const script = document.createElement('script');
+          script.src = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
+          document.head.appendChild(script);
+          await new Promise(resolve => {
+            script.onload = resolve;
+          });
+        } catch (e) {
+          alert('PDF-Export erfordert Internetverbindung für jsPDF.');
+          return;
+        }
+      }
+
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF();
+
+      const pfadTitel = $('#pfad-titel').value.trim() || 'Unbenannter Lernpfad';
+      const pfadBeschreibung = $('#pfad-beschreibung').value.trim();
+
+      let y = 20;
+      
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(18);
+      doc.text(pfadTitel, 20, y);
+      y += 12;
+
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(12);
+      if (pfadBeschreibung) {
+        const beschreibungLines = doc.splitTextToSize(pfadBeschreibung, 170);
+        doc.text(beschreibungLines, 20, y);
+        y += beschreibungLines.length * 7 + 10;
+      }
+
+      schritte.forEach((s, idx) => {
+        if (y > 270) {
+          doc.addPage();
+          y = 20;
+        }
+
+        const prefix = s.kurz ? s.kurz : (idx + 1);
+        
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(14);
+        doc.text(`${prefix}. ${s.titel}`, 20, y);
+        y += 8;
+
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(11);
+        const inhaltLines = doc.splitTextToSize(s.inhalt, 170);
+        doc.text(inhaltLines, 20, y);
+        y += inhaltLines.length * 6 + 8;
+      });
+
+      doc.save(`${pfadTitel.replace(/[<>:"/\\|?*]/g, '_')}.pdf`);
+    });
+  </script>
+</body>
+</html>
