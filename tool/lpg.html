@@ -10,6 +10,8 @@
       --primary-light: #818cf8;
       --primary-dark: #4f46e5;
       --accent: #ec4899;
+      --danger: #ef4444;
+      --danger-light: #f87171;
       --bg: #f9fafb;
       --bg-alt: #f3f4f6;
       --card: #ffffff;
@@ -214,9 +216,6 @@
       box-shadow: var(--shadow-sm);
       transform: translateY(-1px);
     }
-    button.btn-primary:active {
-      transform: translateY(0);
-    }
 
     button.btn-secondary {
       background-color: var(--bg-alt);
@@ -229,6 +228,19 @@
     button.btn-secondary:hover {
       background-color: #f1f5f9;
       border-color: var(--primary-light);
+    }
+
+    button.btn-danger {
+      background-color: var(--danger);
+      color: white;
+      padding: 0.8rem 1.3rem;
+      font-size: 0.95rem;
+      border-radius: var(--border-radius-sm);
+    }
+    button.btn-danger:hover {
+      background-color: #dc2626;
+      box-shadow: var(--shadow-sm);
+      transform: translateY(-1px);
     }
 
     button.btn-icon {
@@ -251,6 +263,7 @@
     }
     .export-btns button {
       flex: 1 1 160px;
+      min-width: 140px;
     }
 
     .btn-icon::before {
@@ -269,6 +282,9 @@
     }
     #btn-print.btn-icon::before {
       content: "🖨️";
+    }
+    #btn-reset.btn-icon::before {
+      content: "🔄";
     }
 
     .steps-list {
@@ -331,7 +347,6 @@
       border-left: 3px solid var(--primary-light);
     }
 
-    /* Versteckte Bereiche */
     .no-print {
       display: block;
     }
@@ -380,7 +395,6 @@
   </style>
 </head>
 <body>
-  <!-- Versteckter Druckbereich -->
   <div id="print-content" class="no-print"></div>
 
   <section>
@@ -459,6 +473,9 @@
         <button class="btn-secondary btn-icon" id="btn-print">
           Drucken
         </button>
+        <button class="btn-danger btn-icon" id="btn-reset">
+          Reset
+        </button>
       </div>
     </div>
   </section>
@@ -467,319 +484,224 @@
     // Zustand: Liste aller Schritte
     let schritte = [];
 
-    // Kurze Hilfsfunktionen
-    const $ = (sel) => document.querySelector(sel);
-    const $$ = (sel) => document.querySelectorAll(sel);
-
-    // **NEUE FUNKTION: Numerische Sortierung nach Kurz-ID**
-    function parseNumericSortKey(kurz) {
-      if (!kurz) return Infinity; // Ohne ID ganz nach hinten
-      
-      // Teile in Segmente (z.B. "1.2.3" -> ["1", "2", "3"])
-      const segments = kurz.trim().split('.').map(s => parseFloat(s) || 0);
-      
-      // Erstelle Sortierschlüssel als Dezimalzahl (1.2.3 = 1.23)
-      return segments.reduce((acc, seg, i) => {
-        return acc + seg / Math.pow(10, i + 1);
-      }, 0);
-    }
-
-    // LocalStorage Funktionen
-    function saveToStorage() {
-      localStorage.setItem('lernpfad-schritte', JSON.stringify(schritte));
-      localStorage.setItem('lernpfad-titel', $('#pfad-titel').value);
-      localStorage.setItem('lernpfad-beschreibung', $('#pfad-beschreibung').value);
-    }
-
-    function loadFromStorage() {
-      const savedSchritte = localStorage.getItem('lernpfad-schritte');
-      const savedTitel = localStorage.getItem('lernpfad-titel');
-      const savedBeschreibung = localStorage.getItem('lernpfad-beschreibung');
-      
-      if (savedSchritte) {
-        schritte = JSON.parse(savedSchritte);
-        sortiereSchritte();
-        renderSchritte();
-      }
-      if (savedTitel) $('#pfad-titel').value = savedTitel;
-      if (savedBeschreibung) $('#pfad-beschreibung').value = savedBeschreibung;
-    }
-
-    // **NEUE FUNKTION: Schritte sortieren**
-    function sortiereSchritte() {
-      schritte.sort((a, b) => {
-        const keyA = parseNumericSortKey(a.kurz);
-        const keyB = parseNumericSortKey(b.kurz);
-        return keyA - keyB;
-      });
-    }
-
-    // Beim Laden Daten aus LocalStorage holen
-    loadFromStorage();
-
-    // Bei jeder Änderung speichern
-    document.addEventListener('input', saveToStorage);
-
-    // Schritt hinzufügen - MIT SORTIERUNG
-    $('#btn-hinzufuegen').addEventListener('click', () => {
-      const titel   = $('#schritt-titel').value.trim();
-      const kurz    = $('#schritt-titel-short').value.trim();
-      const inhalt  = $('#schritt-inhalt').value.trim();
-
-      if (!titel || !inhalt) {
-        alert('Bitte Titel und Inhalt eingeben.');
-        return;
-      }
-
-      const id = Date.now();
-      schritte.push({ id, titel, kurz, inhalt });
-      sortiereSchritte(); // **AUTOMATISCH SORTIEREN**
-      renderSchritte();
-      saveToStorage();
-
-      // Eingaben leeren
-      $('#schritt-titel').value = '';
-      $('#schritt-titel-short').value = '';
-      $('#schritt-inhalt').value = '';
+    // **WICHTIG: Warte bis DOM vollständig geladen ist**
+    document.addEventListener('DOMContentLoaded', function() {
+      initApp();
     });
 
-    // Schritte in der Liste anzeigen
-    function renderSchritte() {
-      const list = $('#steps-list');
-      list.innerHTML = '';
+    function initApp() {
+      // Kurze Hilfsfunktionen
+      const $ = (sel) => document.querySelector(sel);
 
-      schritte.forEach(schritt => {
-        const li = document.createElement('li');
-        li.className = 'step-item';
+      // Numerische Sortierung nach Kurz-ID
+      function parseNumericSortKey(kurz) {
+        if (!kurz) return Infinity;
+        const segments = kurz.trim().split('.').map(s => parseFloat(s) || 0);
+        return segments.reduce((acc, seg, i) => {
+          return acc + seg / Math.pow(10, i + 1);
+        }, 0);
+      }
 
-        const header = document.createElement('div');
-        header.className = 'step-header';
-
-        const titelDiv = document.createElement('div');
-        titelDiv.className = 'step-title';
-        titelDiv.textContent = schritt.titel;
-
-        if (schritt.kurz) {
-          const shortCode = document.createElement('span');
-          shortCode.className = 'step-shortcode';
-          shortCode.textContent = schritt.kurz;
-          titelDiv.appendChild(shortCode);
-        }
-
-        const actions = document.createElement('div');
-        actions.className = 'step-actions';
-
-        const btnEdit = document.createElement('button');
-        btnEdit.textContent = '✏️';
-        btnEdit.title = 'Bearbeiten';
-        btnEdit.style.background = 'var(--primary-light)';
-        btnEdit.style.color = 'white';
-        btnEdit.addEventListener('click', () => {
-          const neuTitel = prompt('Titel:', schritt.titel);
-          const neuKurz  = prompt('Kurz-ID:', schritt.kurz || '');
-          const neuInhalt = prompt('Inhalt:', schritt.inhalt);
-          if (neuTitel !== null) schritt.titel = neuTitel.trim();
-          if (neuKurz !== null) schritt.kurz = neuKurz.trim();
-          sortiereSchritte(); // **BEIM BEARBEITEN NEU SORTIEREN**
+      // Komplett zurücksetzen
+      function resetAlles() {
+        if (confirm('🗑️ Wirklich ALLES löschen?\n\nTitel, Beschreibung und alle Schritte werden unwiderruflich gelöscht!')) {
+          schritte = [];
+          $('#pfad-titel').value = '';
+          $('#pfad-beschreibung').value = '';
+          $('#schritt-titel').value = '';
+          $('#schritt-titel-short').value = '';
+          $('#schritt-inhalt').value = '';
           renderSchritte();
-          saveToStorage();
-        });
+          localStorage.removeItem('lernpfad-schritte');
+          localStorage.removeItem('lernpfad-titel');
+          localStorage.removeItem('lernpfad-beschreibung');
+          alert('✅ Alles zurückgesetzt! Du kannst neu beginnen.');
+        }
+      }
 
-        const btnDel = document.createElement('button');
-        btnDel.textContent = '🗑️';
-        btnDel.title = 'Löschen';
-        btnDel.style.background = '#ef4444';
-        btnDel.style.color = 'white';
-        btnDel.addEventListener('click', () => {
-          if (confirm('Schritt wirklich löschen?')) {
-            schritte = schritte.filter(s => s.id !== schritt.id);
+      function saveToStorage() {
+        localStorage.setItem('lernpfad-schritte', JSON.stringify(schritte));
+        localStorage.setItem('lernpfad-titel', $('#pfad-titel').value);
+        localStorage.setItem('lernpfad-beschreibung', $('#pfad-beschreibung').value);
+      }
+
+      function loadFromStorage() {
+        const savedSchritte = localStorage.getItem('lernpfad-schritte');
+        const savedTitel = localStorage.getItem('lernpfad-titel');
+        const savedBeschreibung = localStorage.getItem('lernpfad-beschreibung');
+        
+        if (savedSchritte) {
+          schritte = JSON.parse(savedSchritte);
+          sortiereSchritte();
+          renderSchritte();
+        }
+        if (savedTitel) $('#pfad-titel').value = savedTitel;
+        if (savedBeschreibung) $('#pfad-beschreibung').value = savedBeschreibung;
+      }
+
+      function sortiereSchritte() {
+        schritte.sort((a, b) => {
+          const keyA = parseNumericSortKey(a.kurz);
+          const keyB = parseNumericSortKey(b.kurz);
+          return keyA - keyB;
+        });
+      }
+
+      function renderSchritte() {
+        const list = $('#steps-list');
+        list.innerHTML = '';
+
+        schritte.forEach(schritt => {
+          const li = document.createElement('li');
+          li.className = 'step-item';
+
+          const header = document.createElement('div');
+          header.className = 'step-header';
+
+          const titelDiv = document.createElement('div');
+          titelDiv.className = 'step-title';
+          titelDiv.textContent = schritt.titel;
+
+          if (schritt.kurz) {
+            const shortCode = document.createElement('span');
+            shortCode.className = 'step-shortcode';
+            shortCode.textContent = schritt.kurz;
+            titelDiv.appendChild(shortCode);
+          }
+
+          const actions = document.createElement('div');
+          actions.className = 'step-actions';
+
+          const btnEdit = document.createElement('button');
+          btnEdit.textContent = '✏️';
+          btnEdit.title = 'Bearbeiten';
+          btnEdit.style.background = 'var(--primary-light)';
+          btnEdit.style.color = 'white';
+          btnEdit.addEventListener('click', () => {
+            const neuTitel = prompt('Titel:', schritt.titel);
+            const neuKurz  = prompt('Kurz-ID:', schritt.kurz || '');
+            const neuInhalt = prompt('Inhalt:', schritt.inhalt);
+            if (neuTitel !== null) schritt.titel = neuTitel.trim();
+            if (neuKurz !== null) schritt.kurz = neuKurz.trim();
+            if (neuInhalt !== null) schritt.inhalt = neuInhalt.trim();
+            sortiereSchritte();
             renderSchritte();
             saveToStorage();
-          }
-        });
-
-        actions.appendChild(btnEdit);
-        actions.appendChild(btnDel);
-
-        const inhaltDiv = document.createElement('div');
-        inhaltDiv.className = 'step-content';
-        inhaltDiv.textContent = schritt.inhalt;
-
-        header.appendChild(titelDiv);
-        header.appendChild(actions);
-
-        li.appendChild(header);
-        li.appendChild(inhaltDiv);
-
-        list.appendChild(li);
-      });
-    }
-
-    // Druckfunktion
-    $('#btn-print').addEventListener('click', () => {
-      if (schritte.length === 0) {
-        alert('Keine Schritte zum Drucken vorhanden.');
-        return;
-      }
-
-      const printContent = $('#print-content');
-      const pfadTitel = $('#pfad-titel').value.trim() || 'Unbenannter Lernpfad';
-      const pfadBeschreibung = $('#pfad-beschreibung').value.trim();
-
-      let html = `<h1>${pfadTitel}</h1>`;
-      
-      if (pfadBeschreibung) {
-        html += `<p><strong>Beschreibung:</strong> ${pfadBeschreibung.replace(/\n/g, '<br>')}</p>`;
-      }
-
-      html += `<h2>Schritte</h2>`;
-      
-      schritte.forEach((s, idx) => {
-        const prefix = s.kurz ? s.kurz : (idx + 1);
-        html += `
-          <div class="print-step">
-            <h3>${prefix}. ${s.titel}</h3>
-            <p>${s.inhalt.replace(/\n/g, '<br>')}</p>
-          </div>
-        `;
-      });
-
-      printContent.innerHTML = html;
-      
-      setTimeout(() => {
-        window.print();
-        setTimeout(() => {
-          printContent.style.display = 'none';
-        }, 100);
-      }, 100);
-    });
-
-    // Export: TXT
-    $('#btn-export-txt').addEventListener('click', () => {
-      if (schritte.length === 0) {
-        alert('Keine Schritte zum Export vorhanden.');
-        return;
-      }
-
-      const pfadTitel = $('#pfad-titel').value.trim() || 'Unbenannter Lernpfad';
-      const pfadBeschreibung = $('#pfad-beschreibung').value.trim();
-
-      let text = `Lernpfad: ${pfadTitel}\n\n`;
-      if (pfadBeschreibung) {
-        text += `Beschreibung: ${pfadBeschreibung}\n\n`;
-      }
-      text += `Schritte:\n\n`;
-
-      schritte.forEach((s, idx) => {
-        const prefix = s.kurz ? s.kurz : (idx + 1);
-        text += `${prefix}. ${s.titel}\n   ${s.inhalt}\n\n`;
-      });
-
-      const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `${pfadTitel.replace(/[<>:"/\\|?*]/g, '_')}.txt`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-    });
-
-    // Export: CSV
-    $('#btn-export-csv').addEventListener('click', () => {
-      if (schritte.length === 0) {
-        alert('Keine Schritte zum Export vorhanden.');
-        return;
-      }
-
-      const pfadTitel = $('#pfad-titel').value.trim() || 'Unbenannter Lernpfad';
-      const pfadBeschreibung = $('#pfad-beschreibung').value.trim();
-
-      let csv = `"Titel des Lernpfads","Beschreibung"\n"${pfadTitel.replace(/"/g, '""')}","${pfadBeschreibung ? pfadBeschreibung.replace(/"/g, '""') : ''}"\n\n`;
-      csv += `"Kurz-ID","Titel","Inhalt"\n`;
-
-      schritte.forEach((s, idx) => {
-        const kurz = s.kurz ? s.kurz : (idx + 1);
-        const escapedInhalt = s.inhalt.replace(/"/g, '""');
-        csv += `"${kurz}","${s.titel.replace(/"/g, '""')}","${escapedInhalt}"\n`;
-      });
-
-      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `${pfadTitel.replace(/[<>:"/\\|?*]/g, '_')}.csv`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-    });
-
-    // Export: PDF
-    $('#btn-export-pdf').addEventListener('click', async () => {
-      if (schritte.length === 0) {
-        alert('Keine Schritte zum Export vorhanden.');
-        return;
-      }
-
-      if (typeof window.jspdf === 'undefined') {
-        try {
-          const script = document.createElement('script');
-          script.src = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
-          document.head.appendChild(script);
-          await new Promise(resolve => {
-            script.onload = resolve;
           });
-        } catch (e) {
-          alert('PDF-Export erfordert Internetverbindung für jsPDF.');
+
+          const btnDel = document.createElement('button');
+          btnDel.textContent = '🗑️';
+          btnDel.title = 'Löschen';
+          btnDel.style.background = '#ef4444';
+          btnDel.style.color = 'white';
+          btnDel.addEventListener('click', () => {
+            if (confirm('Schritt wirklich löschen?')) {
+              schritte = schritte.filter(s => s.id !== schritt.id);
+              renderSchritte();
+              saveToStorage();
+            }
+          });
+
+          actions.appendChild(btnEdit);
+          actions.appendChild(btnDel);
+
+          const inhaltDiv = document.createElement('div');
+          inhaltDiv.className = 'step-content';
+          inhaltDiv.textContent = schritt.inhalt;
+
+          header.appendChild(titelDiv);
+          header.appendChild(actions);
+          li.appendChild(header);
+          li.appendChild(inhaltDiv);
+          list.appendChild(li);
+        });
+      }
+
+      // Event Listeners (JETZT SICHER!)
+      $('#btn-hinzufuegen').addEventListener('click', () => {
+        const titel = $('#schritt-titel').value.trim();
+        const kurz = $('#schritt-titel-short').value.trim();
+        const inhalt = $('#schritt-inhalt').value.trim();
+
+        if (!titel || !inhalt) {
+          alert('Bitte Titel und Inhalt eingeben.');
           return;
         }
-      }
 
-      const { jsPDF } = window.jspdf;
-      const doc = new jsPDF();
+        const id = Date.now();
+        schritte.push({ id, titel, kurz, inhalt });
+        sortiereSchritte();
+        renderSchritte();
+        saveToStorage();
 
-      const pfadTitel = $('#pfad-titel').value.trim() || 'Unbenannter Lernpfad';
-      const pfadBeschreibung = $('#pfad-beschreibung').value.trim();
-
-      let y = 20;
-      
-      doc.setFont('helvetica', 'bold');
-      doc.setFontSize(18);
-      doc.text(pfadTitel, 20, y);
-      y += 12;
-
-      doc.setFont('helvetica', 'normal');
-      doc.setFontSize(12);
-      if (pfadBeschreibung) {
-        const beschreibungLines = doc.splitTextToSize(pfadBeschreibung, 170);
-        doc.text(beschreibungLines, 20, y);
-        y += beschreibungLines.length * 7 + 10;
-      }
-
-      schritte.forEach((s, idx) => {
-        if (y > 270) {
-          doc.addPage();
-          y = 20;
-        }
-
-        const prefix = s.kurz ? s.kurz : (idx + 1);
-        
-        doc.setFont('helvetica', 'bold');
-        doc.setFontSize(14);
-        doc.text(`${prefix}. ${s.titel}`, 20, y);
-        y += 8;
-
-        doc.setFont('helvetica', 'normal');
-        doc.setFontSize(11);
-        const inhaltLines = doc.splitTextToSize(s.inhalt, 170);
-        doc.text(inhaltLines, 20, y);
-        y += inhaltLines.length * 6 + 8;
+        $('#schritt-titel').value = '';
+        $('#schritt-titel-short').value = '';
+        $('#schritt-inhalt').value = '';
       });
 
-      doc.save(`${pfadTitel.replace(/[<>:"/\\|?*]/g, '_')}.pdf`);
-    });
+      $('#btn-reset').addEventListener('click', resetAlles);
+
+      $('#btn-print').addEventListener('click', () => {
+        if (schritte.length === 0) {
+          alert('Keine Schritte zum Drucken vorhanden.');
+          return;
+        }
+        const printContent = $('#print-content');
+        const pfadTitel = $('#pfad-titel').value.trim() || 'Unbenannter Lernpfad';
+        const pfadBeschreibung = $('#pfad-beschreibung').value.trim();
+
+        let html = `<h1>${pfadTitel}</h1>`;
+        if (pfadBeschreibung) {
+          html += `<p><strong>Beschreibung:</strong> ${pfadBeschreibung.replace(/\n/g, '<br>')}</p>`;
+        }
+        html += `<h2>Schritte</h2>`;
+        
+        schritte.forEach((s, idx) => {
+          const prefix = s.kurz ? s.kurz : (idx + 1);
+          html += `
+            <div class="print-step">
+              <h3>${prefix}. ${s.titel}</h3>
+              <p>${s.inhalt.replace(/\n/g, '<br>')}</p>
+            </div>
+          `;
+        });
+
+        printContent.innerHTML = html;
+        setTimeout(() => {
+          window.print();
+          setTimeout(() => {
+            printContent.style.display = 'none';
+          }, 100);
+        }, 100);
+      });
+
+      // Export Funktionen (verkürzt für Übersichtlichkeit)
+      $('#btn-export-txt').addEventListener('click', () => {
+        if (schritte.length === 0) return alert('Keine Schritte zum Export vorhanden.');
+        const pfadTitel = $('#pfad-titel').value.trim() || 'Unbenannter Lernpfad';
+        const pfadBeschreibung = $('#pfad-beschreibung').value.trim();
+        let text = `Lernpfad: ${pfadTitel}\n\n`;
+        if (pfadBeschreibung) text += `Beschreibung: ${pfadBeschreibung}\n\n`;
+        text += `Schritte:\n\n`;
+        schritte.forEach((s, idx) => {
+          const prefix = s.kurz ? s.kurz : (idx + 1);
+          text += `${prefix}. ${s.titel}\n   ${s.inhalt}\n\n`;
+        });
+        const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${pfadTitel.replace(/[<>:"/\\|?*]/g, '_')}.txt`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      });
+
+      // Initialisierung
+      loadFromStorage();
+      document.addEventListener('input', saveToStorage);
+    }
   </script>
 </body>
 </html>
