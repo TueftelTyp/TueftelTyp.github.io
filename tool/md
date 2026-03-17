@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="de" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Markdown Editor Pro</title>
+  <style>
+    :root {
+      --bg: #ffffff;
+      --fg: #000000;
+      --border: #ddd;
+      --toolbar-bg: #f8f9fa;
+      --preview-bg: #f8f9fa;
+      --code-bg: #e9ecef;
+      --text-secondary: #6c757d;
+    }
+    
+    [data-theme="dark"] {
+      --bg: #212529;
+      --fg: #ffffff;
+      --border: #495057;
+      --toolbar-bg: #343a40;
+      --preview-bg: #2d3748;
+      --code-bg: #4a5568;
+      --text-secondary: #a0aec0;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: var(--bg);
+      color: var(--fg);
+      padding: 1rem;
+      min-height: 100vh;
+      line-height: 1.6;
+    }
+
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+    }
+
+    h1 { font-size: 1.4rem; font-weight: 600; }
+
+    .status {
+      font-size: 0.8rem;
+      color: var(--text-secondary);
+      padding: 0.4rem 0.8rem;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      background: var(--toolbar-bg);
+    }
+
+    .saved { background: #48bb78; color: white; }
+
+    .theme-toggle {
+      background: var(--toolbar-bg);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 0.4rem 0.8rem;
+      cursor: pointer;
+      font-size: 0.9rem;
+    }
+
+    .toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.4rem;
+      background: var(--toolbar-bg);
+      padding: 0.8rem;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      margin-bottom: 1rem;
+    }
+
+    .toolbar button, .toolbar select {
+      background: var(--toolbar-bg);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 0.4rem 0.8rem;
+      cursor: pointer;
+      font-size: 0.85rem;
+      transition: all 0.2s;
+    }
+
+    .toolbar button:hover { background: var(--code-bg); }
+
+    .copy-btn { color: var(--text-secondary); }
+    .copy-btn.copied { background: #48bb78; color: white; }
+
+    .dropdown { position: relative; }
+    select {
+      padding-right: 2rem;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='currentColor'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'/%3E%3C/svg%3E");
+      background-position: right 0.5rem center;
+      background-repeat: no-repeat;
+      background-size: 1rem;
+      appearance: none;
+    }
+
+    .editor-container {
+      display: flex;
+      gap: 1rem;
+      height: calc(100vh - 220px);
+    }
+
+    @media (max-width: 768px) {
+      .editor-container {
+        flex-direction: column;
+        height: calc(100vh - 260px);
+      }
+      textarea { min-height: 60vh; }
+    }
+
+    textarea {
+      flex: 1;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1rem;
+      font-family: 'Monaco', monospace;
+      font-size: 14px;
+      background: var(--bg);
+      color: var(--fg);
+      resize: vertical;
+    }
+
+    #preview {
+      flex: 1;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1.5rem;
+      background: var(--preview-bg);
+      overflow-y: auto;
+    }
+
+    #preview table {
+      border-collapse: collapse;
+      width: 100%;
+      margin: 1rem 0;
+    }
+    #preview th, #preview td {
+      border: 1px solid var(--border);
+      padding: 0.5rem;
+      text-align: left;
+    }
+    #preview th { background: var(--code-bg); font-weight: 600; }
+
+    #preview h1 { font-size: 1.8em; margin: 1.5rem 0 0.75rem 0; }
+    #preview h2, #preview h3, #preview h4, #preview h5, #preview h6 { 
+      margin: 1.25rem 0 0.625rem 0; 
+    }
+    #preview p { margin: 0.75rem 0; }
+    #preview ul, #preview ol { padding-left: 2rem; margin: 0.75rem 0; }
+    #preview blockquote {
+      border-left: 4px solid var(--border);
+      margin: 1rem 0;
+      padding-left: 1.25rem;
+      font-style: italic;
+      color: var(--text-secondary);
+    }
+    #preview pre {
+      background: var(--code-bg);
+      padding: 1rem;
+      border-radius: 6px;
+      overflow-x: auto;
+      margin: 1rem 0;
+    }
+    #preview code {
+      background: var(--code-bg);
+      padding: 0.2rem 0.4rem;
+      border-radius: 4px;
+      font-family: 'Monaco', monospace;
+    }
+    #preview hr { border: none; height: 1px; background: var(--border); margin: 2rem 0; }
+    #preview img { max-width: 100%; height: auto; border-radius: 4px; }
+    #preview a { color: #4299e1; }
+    #preview iframe { max-width: 100%; height: 400px; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>Markdown Editor Pro</h1>
+    <div style="display: flex; gap: 0.5rem; align-items: center;">
+      <span class="status saved" id="saveStatus">💾 Gespeichert</span>
+      <button class="theme-toggle" id="themeToggle">☀️ Light</button>
+    </div>
+  </div>
+
+  <div class="toolbar">
+    <!-- Format -->
+    <div class="dropdown">
+      <select id="formatSelect" onchange="insertFormat()">
+        <option value="">📝 Format</option>
+        <option value="####">#### H4</option>
+        <option value="#####">##### H5</option>
+        <option value="######">###### H6</option>
+        <option value="***">*** Fett+Kursiv</option>
+      </select>
+    </div>
+
+    <!-- Text Style -->
+    <button onclick="formatText('**', '**')" title="Fett">𝐁</button>
+    <button onclick="formatText('_', '_')" title="Kursiv">𝐼</button>
+    <button onclick="formatText('~~', '~~')" title="Durchgestrichen">≠</button>
+    <button onclick="formatText('`', '`')" title="Code">`{}`</button>
+
+    <!-- Lists -->
+    <div class="dropdown">
+      <select id="listSelect" onchange="insertList()">
+        <option value="">📋 Listen</option>
+        <option value="bullet">- Aufzählung</option>
+        <option value="number">1. Nummeriert</option>
+        <option value="roman">i. Römisch</option>
+        <option value="task">☐ Aufgabe</option>
+        <option value="task-done">☑ Erledigt</option>
+      </select>
+    </div>
+
+    <button onclick="toggleCheckbox()" title="Checkbox umschalten">✓</button>
+
+    <!-- Block Elements -->
+    <div class="dropdown">
+      <select id="blockSelect" onchange="insertBlock()">
+        <option value="">▦ Block</option>
+        <option value="quote">💬 Zitat</option>
+        <option value="hr">─ Linie</option>
+        <option value="table">📊 Tabelle</option>
+        <option value="code">💻 Codeblock</option>
+      </select>
+    </div>
+
+    <!-- Code Syntax -->
+    <div class="dropdown">
+      <select id="codeSelect" onchange="insertCode()">
+        <option value="">💻 Code</option>
+        <option value="javascript">```js</option>
+        <option value="python">```python</option>
+        <option value="bash">```bash</option>
+        <option value="css">```css</option>
+        <option value="html">```html</option>
+        <option value="sql">```sql</option>
+        <option value="json">```json</option>
+      </select>
+    </div>
+
+    <!-- Media -->
+    <div class="dropdown">
+      <select id="mediaSelect" onchange="insertMedia()">
+        <option value="">📱 Medien</option>
+        <option value="image">🖼️ Bild</option>
+        <option value="video">🎥 Video</option>
+        <option value="audio">🎵 Audio</option>
+      </select>
+    </div>
+
+    <button onclick="insertLink()" title="Link">🔗</button>
+    <button class="copy-btn" onclick="copyMarkdown()" title="Kopieren" id="copyBtn">📋Copy</button>
+  </div>
+
+  <div class="editor-container">
+    <textarea id="markdownInput" placeholder="Pro Markdown Editor..."></textarea>
+    <div id="preview"></div>
+  </div>
+
+  <script>
+    const input = document.getElementById('markdownInput');
+    const preview = document.getElementById('preview');
+    const themeToggle = document.getElementById('themeToggle');
+    const copyBtn = document.getElementById('copyBtn');
+    const saveStatus = document.getElementById('saveStatus');
+
+    const STORAGE_KEY = 'markdown-editor-pro';
+
+    // Load content
+    input.value = localStorage.getItem(STORAGE_KEY) || `# Pro Markdown Editor
+
+## Features
+**Fett** _kursiv_ ~~durchgestrichen~~ \`code\`
+
+### Listen
+- Aufzählung
+- [ ] Aufgabe
+- [x] Erledigt
+
+### Tabelle
+| Name    | Alter | Stadt    |
+|---------|-------|----------|
+| Max     | 28    | Berlin   |
+| Anna    | 34    | München  |
+
+### Code
+\`\`\`javascript
+console.log("Hallo Welt!");
+\`\`\`
+
+> Zitat
+
+[Link](https://tuefteltyp.github.io/index.html)`;
+
+    // Theme
+    const currentTheme = localStorage.getItem('theme') || 'dark';
+    document.documentElement.setAttribute('data-theme', currentTheme);
+    themeToggle.textContent = currentTheme === 'dark' ? '☀️ Light' : '🌙 Dark';
+
+    themeToggle.onclick = () => {
+      const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+      const newTheme = isDark ? 'light' : 'dark';
+      document.documentElement.setAttribute('data-theme', newTheme);
+      themeToggle.textContent = newTheme === 'dark' ? '☀️ Light' : '🌙 Dark';
+      localStorage.setItem('theme', newTheme);
+    };
+
+    // Auto-save
+    let saveTimeout;
+    const updateAndSave = () => {
+      updatePreview();
+      localStorage.setItem(STORAGE_KEY, input.value);
+      saveStatus.textContent = '💾 Speichern...';
+      saveStatus.classList.remove('saved');
+      clearTimeout(saveTimeout);
+      saveTimeout = setTimeout(() => {
+        saveStatus.textContent = '💾 Gespeichert';
+        saveStatus.classList.add('saved');
+      }, 800);
+    };
+
+    input.addEventListener('input', updateAndSave);
+
+    // Copy
+    function copyMarkdown() {
+      navigator.clipboard.writeText(input.value).then(() => {
+        copyBtn.textContent = '✅';
+        copyBtn.classList.add('copied');
+        setTimeout(() => {
+          copyBtn.textContent = '📋';
+          copyBtn.classList.remove('copied');
+        }, 1500);
+      }).catch(() => {
+        input.select();
+        document.execCommand('copy');
+        copyBtn.textContent = '✅';
+        copyBtn.classList.add('copied');
+        setTimeout(() => {
+          copyBtn.textContent = '📋';
+          copyBtn.classList.remove('copied');
+        }, 1500);
+      });
+    }
+
+    // Markdown Parser
+    function parseMarkdown(text) {
+      let html = text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+      // Headings H1-H6
+      for(let i=6; i>=1; i--) {
+        html = html.replace(new RegExp(`^#{${i}}\\s(.+)$`, 'gm'), `<h${i}>$1</h${i}>`);
+      }
+
+      // Blockquote
+      html = html.replace(/^>\s(.+)$/gm, '<blockquote>$1</blockquote>');
+
+      // Tables
+      html = html.replace(/^(\|.*\|\n\|(?:[:-]+]+\|)+\n(?:\|.*\|)+)/gm, (match) => {
+        const rows = match.split('\n');
+        let table = '<table>';
+        table += '<thead><tr>' + rows.replace(/\|/g, '</th><th>').replace(/^<th>|<\/th>$/g, '') + '</tr></thead>';
+        table += '<tbody><tr>' + rows.slice(2).join('</tr><tr>').replace(/\|/g, '</td><td>').replace(/^<td>|<\/td>$/g, '') + '</tr></tbody>';
+        return table + '</table>';
+      });
+
+      // Lists & Tasks
+      html = html.replace(/^- \[(x| )\] (.+)$/gm, '<li><input type="checkbox" $1==="x"?"checked":"" disabled> $2</li>')
+                 .replace(/^- (.+)$/gm, '<li>$1</li>')
+                 .replace(/^\d+\.\s(.+)$/gm, '<li>$1</li>')
+                 .replace(/^i\.\s(.+)$/gm, '<li style="list-style-type: lower-roman;">$1</li>');
+
+      // Code blocks
+      html = html.replace(/```(\w+)?\n([\s\S]*?)```/g, '<pre><code class="$1">$2</code></pre>');
+
+      // Media
+      html = html.replace(/!\[([^\]]*)\]\(([^)]*)\)/g, '<img src="$2" alt="$1">');
+      html = html.replace(/<video>(.*?)<\/video>/g, '<video controls>$1</video>');
+
+      // Links
+      html = html.replace(/\[([^\]]*)\]\(([^)]*)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>');
+
+      // Inline
+      html = html.replace(/`([^`]+)`/g, '<code>$1</code>')
+                 .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
+                 .replace(/_([^_]+)_/g, '<em>$1</em>')
+                 .replace(/~~([^~]+)~~/g, '<del>$1</del>');
+
+      // HR
+      html = html.replace(/^---$/gm, '<hr>');
+
+      // Lists wrapper
+      html = html.replace(/(<li)/g, '<ul>$1').replace(/<\/li>(?=<li>)/g, '</li></ul><ul>');
+
+      // Paragraphs
+      html = html.replace(/^([^\n<>\|]+)(?=<h|<ul|<table|<pre|<blockquote|<hr|$)/gm, '<p>$1</p>');
+
+      return html.replace(/<ul>\s*<\/ul>/g, '');
+    }
+
+    function updatePreview() { preview.innerHTML = parseMarkdown(input.value); }
+
+    // Helper
+    function getCurrentLineStart() {
+      return input.value.slice(0, input.selectionStart).lastIndexOf('\n') + 1;
+    }
+
+    function formatText(open, close) {
+      const start = input.selectionStart, end = input.selectionEnd;
+      const selected = input.value.slice(start, end) || 'Text';
+      input.value = input.value.slice(0, start) + open + selected + close + input.value.slice(end);
+      input.setSelectionRange(start + open.length, start + open.length + selected.length);
+      input.focus();
+      updateAndSave();
+    }
+
+    // Format Dropdown
+    function insertFormat() {
+      const select = document.getElementById('formatSelect');
+      const prefix = select.value;
+      if (!prefix) return select.value = '';
+      
+      const lineStart = getCurrentLineStart();
+      input.value = input.value.slice(0, lineStart) + prefix + ' ' + input.value.slice(lineStart);
+      input.setSelectionRange(lineStart + prefix.length + 1, lineStart + prefix.length + 1);
+      select.value = '';
+      input.focus();
+      updateAndSave();
+    }
+
+    // Lists
+    function insertList() {
+      const select = document.getElementById('listSelect');
+      const type = select.value;
+      if (!type) return select.value = '';
+      
+      const prefixes = {
+        bullet: '- ', number: '1. ', roman: 'i. ', task: '- [ ] ', 'task-done': '- [x] '
+      };
+      
+      const lineStart = getCurrentLineStart();
+      input.value = input.value.slice(0, lineStart) + prefixes[type] + input.value.slice(lineStart);
+      input.setSelectionRange(lineStart + prefixes[type].length, lineStart + prefixes[type].length);
+      select.value = '';
+      input.focus();
+      updateAndSave();
+    }
+
+    function toggleCheckbox() {
+      const lineStart = getCurrentLineStart();
+      const currentLine = input.value.slice(lineStart, input.selectionStart).trim();
+      
+      if (currentLine.startsWith('- [ ] ')) {
+        input.value = input.value.slice(0, lineStart) + currentLine.replace('- [ ] ', '- [x] ') + input.value.slice(input.selectionStart);
+      } else if (currentLine.startsWith('- [x] ')) {
+        input.value = input.value.slice(0, lineStart) + currentLine.replace('- [x] ', '- [ ] ') + input.value.slice(input.selectionStart);
+      } else {
+        insertList('task');
+      }
+      input.focus();
+      updateAndSave();
+    }
+
+    // Block Elements
+    function insertBlock() {
+      const select = document.getElementById('blockSelect');
+      const type = select.value;
+      if (!type) return select.value = '';
+      
+      const lineStart = getCurrentLineStart();
+      switch(type) {
+        case 'quote': 
+          input.value = input.value.slice(0, lineStart) + '> ' + input.value.slice(lineStart);
+          break;
+        case 'hr': 
+          input.value = input.value.slice(0, lineStart) + '---\n' + input.value.slice(lineStart);
+          break;
+        case 'table':
+          input.value = input.value.slice(0, lineStart) + `| Spalte 1 | Spalte 2 | Spalte 3 |
+|----------|----------|----------|
+|          |          |          |\n` + input.value.slice(lineStart);
+          break;
+        case 'code':
+          const pos = input.selectionStart;
+          input.value = input.value.slice(0, pos) + '```\n\n```' + input.value.slice(pos);
+          input.setSelectionRange(pos + 4, pos + 4);
+          break;
+      }
+      select.value = '';
+      input.focus();
+      updateAndSave();
+    }
+
+    // Code Syntax
+    function insertCode() {
+      const select = document.getElementById('codeSelect');
+      const lang = select.value;
+      if (!lang) return select.value = '';
+      
+      const pos = input.selectionStart;
+      input.value = input.value.slice(0, pos) + `\`\`\`${lang}\n\n\`\`\`` + input.value.slice(pos);
+      input.setSelectionRange(pos + 4 + lang.length + 1, pos + 4 + lang.length + 1);
+      select.value = '';
+      input.focus();
+      updateAndSave();
+    }
+
+    // Media
+    function insertMedia() {
+      const select = document.getElementById('mediaSelect');
+      const type = select.value;
+      if (!type) return select.value = '';
+      
+      switch(type) {
+        case 'image':
+          const url = prompt('Bild-URL:');
+          if (url) {
+            const alt = prompt('Alt-Text:', 'Bild') || 'Bild';
+            const size = prompt('Größe % (optional):', '100') || '100';
+            const pos = input.selectionStart;
+            input.value = input.value.slice(0, pos) + `![${alt} ${size}%](${url})` + input.value.slice(pos);
+            input.focus();
+          }
+          break;
+        case 'video':
+          const vidUrl = prompt('YouTube/Vimeo URL:');
+          if (vidUrl) {
+            const videoId = vidUrl.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|vimeo\.com\/)(\w+)/)?.[1];
+            if (videoId) {
+              const pos = input.selectionStart;
+              input.value = input.value.slice(0, pos) + `<iframe src="https://www.youtube.com/embed/${videoId}"></iframe>` + input.value.slice(pos);
+              input.focus();
+            }
+          }
+          break;
+        case 'audio':
+          const audioUrl = prompt('Audio-URL:');
+          if (audioUrl) {
+            const pos = input.selectionStart;
+            input.value = input.value.slice(0, pos) + `<audio controls src="${audioUrl}"></audio>` + input.value.slice(pos);
+            input.focus();
+          }
+          break;
+      }
+      select.value = '';
+      updateAndSave();
+    }
+
+    function insertLink() {
+      const url = prompt('URL:');
+      if (!url) return;
+      const text = prompt('Linktext:', 'Link') || 'Link';
+      const pos = input.selectionStart;
+      input.value = input.value.slice(0, pos) + `[${text}](${url})` + input.value.slice(pos);
+      input.focus();
+      updateAndSave();
+    }
+
+    updatePreview();
+  </script>
+</body>
+</html>
