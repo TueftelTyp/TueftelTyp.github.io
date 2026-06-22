@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>AirNavRadar Widget</title>
+  <style>
+    body { margin: 0; padding: 0; font-family: sans-serif; }
+    .wrap { width: 650px; max-width: 100%; margin: 0 auto; }
+
+    .frame-block { margin: 0 0 12px; }
+    .label { text-align: center; margin: 6px 0; font-weight: 600; }
+
+    .note {
+      text-align: center;
+      margin: 0 0 6px;
+      font-size: 0.95em;
+    }
+
+    iframe {
+      display: block;
+      width: 650px;
+      height: 500px;
+      max-width: 100%;
+      border: 0;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="frame-block">
+      <div class="label">HAMMER2</div>
+      <div class="note">Tiefflug über Bassenheim - 22.06.2026 ~15:30</div>
+      <iframe
+        frameborder="0"
+        scrolling="no"
+        marginheight="0"
+        marginwidth="0"
+        width="650"
+        height="500"
+        src="https://www.airnavradar.com/?widget=1&z=7&fid=2827724168"
+        title="AirNavRadar Widget Hammer2">
+      </iframe>
+    </div>
+
+    <div class="frame-block">
+      <div class="label">HAMMER1</div>
+      <iframe
+        frameborder="0"
+        scrolling="no"
+        marginheight="0"
+        marginwidth="0"
+        width="650"
+        height="500"
+        src="https://www.airnavradar.com/?widget=1&z=7&fid=2827723959"
+        title="AirNavRadar Widget Hammer1">
+      </iframe>
+    </div>
+  </div>
+</body>
+</html>
