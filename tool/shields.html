@@ -96,6 +96,13 @@
             font-size: 0.95em;
         }
 
+        .header-controls {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            align-items: flex-end;
+        }
+
         .theme-toggle {
             display: flex;
             align-items: center;
@@ -109,6 +116,35 @@
             border: none;
             font-size: 0.9em;
             cursor: pointer;
+        }
+
+        .template-controls {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.9em;
+        }
+
+        .template-controls select {
+            padding: 6px 10px;
+            border-radius: 6px;
+            border: none;
+            font-size: 0.9em;
+            cursor: pointer;
+        }
+
+        .template-controls button {
+            padding: 6px 12px;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+            background: #10b981;
+            color: white;
+            font-size: 0.9em;
+        }
+
+        .template-controls button:hover {
+            background: #059669;
         }
 
         .main-content {
@@ -128,12 +164,33 @@
             padding: 20px;
         }
 
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
         .section-title {
             font-size: 1.5em;
             color: var(--text-main);
-            margin-bottom: 20px;
             padding-bottom: 10px;
             border-bottom: 3px solid #667eea;
+            margin: 0;
+        }
+
+        .reset-btn {
+            padding: 6px 12px;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+            background: #ef4444;
+            color: white;
+            font-size: 0.9em;
+        }
+
+        .reset-btn:hover {
+            background: #dc2626;
         }
 
         .form-group {
@@ -353,19 +410,35 @@
                 <h1>🛡️ Shields.io Generator</h1>
                 <p>Create professional badges for your projects</p>
             </div>
-            <div class="theme-toggle">
-                <span>Theme:</span>
-                <select id="themeSelect">
-                    <option value="system">System</option>
-                    <option value="light">Light</option>
-                    <option value="dark">Dark</option>
-                </select>
+            <div class="header-controls">
+                <div class="theme-toggle">
+                    <span>Theme:</span>
+                    <select id="themeSelect">
+                        <option value="system">System</option>
+                        <option value="light">Light</option>
+                        <option value="dark">Dark</option>
+                    </select>
+                </div>
+                <div class="template-controls">
+                    <span>Template:</span>
+                    <select id="templateSelect">
+                        <option value="default">Default (ready)</option>
+                        <option value="buildPassing">Build passing</option>
+                        <option value="licenseMIT">License MIT</option>
+                        <option value="coverage90">Coverage 90%</option>
+                        <option value="githubStars">GitHub stars</option>
+                    </select>
+                    <button id="applyTemplateBtn">Apply</button>
+                </div>
             </div>
         </div>
 
         <div class="main-content">
             <div class="input-section">
-                <h2 class="section-title">Configure badge</h2>
+                <div class="section-header">
+                    <h2 class="section-title">Configure badge</h2>
+                    <button class="reset-btn" id="resetBtn">Reset</button>
+                </div>
 
                 <div class="form-group">
                     <label>Style:</label>
@@ -450,7 +523,9 @@
             </div>
 
             <div class="preview-section">
-                <h2 class="section-title">Preview & code</h2>
+                <div class="section-header">
+                    <h2 class="section-title">Preview & code</h2>
+                </div>
 
                 <div class="preview-box">
                     <img id="preview" src="" alt="Badge preview">
@@ -515,10 +590,8 @@
             }
         }
 
-        // init from system
         applyTheme('system');
 
-        // listen for system changes when in system mode
         if (window.matchMedia) {
             window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
                 if (themeSelect.value === 'system') {
@@ -549,16 +622,138 @@
             'discord', 'slack', 'telegram'
         ];
 
-        // Style selection
-        document.querySelectorAll('.style-option').forEach(option => {
-            option.addEventListener('click', () => {
-                document.querySelectorAll('.style-option').forEach(o => o.classList.remove('selected'));
-                option.classList.add('selected');
-                selectedStyle = option.dataset.style;
-                updateBadge();
+        const templateSelect = document.getElementById('templateSelect');
+        const applyTemplateBtn = document.getElementById('applyTemplateBtn');
+        const resetBtn = document.getElementById('resetBtn');
+
+        const fields = {
+            badgeText: document.getElementById('badgeText'),
+            message: document.getElementById('message'),
+            labelColor: document.getElementById('labelColor'),
+            labelColorText: document.getElementById('labelColorText'),
+            color: document.getElementById('color'),
+            colorText: document.getElementById('colorText'),
+            logoInput: document.getElementById('logoInput'),
+            logoColor: document.getElementById('logoColor'),
+            logoColorText: document.getElementById('logoColorText'),
+            logoSize: document.getElementById('logoSize'),
+            linkUrl: document.getElementById('linkUrl'),
+            cache: document.getElementById('cache'),
+            autoLabelColor: document.getElementById('autoLabelColor')
+        };
+
+        const styleOptions = document.querySelectorAll('.style-option');
+
+        const defaultState = {
+            style: 'flat',
+            badgeText: '',
+            message: 'ready',
+            labelColor: '#555555',
+            color: '#42c44a',
+            logoInput: '',
+            logoColor: '#ffffff',
+            logoSize: '',
+            linkUrl: '',
+            cache: false,
+            autoLabelColor: false
+        };
+
+        const templates = {
+            default: { ...defaultState },
+            buildPassing: {
+                style: 'flat',
+                badgeText: 'build',
+                message: 'passing',
+                labelColor: '#555555',
+                color: '#4caf50',
+                logoInput: 'githubactions',
+                logoColor: '#ffffff',
+                logoSize: '18',
+                linkUrl: '',
+                cache: false,
+                autoLabelColor: false
+            },
+            licenseMIT: {
+                style: 'flat',
+                badgeText: 'license',
+                message: 'MIT',
+                labelColor: '#555555',
+                color: '#007ec6',
+                logoInput: '',
+                logoColor: '#ffffff',
+                logoSize: '',
+                linkUrl: '',
+                cache: false,
+                autoLabelColor: false
+            },
+            coverage90: {
+                style: 'flat-square',
+                badgeText: 'coverage',
+                message: '90%',
+                labelColor: '#555555',
+                color: '#4caf50',
+                logoInput: 'jest',
+                logoColor: '#ffffff',
+                logoSize: '18',
+                linkUrl: '',
+                cache: false,
+                autoLabelColor: false
+            },
+            githubStars: {
+                style: 'social',
+                badgeText: 'GitHub',
+                message: '⭐ stars',
+                labelColor: '#555555',
+                color: '000000',
+                logoInput: 'github',
+                logoColor: '#ffffff',
+                logoSize: '18',
+                linkUrl: 'https://github.com/',
+                cache: false,
+                autoLabelColor: true
+            }
+        };
+
+        function applyTemplate(key) {
+            const t = templates[key] || templates.default;
+
+            styleOptions.forEach(o => {
+                o.classList.toggle('selected', o.dataset.style === t.style);
             });
+            selectedStyle = t.style;
+
+            fields.badgeText.value = t.badgeText;
+            fields.message.value = t.message;
+
+            fields.labelColor.value = t.labelColor;
+            fields.labelColorText.value = t.labelColor;
+            fields.color.value = t.color.startsWith('#') ? t.color : '#' + t.color;
+            fields.colorText.value = fields.color.value;
+
+            fields.logoInput.value = t.logoInput;
+            fields.logoColor.value = t.logoColor;
+            fields.logoColorText.value = t.logoColor;
+            fields.logoSize.value = t.logoSize;
+            fields.linkUrl.value = t.linkUrl;
+            fields.cache.checked = t.cache;
+            fields.autoLabelColor.checked = t.autoLabelColor;
+
+            updateBadge();
+        }
+
+        function resetForm() {
+            applyTemplate('default');
+        }
+
+        applyTemplateBtn.addEventListener('click', () => {
+            applyTemplate(templateSelect.value);
         });
 
+        resetBtn.addEventListener('click', () => {
+            resetForm();
+        });
+
+        // existing listeners
         function syncColor(colorInput, textInput) {
             colorInput.addEventListener('input', () => {
                 textInput.value = colorInput.value;
@@ -572,9 +767,9 @@
             });
         }
 
-        syncColor(document.getElementById('labelColor'), document.getElementById('labelColorText'));
-        syncColor(document.getElementById('color'), document.getElementById('colorText'));
-        syncColor(document.getElementById('logoColor'), document.getElementById('logoColorText'));
+        syncColor(fields.labelColor, fields.labelColorText);
+        syncColor(fields.color, fields.colorText);
+        syncColor(fields.logoColor, fields.logoColorText);
 
         [
             'badgeText', 'message', 'labelColor', 'labelColorText', 'color', 'colorText',
@@ -588,11 +783,11 @@
             }
         });
 
-        const logoInput = document.getElementById('logoInput');
+        const logoInputEl = fields.logoInput;
         const logoList = document.getElementById('logoList');
 
-        logoInput.addEventListener('input', () => {
-            const value = logoInput.value.trim().toLowerCase();
+        logoInputEl.addEventListener('input', () => {
+            const value = logoInputEl.value.trim().toLowerCase();
             if (!value) {
                 logoList.innerHTML = '';
                 logoList.classList.add('hidden');
@@ -617,7 +812,7 @@
 
                 document.querySelectorAll('.autocomplete-item').forEach(item => {
                     item.addEventListener('click', () => {
-                        logoInput.value = item.dataset.slug;
+                        logoInputEl.value = item.dataset.slug;
                         logoList.classList.add('hidden');
                         updateBadge();
                     });
@@ -627,7 +822,7 @@
             updateBadge();
         });
 
-        logoInput.addEventListener('blur', () => {
+        logoInputEl.addEventListener('blur', () => {
             setTimeout(() => {
                 logoList.classList.add('hidden');
             }, 150);
@@ -652,15 +847,15 @@
         }
 
         function buildURL() {
-            const badgeText = document.getElementById('badgeText').value.trim();
-            const message = document.getElementById('message').value.trim() || 'ready';
-            const autoLabel = document.getElementById('autoLabelColor').checked;
-            const labelColor = document.getElementById('labelColorText').value.replace('#', '');
-            const color = document.getElementById('colorText').value.replace('#', '');
-            const logo = document.getElementById('logoInput').value.trim();
-            const logoColor = document.getElementById('logoColorText').value.replace('#', '');
-            const logoSize = document.getElementById('logoSize').value;
-            const cache = document.getElementById('cache').checked;
+            const badgeText = fields.badgeText.value.trim();
+            const message = fields.message.value.trim() || 'ready';
+            const autoLabel = fields.autoLabelColor.checked;
+            const labelColor = fields.labelColorText.value.replace('#', '');
+            const color = fields.colorText.value.replace('#', '');
+            const logo = fields.logoInput.value.trim();
+            const logoColor = fields.logoColorText.value.replace('#', '');
+            const logoSize = fields.logoSize.value;
+            const cache = fields.cache.checked;
 
             let url = `https://img.shields.io/badge/`;
 
@@ -692,9 +887,9 @@
 
         function updateBadge() {
             const url = buildURL();
-            const badgeText = document.getElementById('badgeText').value.trim();
-            const message = document.getElementById('message').value.trim() || 'ready';
-            const linkUrl = document.getElementById('linkUrl').value.trim();
+            const badgeText = fields.badgeText.value.trim();
+            const message = fields.message.value.trim() || 'ready';
+            const linkUrl = fields.linkUrl.value.trim();
 
             document.getElementById('preview').src = url;
 
@@ -732,7 +927,8 @@
             });
         }
 
-        updateBadge();
+        // initial state
+        applyTemplate('default');
     </script>
 </body>
 </html>
