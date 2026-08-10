@@ -604,6 +604,7 @@
             applyTheme(themeSelect.value);
         });
 
+        // State
         let selectedStyle = 'flat';
 
         const logoSlugs = [
@@ -704,7 +705,7 @@
                 badgeText: 'GitHub',
                 message: '⭐ stars',
                 labelColor: '#555555',
-                color: '000000',
+                color: '#000000',
                 logoInput: 'github',
                 logoColor: '#ffffff',
                 logoSize: '18',
@@ -714,21 +715,34 @@
             }
         };
 
+        // Style selection click handler
+        styleOptions.forEach(option => {
+            option.addEventListener('click', () => {
+                styleOptions.forEach(o => o.classList.remove('selected'));
+                option.classList.add('selected');
+                selectedStyle = option.dataset.style;
+                updateBadge();
+            });
+        });
+
         function applyTemplate(key) {
             const t = templates[key] || templates.default;
 
+            // Set style state + UI
+            selectedStyle = t.style;
             styleOptions.forEach(o => {
                 o.classList.toggle('selected', o.dataset.style === t.style);
             });
-            selectedStyle = t.style;
 
             fields.badgeText.value = t.badgeText;
             fields.message.value = t.message;
 
             fields.labelColor.value = t.labelColor;
             fields.labelColorText.value = t.labelColor;
-            fields.color.value = t.color.startsWith('#') ? t.color : '#' + t.color;
-            fields.colorText.value = fields.color.value;
+
+            const colorHex = t.color.startsWith('#') ? t.color : '#' + t.color;
+            fields.color.value = colorHex;
+            fields.colorText.value = colorHex;
 
             fields.logoInput.value = t.logoInput;
             fields.logoColor.value = t.logoColor;
@@ -743,6 +757,7 @@
 
         function resetForm() {
             applyTemplate('default');
+            templateSelect.value = 'default';
         }
 
         applyTemplateBtn.addEventListener('click', () => {
@@ -753,7 +768,7 @@
             resetForm();
         });
 
-        // existing listeners
+        // Color sync
         function syncColor(colorInput, textInput) {
             colorInput.addEventListener('input', () => {
                 textInput.value = colorInput.value;
