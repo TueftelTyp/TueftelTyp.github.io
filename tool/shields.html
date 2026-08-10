@@ -1,0 +1,738 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shields.io Generator</title>
+    <style>
+        :root {
+            --bg-gradient-light: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --bg-gradient-dark: linear-gradient(135deg, #1f2933 0%, #111827 100%);
+            --container-bg-light: #ffffff;
+            --container-bg-dark: #111827;
+            --text-main-light: #333333;
+            --text-main-dark: #e5e7eb;
+            --text-muted-light: #555555;
+            --text-muted-dark: #9ca3af;
+            --border-light: #e0e0e0;
+            --border-dark: #374151;
+            --preview-bg-light: #f8f9fa;
+            --preview-bg-dark: #1f2933;
+            --code-bg-light: #2d2d2d;
+            --code-bg-dark: #111827;
+            --code-text-light: #f8f8f2;
+            --code-text-dark: #e5e7eb;
+        }
+
+        body[data-theme="light"] {
+            --bg-gradient: var(--bg-gradient-light);
+            --container-bg: var(--container-bg-light);
+            --text-main: var(--text-main-light);
+            --text-muted: var(--text-muted-light);
+            --border-color: var(--border-light);
+            --preview-bg: var(--preview-bg-light);
+            --code-bg: var(--code-bg-light);
+            --code-text: var(--code-text-light);
+        }
+
+        body[data-theme="dark"] {
+            --bg-gradient: var(--bg-gradient-dark);
+            --container-bg: var(--container-bg-dark);
+            --text-main: var(--text-main-dark);
+            --text-muted: var(--text-muted-dark);
+            --border-color: var(--border-dark);
+            --preview-bg: var(--preview-bg-dark);
+            --code-bg: var(--code-bg-dark);
+            --code-text: var(--code-text-dark);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: var(--bg-gradient);
+            min-height: 100vh;
+            padding: 20px;
+            color: var(--text-main);
+            transition: background 0.3s ease, color 0.3s ease;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: var(--container-bg);
+            border-radius: 15px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+            transition: background 0.3s ease;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px 30px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 15px;
+        }
+
+        .header-title {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .header h1 {
+            font-size: 2em;
+        }
+
+        .header p {
+            opacity: 0.9;
+            font-size: 0.95em;
+        }
+
+        .theme-toggle {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.9em;
+        }
+
+        .theme-toggle select {
+            padding: 6px 10px;
+            border-radius: 6px;
+            border: none;
+            font-size: 0.9em;
+            cursor: pointer;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            padding: 30px;
+        }
+
+        @media (max-width: 900px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .input-section, .preview-section {
+            padding: 20px;
+        }
+
+        .section-title {
+            font-size: 1.5em;
+            color: var(--text-main);
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 3px solid #667eea;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            font-weight: 600;
+            color: var(--text-muted);
+            margin-bottom: 8px;
+            font-size: 0.95em;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 1em;
+            transition: border-color 0.3s, background 0.3s, color 0.3s;
+            background: transparent;
+            color: var(--text-main);
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .checkbox-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-top: 10px;
+        }
+
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--text-muted);
+            font-size: 0.9em;
+        }
+
+        .checkbox-item input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+
+        .preview-box {
+            background: var(--preview-bg);
+            border: 2px solid var(--border-color);
+            border-radius: 10px;
+            padding: 40px;
+            text-align: center;
+            margin-bottom: 30px;
+            min-height: 150px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.3s ease, border-color 0.3s ease;
+        }
+
+        .preview-box img {
+            max-width: 100%;
+            height: auto;
+        }
+
+        .output-section {
+            margin-top: 20px;
+        }
+
+        .output-group {
+            margin-bottom: 25px;
+        }
+
+        .output-group h4 {
+            color: var(--text-muted);
+            margin-bottom: 10px;
+            font-size: 1.1em;
+        }
+
+        .code-box {
+            background: var(--code-bg);
+            color: var(--code-text);
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            overflow-x: auto;
+            position: relative;
+            transition: background 0.3s ease, color 0.3s ease;
+        }
+
+        .code-box code {
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+
+        .copy-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 5px 12px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.85em;
+            transition: background 0.3s;
+        }
+
+        .copy-btn:hover {
+            background: #764ba2;
+        }
+
+        .style-options {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .style-option {
+            padding: 10px;
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 0.9em;
+            color: var(--text-main);
+        }
+
+        .style-option:hover {
+            border-color: #667eea;
+            background: rgba(102,126,234,0.08);
+        }
+
+        .style-option.selected {
+            border-color: #667eea;
+            background: #667eea;
+            color: white;
+        }
+
+        .color-picker-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .color-picker-wrapper input[type="color"] {
+            width: 50px;
+            height: 40px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            padding: 0;
+            background: transparent;
+        }
+
+        .color-picker-wrapper input[type="text"] {
+            flex: 1;
+        }
+
+        .autocomplete-wrapper {
+            position: relative;
+        }
+
+        .autocomplete-list {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: var(--container-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 0 0 8px 8px;
+            max-height: 180px;
+            overflow-y: auto;
+            z-index: 10;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+        }
+
+        .autocomplete-item {
+            padding: 8px 12px;
+            cursor: pointer;
+            font-size: 0.9em;
+            color: var(--text-main);
+        }
+
+        .autocomplete-item:hover {
+            background: rgba(102,126,234,0.08);
+        }
+
+        .autocomplete-item strong {
+            color: #667eea;
+        }
+
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body data-theme="light">
+    <div class="container">
+        <div class="header">
+            <div class="header-title">
+                <h1>🛡️ Shields.io Generator</h1>
+                <p>Create professional badges for your projects</p>
+            </div>
+            <div class="theme-toggle">
+                <span>Theme:</span>
+                <select id="themeSelect">
+                    <option value="system">System</option>
+                    <option value="light">Light</option>
+                    <option value="dark">Dark</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="main-content">
+            <div class="input-section">
+                <h2 class="section-title">Configure badge</h2>
+
+                <div class="form-group">
+                    <label>Style:</label>
+                    <div class="style-options" id="styleOptions">
+                        <div class="style-option selected" data-style="flat">flat</div>
+                        <div class="style-option" data-style="flat-square">flat-square</div>
+                        <div class="style-option" data-style="for-the-badge">for-the-badge</div>
+                        <div class="style-option" data-style="plastic">plastic</div>
+                        <div class="style-option" data-style="social">social</div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="badgeText">Label (left, optional):</label>
+                    <input type="text" id="badgeText" placeholder="e.g. build, version, license">
+                </div>
+
+                <div class="form-group">
+                    <label for="message">Message (right):</label>
+                    <input type="text" id="message" placeholder="e.g. MIT" value="ready">
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="labelColor">Label color (hex):</label>
+                        <div class="color-picker-wrapper">
+                            <input type="color" id="labelColor" value="#555555">
+                            <input type="text" id="labelColorText" value="#555555" placeholder="#555555">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="color">Badge color (hex):</label>
+                        <div class="color-picker-wrapper">
+                            <input type="color" id="color" value="#42c44a">
+                            <input type="text" id="colorText" value="#42c44a" placeholder="#42c44a">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="logoInput">Logo (Simple Icons):</label>
+                    <div class="autocomplete-wrapper">
+                        <input type="text" id="logoInput" placeholder="Enter slug, e.g. github, python, opera">
+                        <div id="logoList" class="autocomplete-list hidden"></div>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="logoColor">Logo color (optional):</label>
+                        <div class="color-picker-wrapper">
+                            <input type="color" id="logoColor" value="#ffffff">
+                            <input type="text" id="logoColorText" value="#ffffff" placeholder="#ffffff">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="logoSize">Logo size (px, optional):</label>
+                        <input type="number" id="logoSize" placeholder="e.g. 20" min="1" max="100">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="linkUrl">Link URL (optional):</label>
+                    <input type="text" id="linkUrl" placeholder="e.g. https://github.com/your-repo">
+                </div>
+
+                <div class="form-group">
+                    <label>Options:</label>
+                    <div class="checkbox-group">
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="cache">
+                            <label for="cache">Bypass cache (cacheSeconds=0)</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="autoLabelColor">
+                            <label for="autoLabelColor">Automatic label color (no labelColor)</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="preview-section">
+                <h2 class="section-title">Preview & code</h2>
+
+                <div class="preview-box">
+                    <img id="preview" src="" alt="Badge preview">
+                </div>
+
+                <div class="output-section">
+                    <div class="output-group">
+                        <h4>Markdown</h4>
+                        <div class="code-box">
+                            <code id="markdown"></code>
+                            <button class="copy-btn" onclick="copyToClipboard('markdown')">Copy</button>
+                        </div>
+                    </div>
+
+                    <div class="output-group">
+                        <h4>reStructuredText</h4>
+                        <div class="code-box">
+                            <code id="rst"></code>
+                            <button class="copy-btn" onclick="copyToClipboard('rst')">Copy</button>
+                        </div>
+                    </div>
+
+                    <div class="output-group">
+                        <h4>Plain (link markdown)</h4>
+                        <div class="code-box">
+                            <code id="ascii"></code>
+                            <button class="copy-btn" onclick="copyToClipboard('ascii')">Copy</button>
+                        </div>
+                    </div>
+
+                    <div class="output-group">
+                        <h4>HTML</h4>
+                        <div class="code-box">
+                            <code id="html"></code>
+                            <button class="copy-btn" onclick="copyToClipboard('html')">Copy</button>
+                        </div>
+                    </div>
+
+                    <div class="output-group">
+                        <h4>Direct URL</h4>
+                        <div class="code-box">
+                            <code id="url"></code>
+                            <button class="copy-btn" onclick="copyToClipboard('url')">Copy</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Theme handling
+        const themeSelect = document.getElementById('themeSelect');
+
+        function applyTheme(mode) {
+            if (mode === 'system') {
+                const prefersDark = window.matchMedia &&
+                    window.matchMedia('(prefers-color-scheme: dark)').matches;
+                document.body.setAttribute('data-theme', prefersDark ? 'dark' : 'light');
+            } else {
+                document.body.setAttribute('data-theme', mode);
+            }
+        }
+
+        // init from system
+        applyTheme('system');
+
+        // listen for system changes when in system mode
+        if (window.matchMedia) {
+            window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
+                if (themeSelect.value === 'system') {
+                    applyTheme('system');
+                }
+            });
+        }
+
+        themeSelect.addEventListener('change', () => {
+            applyTheme(themeSelect.value);
+        });
+
+        let selectedStyle = 'flat';
+
+        const logoSlugs = [
+            'github', 'gitlab', 'bitbucket', 'docker', 'azurepipelines', 'jenkins', 'travisci',
+            'npm', 'yarn', 'pnpm',
+            'nodejs', 'deno', 'python', 'java', 'dotnet', 'csharp', 'cplusplus', 'go',
+            'javascript', 'typescript',
+            'react', 'vuejs', 'angular', 'svelte', 'nextdotjs', 'nuxtdotjs',
+            'tailwindcss', 'bootstrap', 'materialui',
+            'linux', 'ubuntu', 'debian', 'archlinux', 'redhat', 'centos',
+            'windows', 'apple', 'android',
+            'vscode', 'visualstudio', 'intellijidea', 'pycharm', 'webstorm',
+            'postgresql', 'mysql', 'mariadb', 'mongodb', 'redis',
+            'nginx', 'apache', 'cloudflare',
+            'githubactions', 'circleci', 'git', 'jira', 'confluence',
+            'discord', 'slack', 'telegram'
+        ];
+
+        // Style selection
+        document.querySelectorAll('.style-option').forEach(option => {
+            option.addEventListener('click', () => {
+                document.querySelectorAll('.style-option').forEach(o => o.classList.remove('selected'));
+                option.classList.add('selected');
+                selectedStyle = option.dataset.style;
+                updateBadge();
+            });
+        });
+
+        function syncColor(colorInput, textInput) {
+            colorInput.addEventListener('input', () => {
+                textInput.value = colorInput.value;
+                updateBadge();
+            });
+            textInput.addEventListener('input', () => {
+                if (/^#[0-9A-Fa-f]{6}$/.test(textInput.value)) {
+                    colorInput.value = textInput.value;
+                    updateBadge();
+                }
+            });
+        }
+
+        syncColor(document.getElementById('labelColor'), document.getElementById('labelColorText'));
+        syncColor(document.getElementById('color'), document.getElementById('colorText'));
+        syncColor(document.getElementById('logoColor'), document.getElementById('logoColorText'));
+
+        [
+            'badgeText', 'message', 'labelColor', 'labelColorText', 'color', 'colorText',
+            'logoInput', 'logoColor', 'logoColorText', 'logoSize', 'cache',
+            'autoLabelColor', 'linkUrl'
+        ].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) {
+                el.addEventListener('input', updateBadge);
+                el.addEventListener('change', updateBadge);
+            }
+        });
+
+        const logoInput = document.getElementById('logoInput');
+        const logoList = document.getElementById('logoList');
+
+        logoInput.addEventListener('input', () => {
+            const value = logoInput.value.trim().toLowerCase();
+            if (!value) {
+                logoList.innerHTML = '';
+                logoList.classList.add('hidden');
+                updateBadge();
+                return;
+            }
+
+            const matches = logoSlugs
+                .map(slug => ({ slug, score: similarity(value, slug) }))
+                .filter(item => item.score > 0.3)
+                .sort((a, b) => b.score - a.score)
+                .slice(0, 8);
+
+            if (matches.length === 0) {
+                logoList.innerHTML = '';
+                logoList.classList.add('hidden');
+            } else {
+                logoList.innerHTML = matches
+                    .map(m => `<div class="autocomplete-item" data-slug="${m.slug}">${highlightMatch(m.slug, value)}</div>`)
+                    .join('');
+                logoList.classList.remove('hidden');
+
+                document.querySelectorAll('.autocomplete-item').forEach(item => {
+                    item.addEventListener('click', () => {
+                        logoInput.value = item.dataset.slug;
+                        logoList.classList.add('hidden');
+                        updateBadge();
+                    });
+                });
+            }
+
+            updateBadge();
+        });
+
+        logoInput.addEventListener('blur', () => {
+            setTimeout(() => {
+                logoList.classList.add('hidden');
+            }, 150);
+        });
+
+        function similarity(input, slug) {
+            if (!input || !slug) return 0;
+            if (slug.startsWith(input)) return 1;
+            let matches = 0;
+            for (let ch of input) {
+                if (slug.includes(ch)) matches++;
+            }
+            return matches / slug.length;
+        }
+
+        function highlightMatch(slug, input) {
+            const idx = slug.indexOf(input);
+            if (idx === -1) return slug;
+            return slug.substring(0, idx) +
+                '<strong>' + slug.substring(idx, idx + input.length) + '</strong>' +
+                slug.substring(idx + input.length);
+        }
+
+        function buildURL() {
+            const badgeText = document.getElementById('badgeText').value.trim();
+            const message = document.getElementById('message').value.trim() || 'ready';
+            const autoLabel = document.getElementById('autoLabelColor').checked;
+            const labelColor = document.getElementById('labelColorText').value.replace('#', '');
+            const color = document.getElementById('colorText').value.replace('#', '');
+            const logo = document.getElementById('logoInput').value.trim();
+            const logoColor = document.getElementById('logoColorText').value.replace('#', '');
+            const logoSize = document.getElementById('logoSize').value;
+            const cache = document.getElementById('cache').checked;
+
+            let url = `https://img.shields.io/badge/`;
+
+            if (badgeText) {
+                url += `${encodeURIComponent(badgeText)}-${encodeURIComponent(message)}-${color}`;
+            } else {
+                url += `${encodeURIComponent(message)}-${color}`;
+            }
+
+            const params = new URLSearchParams();
+            params.append('style', selectedStyle);
+
+            if (!autoLabel && labelColor) {
+                params.append('labelColor', labelColor);
+            }
+
+            if (logo) params.append('logo', logo);
+            if (logoColor && logoColor !== 'ffffff') params.append('logoColor', logoColor);
+            if (logoSize) params.append('logoSize', logoSize);
+            if (cache) params.append('cacheSeconds', '0');
+
+            const paramString = params.toString();
+            if (paramString) {
+                url += `?${paramString}`;
+            }
+
+            return url;
+        }
+
+        function updateBadge() {
+            const url = buildURL();
+            const badgeText = document.getElementById('badgeText').value.trim();
+            const message = document.getElementById('message').value.trim() || 'ready';
+            const linkUrl = document.getElementById('linkUrl').value.trim();
+
+            document.getElementById('preview').src = url;
+
+            const labelText = badgeText || message || 'badge';
+
+            const markdownImage = `![${labelText}](${url})`;
+            const markdown = linkUrl ? `[${markdownImage}](${linkUrl})` : markdownImage;
+
+            let rst = `.. image:: ${url}\n   :alt: ${labelText}`;
+            if (linkUrl) {
+                rst += `\n   :target: ${linkUrl}`;
+            }
+
+            const ascii = linkUrl ? `[${labelText}](${linkUrl})` : `[${labelText}](${url})`;
+
+            const imgHtml = `<img src="${url}" alt="${labelText}">`;
+            const html = linkUrl ? `<a href="${linkUrl}">${imgHtml}</a>` : imgHtml;
+
+            document.getElementById('markdown').textContent = markdown;
+            document.getElementById('rst').textContent = rst;
+            document.getElementById('ascii').textContent = ascii;
+            document.getElementById('html').textContent = html;
+            document.getElementById('url').textContent = url;
+        }
+
+        function copyToClipboard(elementId) {
+            const text = document.getElementById(elementId).textContent;
+            navigator.clipboard.writeText(text).then(() => {
+                const btn = event.target;
+                const originalText = btn.textContent;
+                btn.textContent = '✓ Copied!';
+                setTimeout(() => {
+                    btn.textContent = originalText;
+                }, 2000);
+            });
+        }
+
+        updateBadge();
+    </script>
+</body>
+</html>
