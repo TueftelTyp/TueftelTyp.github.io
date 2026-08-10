@@ -96,55 +96,21 @@
             font-size: 0.95em;
         }
 
-        .header-controls {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-            align-items: flex-end;
-        }
-
-        .theme-toggle {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            font-size: 0.9em;
-        }
-
-        .theme-toggle select {
-            padding: 6px 10px;
-            border-radius: 6px;
+        .theme-toggle-btn {
+            padding: 8px 14px;
+            border-radius: 999px;
             border: none;
-            font-size: 0.9em;
             cursor: pointer;
-        }
-
-        .template-controls {
+            background: rgba(17,24,39,0.4);
+            color: #ffffff;
+            font-size: 0.9em;
             display: flex;
             align-items: center;
             gap: 8px;
-            font-size: 0.9em;
         }
 
-        .template-controls select {
-            padding: 6px 10px;
-            border-radius: 6px;
-            border: none;
-            font-size: 0.9em;
-            cursor: pointer;
-        }
-
-        .template-controls button {
-            padding: 6px 12px;
-            border-radius: 6px;
-            border: none;
-            cursor: pointer;
-            background: #10b981;
-            color: white;
-            font-size: 0.9em;
-        }
-
-        .template-controls button:hover {
-            background: #059669;
+        .theme-toggle-btn span.mode {
+            font-weight: 600;
         }
 
         .main-content {
@@ -401,6 +367,53 @@
         .hidden {
             display: none;
         }
+
+        /* Templates section */
+        .templates-section {
+            border-top: 1px solid var(--border-color);
+            padding: 20px 30px 30px;
+            background: var(--container-bg);
+        }
+
+        .templates-title {
+            font-size: 1.2em;
+            color: var(--text-main);
+            margin-bottom: 10px;
+        }
+
+        .templates-subtitle {
+            font-size: 0.9em;
+            color: var(--text-muted);
+            margin-bottom: 15px;
+        }
+
+        .template-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .template-btn {
+            padding: 8px 14px;
+            border-radius: 999px;
+            border: 1px solid var(--border-color);
+            background: transparent;
+            cursor: pointer;
+            font-size: 0.9em;
+            color: var(--text-main);
+            transition: background 0.2s, border-color 0.2s, color 0.2s;
+        }
+
+        .template-btn:hover {
+            border-color: #10b981;
+            background: rgba(16,185,129,0.08);
+        }
+
+        .template-btn.active {
+            border-color: #10b981;
+            background: #10b981;
+            color: #ffffff;
+        }
     </style>
 </head>
 <body data-theme="light">
@@ -410,27 +423,10 @@
                 <h1>🛡️ Shields.io Generator</h1>
                 <p>Create professional badges for your projects</p>
             </div>
-            <div class="header-controls">
-                <div class="theme-toggle">
-                    <span>Theme:</span>
-                    <select id="themeSelect">
-                        <option value="system">System</option>
-                        <option value="light">Light</option>
-                        <option value="dark">Dark</option>
-                    </select>
-                </div>
-                <div class="template-controls">
-                    <span>Template:</span>
-                    <select id="templateSelect">
-                        <option value="default">Default (ready)</option>
-                        <option value="buildPassing">Build passing</option>
-                        <option value="licenseMIT">License MIT</option>
-                        <option value="coverage90">Coverage 90%</option>
-                        <option value="githubStars">GitHub stars</option>
-                    </select>
-                    <button id="applyTemplateBtn">Apply</button>
-                </div>
-            </div>
+            <button id="themeToggleBtn" class="theme-toggle-btn">
+                <span>Theme:</span>
+                <span class="mode" id="themeModeLabel">System</span>
+            </button>
         </div>
 
         <div class="main-content">
@@ -574,19 +570,38 @@
                 </div>
             </div>
         </div>
+
+        <!-- Templates unter dem Generator -->
+        <div class="templates-section">
+            <div class="templates-title">Templates</div>
+            <div class="templates-subtitle">Quick presets for common badges</div>
+            <div class="template-buttons">
+                <button class="template-btn active" data-template="default">Default (ready)</button>
+                <button class="template-btn" data-template="buildPassing">Build passing</button>
+                <button class="template-btn" data-template="licenseMIT">License MIT</button>
+                <button class="template-btn" data-template="coverage90">Coverage 90%</button>
+                <button class="template-btn" data-template="githubStars">GitHub stars</button>
+            </div>
+        </div>
     </div>
 
     <script>
-        // Theme handling
-        const themeSelect = document.getElementById('themeSelect');
+        // Theme handling with toggle
+        const themeToggleBtn = document.getElementById('themeToggleBtn');
+        const themeModeLabel = document.getElementById('themeModeLabel');
+
+        let themeMode = 'system'; // system, light, dark
 
         function applyTheme(mode) {
+            themeMode = mode;
             if (mode === 'system') {
                 const prefersDark = window.matchMedia &&
                     window.matchMedia('(prefers-color-scheme: dark)').matches;
                 document.body.setAttribute('data-theme', prefersDark ? 'dark' : 'light');
+                themeModeLabel.textContent = 'System';
             } else {
                 document.body.setAttribute('data-theme', mode);
+                themeModeLabel.textContent = mode === 'dark' ? 'Dark' : 'Light';
             }
         }
 
@@ -594,14 +609,20 @@
 
         if (window.matchMedia) {
             window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
-                if (themeSelect.value === 'system') {
+                if (themeMode === 'system') {
                     applyTheme('system');
                 }
             });
         }
 
-        themeSelect.addEventListener('change', () => {
-            applyTheme(themeSelect.value);
+        themeToggleBtn.addEventListener('click', () => {
+            if (themeMode === 'system') {
+                applyTheme('dark');
+            } else if (themeMode === 'dark') {
+                applyTheme('light');
+            } else {
+                applyTheme('system');
+            }
         });
 
         // State
@@ -623,8 +644,6 @@
             'discord', 'slack', 'telegram'
         ];
 
-        const templateSelect = document.getElementById('templateSelect');
-        const applyTemplateBtn = document.getElementById('applyTemplateBtn');
         const resetBtn = document.getElementById('resetBtn');
 
         const fields = {
@@ -715,7 +734,9 @@
             }
         };
 
-        // Style selection click handler
+        const templateBtns = document.querySelectorAll('.template-btn');
+
+        // Style selection
         styleOptions.forEach(option => {
             option.addEventListener('click', () => {
                 styleOptions.forEach(o => o.classList.remove('selected'));
@@ -728,7 +749,12 @@
         function applyTemplate(key) {
             const t = templates[key] || templates.default;
 
-            // Set style state + UI
+            // Template button active state
+            templateBtns.forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.template === key);
+            });
+
+            // Style state + UI
             selectedStyle = t.style;
             styleOptions.forEach(o => {
                 o.classList.toggle('selected', o.dataset.style === t.style);
@@ -755,14 +781,15 @@
             updateBadge();
         }
 
+        templateBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                applyTemplate(btn.dataset.template);
+            });
+        });
+
         function resetForm() {
             applyTemplate('default');
-            templateSelect.value = 'default';
         }
-
-        applyTemplateBtn.addEventListener('click', () => {
-            applyTemplate(templateSelect.value);
-        });
 
         resetBtn.addEventListener('click', () => {
             resetForm();
