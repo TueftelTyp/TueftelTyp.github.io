@@ -86,6 +86,8 @@ h1{font:800 clamp(2rem,4.6vw,3.3rem)/1.08 var(--fd);letter-spacing:-.02em;max-wi
 .flex1{flex:1}
 
 .btn{font:600 .85rem var(--fd);border-radius:10px;padding:9px 16px;cursor:pointer;border:1px solid transparent;transition:.18s;display:inline-flex;align-items:center;gap:7px}
+.btn svg{width:15px;height:15px;flex:0 0 auto}
+.btn.sm svg{width:13px;height:13px}
 .btn.primary{background:var(--c-min);color:#1a1206}
 .btn.primary:hover{transform:translateY(-2px);box-shadow:0 8px 20px rgba(255,194,75,.25);filter:brightness(1.06)}
 .btn.ghost{background:transparent;border-color:var(--line2);color:var(--tx)}
@@ -270,7 +272,10 @@ body.embed-mode footer{padding:14px 0 18px;margin-top:10px}
     <p data-i="embedDesc"></p>
     <div class="modal-code">
       <textarea id="embedCode" readonly spellcheck="false"></textarea>
-      <button class="btn ghost sm copy-float" id="btnCopyEmbed" data-i="copy"></button>
+      <button class="btn ghost sm copy-float" id="btnCopyEmbed">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+        <span data-i="copy"></span>
+      </button>
     </div>
     <div class="modal-actions">
       <button class="btn ghost" id="modalCloseBtn" data-i="close"></button>
@@ -291,8 +296,14 @@ body.embed-mode footer{padding:14px 0 18px;margin-top:10px}
       <div class="exprbar">
         <span class="cnt" id="countdown"></span>
         <span class="flex1"></span>
-        <button class="btn ghost" id="btnReset"></button>
-        <button class="btn primary" id="btnCopyExpr"></button>
+        <button class="btn ghost" id="btnReset">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>
+          <span data-i="reset"></span>
+        </button>
+        <button class="btn primary" id="btnCopyExpr">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          <span data-i="copyExpr"></span>
+        </button>
       </div>
     </div>
   </section>
@@ -332,7 +343,13 @@ body.embed-mode footer{padding:14px 0 18px;margin-top:10px}
 
         <h3 data-i="cmdLabel"></h3>
         <input class="cmdinput" id="cmd" type="text" spellcheck="false" autocomplete="off">
-        <div class="cronline"><code id="cronline"></code><button class="btn ghost sm" id="btnCopyLine"></button></div>
+        <div class="cronline">
+          <code id="cronline"></code>
+          <button class="btn ghost sm" id="btnCopyLine">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+            <span data-i="copy"></span>
+          </button>
+        </div>
       </div>
     </aside>
   </div>
@@ -1108,15 +1125,17 @@ function applyLang(){
   refresh();
 }
 
+/* ================= copy (Icon bleibt erhalten) ================= */
 async function copyText(txt,btn){
   try{await navigator.clipboard.writeText(txt);}
   catch(e){
     const ta=document.createElement('textarea');ta.value=txt;document.body.append(ta);
     ta.select();document.execCommand('copy');ta.remove();
   }
-  const old=btn.textContent;
-  btn.textContent=L().copied;btn.classList.add('ok');
-  setTimeout(()=>{btn.textContent=old;btn.classList.remove('ok');},1400);
+  const lbl=btn.querySelector('[data-i]')||btn;
+  const old=lbl.textContent;
+  lbl.textContent=L().copied;btn.classList.add('ok');
+  setTimeout(()=>{lbl.textContent=old;btn.classList.remove('ok');},1400);
 }
 
 /* ================= ticker ================= */
