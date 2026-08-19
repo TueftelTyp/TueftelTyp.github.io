@@ -47,7 +47,6 @@ body{background:var(--bg);color:var(--tx);font:16px/1.55 var(--fb);overflow-x:hi
 .langsw button:hover{color:var(--tx);background:rgba(255,255,255,.05)}
 .langsw button.on{background:var(--c-min);color:#1a1206}
 
-/* ===== EMBED BUTTON & MODAL ===== */
 .btn-embed{background:transparent;border:1px solid var(--line2);color:var(--mut);font:600 .78rem var(--fd);padding:7px 12px;border-radius:10px;cursor:pointer;transition:.18s;display:inline-flex;align-items:center;gap:6px}
 .btn-embed:hover{color:var(--c-min);border-color:var(--c-min);transform:translateY(-1px)}
 .btn-embed svg{width:14px;height:14px}
@@ -94,9 +93,23 @@ h1{font:800 clamp(2rem,4.6vw,3.3rem)/1.08 var(--fd);letter-spacing:-.02em;max-wi
 .btn.sm{padding:5px 11px;font-size:.75rem;border-radius:8px}
 .btn.ok{background:var(--c-dom)!important;color:#08240f!important;border-color:transparent!important}
 
+/* ===== presets + scroller ===== */
 .presets{margin:38px 0 8px}
 h2{font:700 1.25rem var(--fd);letter-spacing:-.01em;margin-bottom:14px}
-.presetrow{display:flex;gap:10px;overflow-x:auto;padding:4px 2px 12px;scrollbar-width:thin}
+.presetwrap{position:relative}
+.presetwrap::before,.presetwrap::after{content:'';position:absolute;top:0;bottom:0;width:56px;pointer-events:none;z-index:3;transition:opacity .3s}
+.presetwrap::before{left:0;background:linear-gradient(90deg,var(--bg) 15%,transparent)}
+.presetwrap::after{right:0;background:linear-gradient(-90deg,var(--bg) 15%,transparent)}
+.presetwrap.at-left::before{opacity:0}
+.presetwrap.at-right::after{opacity:0}
+.presetrow{display:flex;gap:10px;overflow-x:auto;padding:4px 2px 8px;scrollbar-width:none;-ms-overflow-style:none}
+.presetrow::-webkit-scrollbar{display:none}
+.pnav{position:absolute;top:50%;transform:translateY(-50%);z-index:5;width:38px;height:38px;border-radius:50%;border:1px solid var(--line2);background:rgba(10,18,22,.88);backdrop-filter:blur(6px);color:var(--c-min);cursor:pointer;display:grid;place-items:center;transition:opacity .25s,border-color .18s,color .18s,transform .18s;box-shadow:0 4px 14px rgba(0,0,0,.45)}
+.pnav svg{width:16px;height:16px}
+.pnav:hover{border-color:var(--c-min);color:#fff;transform:translateY(-50%) scale(1.1)}
+.pnav.left{left:2px}
+.pnav.right{right:2px}
+.pnav.hide{opacity:0;pointer-events:none}
 .chip{flex:0 0 auto;display:inline-flex;align-items:center;gap:8px;background:var(--panel2);border:1px solid var(--line);border-radius:999px;padding:8px 15px;font:500 .83rem var(--fb);color:var(--tx);cursor:pointer;transition:.18s;white-space:nowrap}
 .chip svg{width:15px;height:15px;color:var(--c-min)}
 .chip:hover{transform:translateY(-2px);border-color:var(--c-min);box-shadow:0 6px 16px rgba(0,0,0,.3)}
@@ -286,7 +299,15 @@ body.embed-mode footer{padding:14px 0 18px;margin-top:10px}
 
   <section class="presets reveal">
     <h2 data-i="presets"></h2>
-    <div class="presetrow" id="presetrow"></div>
+    <div class="presetwrap" id="presetwrap">
+      <button class="pnav left hide" id="pnavL" aria-label="Scroll left">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+      </button>
+      <div class="presetrow" id="presetrow"></div>
+      <button class="pnav right hide" id="pnavR" aria-label="Scroll right">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+      </button>
+    </div>
   </section>
 
   <div class="cols">
@@ -898,6 +919,7 @@ function buildPresets(){
     };
     row.append(c);
   });
+  updateNav();
 }
 function buildRef(){
   const tb=$('#reftbody');tb.innerHTML='';
@@ -1115,6 +1137,37 @@ setInterval(()=>{
     cd.classList.remove('hot');
   }
 },1000);
+
+/* ================= preset scroller ================= */
+const pRow=$('#presetrow'),pWrap=$('#presetwrap'),pL=$('#pnavL'),pR=$('#pnavR');
+let pHover=false,pDir=0,pPow=0,pRaf=null;
+
+function updateNav(){
+  const canL=pRow.scrollLeft>2;
+  const canR=pRow.scrollLeft+pRow.clientWidth<pRow.scrollWidth-2;
+  pL.classList.toggle('hide',!canL);
+  pR.classList.toggle('hide',!canR);
+  pWrap.classList.toggle('at-left',!canL);
+  pWrap.classList.toggle('at-right',!canR);
+}
+function pLoop(){
+  if(!pHover){pRaf=null;return;}
+  if(pDir!==0){pRow.scrollLeft+=pDir*(2+pPow*13);updateNav();}
+  pRaf=requestAnimationFrame(pLoop);
+}
+pRow.addEventListener('mousemove',e=>{
+  const r=pRow.getBoundingClientRect();
+  const x=e.clientX-r.left,zone=Math.min(90,r.width*0.25);
+  if(x<zone){pDir=-1;pPow=1-x/zone;}
+  else if(x>r.width-zone){pDir=1;pPow=1-(r.width-x)/zone;}
+  else{pDir=0;pPow=0;}
+});
+pRow.addEventListener('mouseenter',()=>{pHover=true;if(!pRaf)pRaf=requestAnimationFrame(pLoop);});
+pRow.addEventListener('mouseleave',()=>{pHover=false;pDir=0;pPow=0;});
+pL.addEventListener('click',()=>pRow.scrollBy({left:-pRow.clientWidth*0.7,behavior:'smooth'}));
+pR.addEventListener('click',()=>pRow.scrollBy({left:pRow.clientWidth*0.7,behavior:'smooth'}));
+pRow.addEventListener('scroll',updateNav,{passive:true});
+window.addEventListener('resize',updateNav);
 
 /* ================= init ================= */
 lang=detectLang();
