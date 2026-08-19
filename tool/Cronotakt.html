@@ -1,0 +1,1075 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cronotakt · Cron-Generator</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><text y='19' font-size='19' fill='%23ffc24b'>✳</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&family=IBM+Plex+Sans:wght@400;500;600&family=Chivo+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0b151a; --panel:#101f27; --panel2:#0c161d; --ink:#0a1216;
+  --line:rgba(190,225,235,.10); --line2:rgba(190,225,235,.18);
+  --tx:#e9f3f4; --mut:#8fa8b0; --dim:#5f7780;
+  --c-sec:#5eead4; --c-min:#ffc24b; --c-hour:#ff8a5c; --c-dom:#6ee7a0; --c-mon:#6cc4ff; --c-dow:#d9a7ff;
+  --warn:#ffc24b; --err:#ff8080; --fc:#ffc24b;
+  --fd:'Sora',sans-serif; --fb:'IBM Plex Sans',sans-serif; --fm:'Chivo Mono',monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--tx);font:16px/1.55 var(--fb);overflow-x:hidden}
+::selection{background:#ffc24b33}
+
+/* ---- ambient background ---- */
+.bg{position:fixed;inset:0;z-index:-1;overflow:hidden}
+.glow{position:absolute;width:60vmax;height:60vmax;border-radius:50%;filter:blur(90px);opacity:.5}
+.g1{background:radial-gradient(circle,#123039 0%,transparent 60%);top:-20vmax;left:-15vmax;animation:drift1 26s ease-in-out infinite alternate}
+.g2{background:radial-gradient(circle,#2a1f10 0%,transparent 60%);bottom:-25vmax;right:-15vmax;animation:drift2 32s ease-in-out infinite alternate}
+@keyframes drift1{to{transform:translate(9vmax,7vmax)}}
+@keyframes drift2{to{transform:translate(-8vmax,-6vmax)}}
+.dots{position:absolute;inset:0;background-image:radial-gradient(rgba(150,200,210,.10) 1px,transparent 1.4px);background-size:26px 26px;mask-image:radial-gradient(ellipse at 50% 20%,#000 30%,transparent 80%)}
+.ast{position:absolute;top:-140px;right:-140px;width:520px;height:520px;opacity:.05;animation:spin 240s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+.wrap{max-width:1180px;margin:0 auto;padding:0 20px}
+
+/* ---- topbar ---- */
+.top{position:sticky;top:0;z-index:50;background:rgba(11,21,26,.82);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+.topin{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:12px 20px}
+.brand{display:flex;align-items:center;gap:11px}
+.brand svg{width:30px;height:30px;color:var(--c-min);animation:spin 40s linear infinite}
+.brand b{font:800 1.15rem var(--fd);letter-spacing:.3px}
+.brand small{display:block;font-size:.68rem;color:var(--dim);letter-spacing:.12em;text-transform:uppercase;margin-top:-2px}
+.topright{display:flex;align-items:center;gap:14px}
+.clock{font:500 .85rem var(--fm);color:var(--mut);border:1px solid var(--line);border-radius:8px;padding:5px 10px;font-variant-numeric:tabular-nums}
+.langsw{display:flex;border:1px solid var(--line2);border-radius:10px;overflow:hidden}
+.langsw button{background:transparent;border:0;color:var(--mut);font:600 .78rem var(--fd);padding:7px 11px;cursor:pointer;transition:.18s}
+.langsw button:hover{color:var(--tx);background:rgba(255,255,255,.05)}
+.langsw button.on{background:var(--c-min);color:#1a1206}
+
+/* ---- hero ---- */
+.hero{padding:52px 0 8px}
+.kicker{font:600 .74rem var(--fm);letter-spacing:.22em;color:var(--c-min);text-transform:uppercase;margin-bottom:14px}
+h1{font:800 clamp(2rem,4.6vw,3.3rem)/1.08 var(--fd);letter-spacing:-.02em;max-width:20ch}
+.lead{color:var(--mut);max-width:62ch;margin-top:14px;font-size:1.02rem}
+
+.exprcard{margin-top:30px;background:var(--ink);border:1px solid var(--line2);border-radius:16px;padding:24px;box-shadow:0 20px 50px rgba(0,0,0,.35)}
+.exprslots{display:flex;gap:12px;flex-wrap:wrap}
+.slot{flex:1 1 110px;min-width:96px;background:#0d181e;border:1px solid var(--line);border-bottom:3px solid var(--fc);border-radius:10px;padding:12px 12px 10px;cursor:pointer;transition:transform .18s,border-color .18s,box-shadow .18s}
+.slot:hover{transform:translateY(-3px);border-color:var(--fc);box-shadow:0 8px 22px rgba(0,0,0,.35)}
+.slot .sv{display:block;font:700 clamp(1.15rem,2.3vw,1.7rem) var(--fm);color:var(--fc);word-break:break-all;transition:color .2s}
+.slot.long .sv{font-size:1rem}
+.slot.bad .sv{color:var(--err)}
+.slot .sl{display:block;font:600 .64rem var(--fb);letter-spacing:.14em;text-transform:uppercase;color:var(--dim);margin-top:6px}
+.slot.pop .sv{animation:pop .35s ease}
+@keyframes pop{40%{transform:scale(1.12)}}
+.exprbar{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-top:18px}
+.cnt{font:500 .82rem var(--fm);color:var(--warn);border:1px dashed rgba(255,194,75,.4);border-radius:8px;padding:6px 11px;font-variant-numeric:tabular-nums;transition:.3s}
+.cnt.hot{background:rgba(255,194,75,.12);animation:blink 1s ease infinite}
+@keyframes blink{50%{opacity:.55}}
+.flex1{flex:1}
+
+/* ---- buttons ---- */
+.btn{font:600 .85rem var(--fd);border-radius:10px;padding:9px 16px;cursor:pointer;border:1px solid transparent;transition:.18s;display:inline-flex;align-items:center;gap:7px}
+.btn.primary{background:var(--c-min);color:#1a1206}
+.btn.primary:hover{transform:translateY(-2px);box-shadow:0 8px 20px rgba(255,194,75,.25);filter:brightness(1.06)}
+.btn.ghost{background:transparent;border-color:var(--line2);color:var(--tx)}
+.btn.ghost:hover{border-color:var(--c-min);color:var(--c-min);transform:translateY(-1px)}
+.btn.sm{padding:5px 11px;font-size:.75rem;border-radius:8px}
+.btn.ok{background:var(--c-dom)!important;color:#08240f!important;border-color:transparent!important}
+
+/* ---- presets ---- */
+.presets{margin:38px 0 8px}
+h2{font:700 1.25rem var(--fd);letter-spacing:-.01em;margin-bottom:14px}
+.presetrow{display:flex;gap:10px;overflow-x:auto;padding:4px 2px 12px;scrollbar-width:thin}
+.chip{flex:0 0 auto;display:inline-flex;align-items:center;gap:8px;background:var(--panel2);border:1px solid var(--line);border-radius:999px;padding:8px 15px;font:500 .83rem var(--fb);color:var(--tx);cursor:pointer;transition:.18s;white-space:nowrap}
+.chip svg{width:15px;height:15px;color:var(--c-min)}
+.chip:hover{transform:translateY(-2px);border-color:var(--c-min);box-shadow:0 6px 16px rgba(0,0,0,.3)}
+.chip.hit{animation:chipflash .5s ease}
+@keyframes chipflash{30%{background:rgba(255,194,75,.25)}}
+
+/* ---- layout columns ---- */
+.cols{display:grid;grid-template-columns:minmax(0,1fr) 396px;gap:24px;margin-top:14px;align-items:start}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:20px}
+
+/* ---- seconds switch ---- */
+.secswitch{display:flex;align-items:flex-start;gap:14px;margin-bottom:16px}
+.sw{position:relative;width:46px;height:26px;flex:0 0 auto;margin-top:2px}
+.sw input{position:absolute;inset:0;opacity:0;cursor:pointer;z-index:2}
+.sw .tr{position:absolute;inset:0;background:#0a1419;border:1px solid var(--line2);border-radius:999px;transition:.2s}
+.sw .kn{position:absolute;top:4px;left:4px;width:18px;height:18px;border-radius:50%;background:var(--dim);transition:.2s}
+.sw input:checked ~ .tr{background:rgba(94,234,212,.15);border-color:var(--c-sec)}
+.sw input:checked ~ .kn{left:24px;background:var(--c-sec)}
+.secswitch b{font:600 .95rem var(--fd)}
+.secswitch p{font-size:.8rem;color:var(--mut);margin-top:2px}
+
+/* ---- field panels ---- */
+.fpanel{background:var(--panel);border:1px solid var(--line);border-left:3px solid var(--fc);border-radius:14px;padding:18px 20px;margin-bottom:14px;transition:box-shadow .3s}
+.fpanel.flash{animation:flashB 1.1s ease}
+@keyframes flashB{0%,60%{box-shadow:0 0 0 3px var(--fc)}}
+.fhead{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+.fdot{width:10px;height:10px;border-radius:50%;background:var(--fc);box-shadow:0 0 10px var(--fc)}
+.fhead h3{font:700 1.02rem var(--fd)}
+.frange{font:500 .68rem var(--fm);color:var(--dim);border:1px solid var(--line);border-radius:6px;padding:3px 7px}
+.fbadge{margin-left:auto;font:600 .9rem var(--fm);color:var(--fc);background:rgba(255,255,255,.04);border-radius:7px;padding:3px 10px;min-width:38px;text-align:center}
+.fmodes{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px}
+.fmodes button{background:#0a1419;border:1px solid var(--line);color:var(--mut);font:600 .74rem var(--fb);border-radius:8px;padding:6px 11px;cursor:pointer;transition:.15s}
+.fmodes button:hover{color:var(--tx);border-color:var(--line2)}
+.fmodes button.on{background:var(--fc);border-color:var(--fc);color:#0a1419}
+.fbody{display:flex;align-items:flex-end;gap:12px;flex-wrap:wrap}
+.fld{display:flex;flex-direction:column;gap:5px}
+.fld>span{font-size:.68rem;letter-spacing:.1em;text-transform:uppercase;color:var(--dim);font-weight:600}
+input[type=number],input[type=text],select{background:var(--ink);border:1px solid var(--line2);border-radius:9px;color:var(--tx);font:500 .95rem var(--fm);padding:9px 11px;transition:.18s;outline:none}
+input:focus,select:focus{border-color:var(--fc);box-shadow:0 0 0 3px color-mix(in srgb,var(--fc) 22%,transparent)}
+input[type=number]{width:6rem;text-align:center}
+select{min-width:10rem;cursor:pointer}
+.txt{flex:1;min-width:200px}
+.txt.bad{border-color:var(--err)}
+.fnote{font-size:.8rem;color:var(--dim)}
+.fnote code{color:var(--fc)}
+.ferr{width:100%;font-size:.78rem;color:var(--err)}
+.fprev{width:100%;display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.fprev em{font-style:normal;font-size:.72rem;color:var(--dim);text-transform:uppercase;letter-spacing:.1em}
+.fprev b{font:500 .78rem var(--fm);color:var(--fc);background:rgba(255,255,255,.05);border-radius:6px;padding:2px 8px}
+
+/* ---- output card ---- */
+.out{position:sticky;top:84px}
+.out h2{margin-bottom:8px}
+.out h3{font:600 .72rem var(--fb);letter-spacing:.16em;text-transform:uppercase;color:var(--dim);margin:20px 0 10px}
+.outdesc{font:600 1.12rem/1.4 var(--fd);color:#fff;background:var(--ink);border:1px solid var(--line);border-radius:10px;padding:14px 16px;min-height:3.4em}
+.warnchip{margin-top:10px;font-size:.78rem;color:var(--warn);background:rgba(255,194,75,.08);border:1px solid rgba(255,194,75,.3);border-radius:8px;padding:8px 11px}
+.warnchip.err{color:var(--err);background:rgba(255,128,128,.08);border-color:rgba(255,128,128,.35)}
+.nextlist{list-style:none}
+.nextlist li{display:flex;align-items:center;gap:12px;padding:8px 8px;border-radius:9px;transition:.15s;animation:fadein .4s both}
+.nextlist li:hover{background:rgba(255,255,255,.04)}
+.nextlist i{font:700 .72rem var(--fm);font-style:normal;color:var(--c-hour);width:20px;height:20px;border:1px solid rgba(255,138,92,.4);border-radius:6px;display:grid;place-items:center;flex:0 0 auto}
+.nextlist b{font:500 .86rem var(--fm);display:block;font-variant-numeric:tabular-nums}
+.nextlist span{font-size:.72rem;color:var(--dim)}
+.nonext{font-size:.82rem;color:var(--dim);padding:6px 0}
+@keyframes fadein{from{opacity:0;transform:translateY(6px)}}
+.cmdinput{width:100%;font-size:.88rem}
+.cronline{margin-top:10px;background:var(--ink);border:1px solid var(--line);border-radius:10px;padding:11px 12px;display:flex;align-items:center;gap:10px}
+.cronline code{flex:1;font:500 .82rem var(--fm);color:var(--c-min);word-break:break-all}
+
+/* ---- reference ---- */
+.ref{margin:52px 0 30px}
+.refgrid{display:grid;grid-template-columns:1.2fr 1fr;gap:24px;align-items:start}
+table{width:100%;border-collapse:collapse;background:var(--panel);border:1px solid var(--line);border-radius:14px;overflow:hidden;font-size:.85rem}
+th{font:600 .68rem var(--fb);letter-spacing:.13em;text-transform:uppercase;color:var(--dim);text-align:left;padding:12px 14px;border-bottom:1px solid var(--line2);background:var(--panel2)}
+td{padding:10px 14px;border-bottom:1px solid var(--line)}
+tr:last-child td{border-bottom:0}
+tr:hover td{background:rgba(255,255,255,.025)}
+td:nth-child(2){font-family:var(--fm);font-size:.78rem;color:var(--c-dom)}
+td:nth-child(3){font-family:var(--fm);color:var(--c-mon)}
+.gloss{font-size:.75rem;color:var(--dim);margin-top:10px}
+.tips{list-style:none;display:grid;gap:10px}
+.tips li{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:11px 14px;font-size:.83rem;color:var(--mut);transition:.18s}
+.tips li:hover{border-color:var(--line2);transform:translateX(4px);color:var(--tx)}
+.tips code{font:500 .78rem var(--fm);color:var(--c-min);background:rgba(255,194,75,.08);border-radius:5px;padding:1px 6px}
+.tips b{color:var(--tx)}
+
+footer{border-top:1px solid var(--line);padding:22px 0 30px;margin-top:20px}
+footer .wrap{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;font-size:.78rem;color:var(--dim)}
+footer b{color:var(--mut);font-family:var(--fd)}
+
+.reveal{opacity:0;transform:translateY(16px);transition:opacity .6s ease,transform .6s ease}
+.reveal.in{opacity:1;transform:none}
+
+@media (max-width:1020px){
+  .cols{grid-template-columns:1fr}
+  .out{position:static}
+  .refgrid{grid-template-columns:1fr}
+}
+@media (max-width:640px){
+  .topin{flex-wrap:wrap}
+  .clock{display:none}
+  .exprbar .btn{flex:1;justify-content:center}
+}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation:none!important;transition:none!important}
+}
+</style>
+</head>
+<body>
+
+<div class="bg" aria-hidden="true">
+  <div class="glow g1"></div><div class="glow g2"></div><div class="dots"></div>
+  <svg class="ast" viewBox="0 0 24 24" fill="none" stroke="#9fd8e0" stroke-width=".8" stroke-linecap="round">
+    <path d="M12 2v20M2 12h20M4.9 4.9l14.2 14.2M19.1 4.9L4.9 19.1"/>
+  </svg>
+</div>
+
+<header class="top">
+  <div class="wrap topin">
+    <div class="brand">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 3v18M3 12h18M5.6 5.6l12.8 12.8M18.4 5.6L5.6 18.4"/></svg>
+      <div><b>Cronotakt</b><small data-i="tagline"></small></div>
+    </div>
+    <div class="topright">
+      <span class="clock" id="clock">--:--:--</span>
+      <div class="langsw" id="langsw" role="group" aria-label="Language"></div>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+
+  <section class="hero">
+    <div class="reveal">
+      <p class="kicker" data-i="kicker"></p>
+      <h1 data-i="h1"></h1>
+      <p class="lead" data-i="intro"></p>
+    </div>
+    <div class="exprcard reveal">
+      <div class="exprslots" id="slots"></div>
+      <div class="exprbar">
+        <span class="cnt" id="countdown"></span>
+        <span class="flex1"></span>
+        <button class="btn ghost" id="btnReset"></button>
+        <button class="btn primary" id="btnCopyExpr"></button>
+      </div>
+    </div>
+  </section>
+
+  <section class="presets reveal">
+    <h2 data-i="presets"></h2>
+    <div class="presetrow" id="presetrow"></div>
+  </section>
+
+  <div class="cols">
+    <div class="leftcol">
+      <div class="card secswitch reveal">
+        <label class="sw"><input type="checkbox" id="secSwitch"><span class="tr"></span><span class="kn"></span></label>
+        <div><b data-i="secMode"></b><p data-i="secModeHint"></p></div>
+      </div>
+      <div id="panels"></div>
+    </div>
+
+    <aside class="rightcol">
+      <div class="card out reveal">
+        <h2 data-i="result"></h2>
+        <div class="outdesc" id="desc" aria-live="polite"></div>
+        <div class="warnchip" id="warnDom" hidden></div>
+        <div class="warnchip err" id="warnInvalid" hidden></div>
+
+        <h3 data-i="next"></h3>
+        <ol class="nextlist" id="nextlist"></ol>
+        <div class="nonext" id="nonext" hidden></div>
+
+        <h3 data-i="cmdLabel"></h3>
+        <input class="cmdinput" id="cmd" type="text" spellcheck="false" autocomplete="off">
+        <div class="cronline"><code id="cronline"></code><button class="btn ghost sm" id="btnCopyLine"></button></div>
+      </div>
+    </aside>
+  </div>
+
+  <section class="ref reveal">
+    <h2 data-i="refTitle"></h2>
+    <div class="refgrid">
+      <div>
+        <table>
+          <thead><tr><th data-i="refC1"></th><th data-i="refC2"></th><th data-i="refC3"></th></tr></thead>
+          <tbody id="reftbody"></tbody>
+        </table>
+        <p class="gloss" data-i="gloss"></p>
+      </div>
+      <ul class="tips" id="tips"></ul>
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  <div class="wrap">
+    <span><b>Cronotakt</b> · <span data-i="footNote"></span></span>
+    <span>min · hour · dom · month · dow</span>
+  </div>
+</footer>
+
+<script>
+/* ================= i18n ================= */
+const MON3=['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
+const DOW3=['SUN','MON','TUE','WED','THU','FRI','SAT'];
+const enOrd=n=>{const s=['th','st','nd','rd'],v=n%100;return n+(s[(v-20)%10]||s[v]||s[0]);};
+
+const I18N={
+/* ---------- DEUTSCH ---------- */
+de:{
+ locale:'de-DE',docTitle:'Cronotakt · Cron-Generator',
+ tagline:'Cron-Ausdrücke bauen · verstehen · kopieren',
+ kicker:'Cron · 5 Felder · 4 Sprachen',
+ h1:'Cron-Ausdrücke, die man wirklich versteht.',
+ intro:'Fünf Felder, ein Zeitplan: Baue deinen Ausdruck per Klick, lies die Klartext-Erklärung und sieh dir die nächsten Ausführungen live an – alles läuft lokal im Browser.',
+ presets:'Schnellstart-Presets',
+ secMode:'Sekunden-Feld aktivieren (6-Felder-Modus)',
+ secModeHint:'Für Quartz, node-cron & Co. – Standard-Cron unter Linux kennt nur 5 Felder.',
+ fields:{sec:'Sekunde',min:'Minute',hour:'Stunde',dom:'Tag (Monat)',month:'Monat',dow:'Wochentag'},
+ frange:{sec:'0–59',min:'0–59',hour:'0–23',dom:'1–31',month:'1–12 · JAN–DEZ',dow:'0–7 · SUN–SAT'},
+ modes:{all:'Immer *',single:'Fester Wert',step:'Alle N',range:'Bereich',list:'Liste'},
+ from:'Start',every:'Intervall',to:'bis',
+ listPh:'z. B. 0,15,30-45',listPreview:'Ergibt',
+ listErr:'Ungültige Eingabe. Erlaubt: Zahlen, Bereiche (a-b), Schritte (a/b) – per Komma getrennt.',
+ invalid:'Ausdruck ungültig – bitte Eingaben prüfen.',
+ allNote:'Jeder Wert ist erlaubt → <code>*</code>',
+ result:'Ergebnis',next:'Nächste Ausführungen',
+ noRuns:'Keine Ausführung in den nächsten 4 Jahren gefunden.',
+ cmdLabel:'Befehl / Skript',cmdPh:'/pfad/zu/skript.sh',
+ copy:'Kopieren',copied:'Kopiert ✓',copyExpr:'Ausdruck kopieren',reset:'Zurücksetzen',
+ nextIn:'Nächster Lauf',
+ hintDomDow:'Hinweis: Sind „Tag (Monat)“ und „Wochentag“ beide eingeschränkt, verknüpft Cron sie mit ODER – nicht mit UND.',
+ refTitle:'Cron-Syntax auf einen Blick',
+ refC1:'Feld',refC2:'Erlaubte Werte',refC3:'Sonderzeichen',
+ refRows:[['Minute','0–59','* , - /'],['Stunde','0–23','* , - /'],['Tag des Monats','1–31','* , - /'],['Monat','1–12 oder JAN–DEZ','* , - /'],['Wochentag','0–7 (0 & 7 = So) oder SUN–SAT','* , - /']],
+ gloss:'* = jeder Wert · , = Liste · - = Bereich · / = Schrittweite',
+ tips:[
+  '<code>crontab -e</code> öffnet deine Crontab, <code>crontab -l</code> zeigt sie an.',
+  'Sind <b>Tag</b> und <b>Wochentag</b> beide gesetzt, gilt <b>ODER</b> – die häufigste Cron-Falle.',
+  'Abkürzungen: <code>@yearly</code> <code>@monthly</code> <code>@weekly</code> <code>@daily</code> <code>@hourly</code> <code>@reboot</code>',
+  'Namen funktionieren auch: <code>JAN–DEZ</code> im Monat, <code>SUN–SAT</code> im Wochentag.',
+  'GitHub Actions nutzt Cron in <b>UTC</b> mit 5 Feldern – Zeitzonen beachten!',
+  'Quartz (Java) verlangt 6–7 Felder und <code>?</code> statt <code>*</code> für Tag/Wochentag.'
+ ],
+ footNote:'läuft 100 % lokal im Browser · Referenz: Vixie-/POSIX-Cron',
+ months:['Januar','Februar','März','April','Mai','Juni','Juli','August','September','Oktober','November','Dezember'],
+ dows:['Sonntag','Montag','Dienstag','Mittwoch','Donnerstag','Freitag','Samstag'],
+ presetsList:['Jede Minute','Alle 5 Minuten','Jede volle Stunde','Alle 2 Stunden','Täglich 09:00','Täglich Mitternacht','Alle 15 Min · Mo–Fr 8–17','Wochentags 09:00','Montags 08:30','Wochenende 10:00','Monatsbeginn 00:00','Quartalsbeginn 06:00','Neujahr 00:00','Heiligabend 04:00'],
+ d:{
+  everyMin:'Jede Minute',everySec:'Jede Sekunde',
+  nSec:n=>`Alle ${n} Sekunden`,nMin:n=>`Alle ${n} Minuten`,nHour:n=>`Alle ${n} Stunden`,
+  fromWord:{sec:'ab Sekunde',min:'ab Minute',hour:'ab Stunde',dom:'ab Tag',month:'ab Monat',dow:'ab Tag'},
+  dailyAt:t=>`Täglich um ${t} Uhr`,
+  everyDowAt:(n,t)=>`Jeden ${n} um ${t} Uhr`,
+  dowRangeAt:(a,b,t)=>`Von ${a} bis ${b} um ${t} Uhr`,
+  weekListAt:(n,t)=>`Jede Woche ${n} um ${t} Uhr`,
+  monthlyAt:(c,t)=>`Am ${c} jedes Monats um ${t} Uhr`,
+  yearlyAt:(day,mon,t)=>`Am ${day} ${mon} um ${t} Uhr`,
+  atEveryHour:m=>`Jede Stunde bei Minute ${m}`,
+  everyMinIn:p=>`Jede Minute in Stunde ${p}`,
+  minParts:p=>`Bei Minute ${p}`,hourParts:p=>`In Stunde ${p}`,secParts:p=>`Bei Sekunde ${p}`,
+  domRangePhrase:(a,b)=>`Vom ${a} bis ${b}`,
+  domAt:j=>`Am ${j}`,
+  monthRangePhrase:(a,b)=>`Von ${a} bis ${b}`,
+  monthIn:j=>`Im ${j}`,
+  dowRangeAlone:(a,b)=>`${a} bis ${b}`,
+  dowOn:j=>`Am ${j}`,
+  and:'und',
+  domVal:n=>n+'.',
+  domRangeVals:(a,b)=>`${a}.–${b}.`
+ }
+},
+/* ---------- ENGLISH ---------- */
+en:{
+ locale:'en-GB',docTitle:'Cronotakt · Cron Generator',
+ tagline:'build · understand · copy cron expressions',
+ kicker:'Cron · 5 fields · 4 languages',
+ h1:'Cron expressions you actually understand.',
+ intro:'Five fields, one schedule: click together your expression, read the plain-English explanation and preview the upcoming runs – all locally in your browser.',
+ presets:'Quick-start presets',
+ secMode:'Enable seconds field (6-field mode)',
+ secModeHint:'For Quartz, node-cron & friends – standard Linux cron only knows 5 fields.',
+ fields:{sec:'Second',min:'Minute',hour:'Hour',dom:'Day of month',month:'Month',dow:'Day of week'},
+ frange:{sec:'0–59',min:'0–59',hour:'0–23',dom:'1–31',month:'1–12 · JAN–DEC',dow:'0–7 · SUN–SAT'},
+ modes:{all:'Always *',single:'Fixed value',step:'Every N',range:'Range',list:'List'},
+ from:'Start',every:'Interval',to:'to',
+ listPh:'e.g. 0,15,30-45',listPreview:'Yields',
+ listErr:'Invalid input. Allowed: numbers, ranges (a-b), steps (a/b) – separated by commas.',
+ invalid:'Expression invalid – please check your inputs.',
+ allNote:'Any value is allowed → <code>*</code>',
+ result:'Result',next:'Upcoming runs',
+ noRuns:'No run found within the next 4 years.',
+ cmdLabel:'Command / script',cmdPh:'/path/to/script.sh',
+ copy:'Copy',copied:'Copied ✓',copyExpr:'Copy expression',reset:'Reset',
+ nextIn:'Next run',
+ hintDomDow:'Note: when both “day of month” and “day of week” are restricted, cron joins them with OR – not AND.',
+ refTitle:'Cron syntax at a glance',
+ refC1:'Field',refC2:'Allowed values',refC3:'Specials',
+ refRows:[['Minute','0–59','* , - /'],['Hour','0–23','* , - /'],['Day of month','1–31','* , - /'],['Month','1–12 or JAN–DEC','* , - /'],['Day of week','0–7 (0 & 7 = Sun) or SUN–SAT','* , - /']],
+ gloss:'* = any value · , = list · - = range · / = step',
+ tips:[
+  '<code>crontab -e</code> opens your crontab, <code>crontab -l</code> lists it.',
+  'When both <b>day of month</b> and <b>day of week</b> are set, cron uses <b>OR</b> – the classic trap.',
+  'Shortcuts: <code>@yearly</code> <code>@monthly</code> <code>@weekly</code> <code>@daily</code> <code>@hourly</code> <code>@reboot</code>',
+  'Names work too: <code>JAN–DEC</code> for months, <code>SUN–SAT</code> for weekdays.',
+  'GitHub Actions runs cron in <b>UTC</b> with 5 fields – mind the timezone!',
+  'Quartz (Java) needs 6–7 fields and <code>?</code> instead of <code>*</code> for day fields.'
+ ],
+ footNote:'runs 100 % locally in your browser · Reference: Vixie/POSIX cron',
+ months:['January','February','March','April','May','June','July','August','September','October','November','December'],
+ dows:['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'],
+ presetsList:['Every minute','Every 5 minutes','Every full hour','Every 2 hours','Daily 9:00','Daily midnight','Every 15 min · Mon–Fri 8–17','Weekdays 9:00','Mondays 8:30','Weekend 10:00','1st of month 00:00','Quarter start 6:00','New Year 00:00','Christmas Eve 4:00'],
+ d:{
+  everyMin:'Every minute',everySec:'Every second',
+  nSec:n=>`Every ${n} seconds`,nMin:n=>`Every ${n} minutes`,nHour:n=>`Every ${n} hours`,
+  fromWord:{sec:'from second',min:'from minute',hour:'from hour',dom:'from day',month:'from month',dow:'from weekday'},
+  dailyAt:t=>`Daily at ${t}`,
+  everyDowAt:(n,t)=>`Every ${n} at ${t}`,
+  dowRangeAt:(a,b,t)=>`${a} through ${b} at ${t}`,
+  weekListAt:(n,t)=>`Every week on ${n} at ${t}`,
+  monthlyAt:(c,t)=>`On the ${c} of every month at ${t}`,
+  yearlyAt:(day,mon,t)=>`On ${mon} ${day} at ${t}`,
+  atEveryHour:m=>`At minute ${m} past every hour`,
+  everyMinIn:p=>`Every minute during hours ${p}`,
+  minParts:p=>`At minutes ${p}`,hourParts:p=>`At hours ${p}`,secParts:p=>`At second ${p}`,
+  domRangePhrase:(a,b)=>`From the ${a} to the ${b}`,
+  domAt:j=>`On the ${j}`,
+  monthRangePhrase:(a,b)=>`From ${a} to ${b}`,
+  monthIn:j=>`In ${j}`,
+  dowRangeAlone:(a,b)=>`${a} through ${b}`,
+  dowOn:j=>`On ${j}`,
+  and:'and',
+  domVal:n=>enOrd(n),
+  domRangeVals:(a,b)=>`${enOrd(a)}–${enOrd(b)}`
+ }
+},
+/* ---------- FRANÇAIS ---------- */
+fr:{
+ locale:'fr-FR',docTitle:'Cronotakt · Générateur Cron',
+ tagline:'créer · comprendre · copier des expressions cron',
+ kicker:'Cron · 5 champs · 4 langues',
+ h1:'Des expressions cron vraiment compréhensibles.',
+ intro:'Cinq champs, un planning : composez votre expression par clic, lisez l’explication en clair et prévisualisez les prochaines exécutions – tout se passe dans votre navigateur.',
+ presets:'Préréglages rapides',
+ secMode:'Activer le champ secondes (mode 6 champs)',
+ secModeHint:'Pour Quartz, node-cron & Cie – le cron Linux standard ne connaît que 5 champs.',
+ fields:{sec:'Seconde',min:'Minute',hour:'Heure',dom:'Jour du mois',month:'Mois',dow:'Jour de semaine'},
+ frange:{sec:'0–59',min:'0–59',hour:'0–23',dom:'1–31',month:'1–12 · JAN–DEC',dow:'0–7 · SUN–SAT'},
+ modes:{all:'Toujours *',single:'Valeur fixe',step:'Tous les N',range:'Plage',list:'Liste'},
+ from:'Départ',every:'Intervalle',to:'à',
+ listPh:'ex. 0,15,30-45',listPreview:'Donne',
+ listErr:'Entrée invalide. Autorisé : nombres, plages (a-b), pas (a/b) – séparés par des virgules.',
+ invalid:'Expression invalide – vérifiez vos entrées.',
+ allNote:'Toutes les valeurs → <code>*</code>',
+ result:'Résultat',next:'Prochaines exécutions',
+ noRuns:'Aucune exécution trouvée dans les 4 prochaines années.',
+ cmdLabel:'Commande / script',cmdPh:'/chemin/vers/script.sh',
+ copy:'Copier',copied:'Copié ✓',copyExpr:"Copier l'expression",reset:'Réinitialiser',
+ nextIn:'Prochain lancement',
+ hintDomDow:'Attention : si « jour du mois » et « jour de semaine » sont tous deux restreints, cron les combine avec OU – pas ET.',
+ refTitle:'La syntaxe cron en un coup d’œil',
+ refC1:'Champ',refC2:'Valeurs autorisées',refC3:'Spéciaux',
+ refRows:[['Minute','0–59','* , - /'],['Heure','0–23','* , - /'],['Jour du mois','1–31','* , - /'],['Mois','1–12 ou JAN–DEC','* , - /'],['Jour de semaine','0–7 (0 & 7 = dim.) ou SUN–SAT','* , - /']],
+ gloss:'* = toute valeur · , = liste · - = plage · / = pas',
+ tips:[
+  '<code>crontab -e</code> ouvre votre crontab, <code>crontab -l</code> l’affiche.',
+  'Si <b>jour du mois</b> et <b>jour de semaine</b> sont définis, cron utilise <b>OU</b> – le piège classique.',
+  'Raccourcis : <code>@yearly</code> <code>@monthly</code> <code>@weekly</code> <code>@daily</code> <code>@hourly</code> <code>@reboot</code>',
+  'Les noms marchent aussi : <code>JAN–DEC</code> pour les mois, <code>SUN–SAT</code> pour les jours.',
+  'GitHub Actions exécute cron en <b>UTC</b> avec 5 champs – attention au fuseau !',
+  'Quartz (Java) demande 6–7 champs et <code>?</code> au lieu de <code>*</code> pour les jours.'
+ ],
+ footNote:'fonctionne 100 % en local · Référence : cron Vixie/POSIX',
+ months:['janvier','février','mars','avril','mai','juin','juillet','août','septembre','octobre','novembre','décembre'],
+ dows:['dimanche','lundi','mardi','mercredi','jeudi','vendredi','samedi'],
+ presetsList:['Chaque minute','Toutes les 5 minutes','Chaque heure pile','Toutes les 2 heures','Chaque jour à 9 h','Chaque jour à minuit','Toutes les 15 min · lun–ven 8–17','Semaine à 9 h','Le lundi à 8 h 30','Week-end à 10 h','Début de mois 00 h','Début de trimestre 6 h','1er janvier 00 h','Réveillon de Noël 4 h'],
+ d:{
+  everyMin:'Chaque minute',everySec:'Chaque seconde',
+  nSec:n=>`Toutes les ${n} secondes`,nMin:n=>`Toutes les ${n} minutes`,nHour:n=>`Toutes les ${n} heures`,
+  fromWord:{sec:'à partir de la seconde',min:'à partir de la minute',hour:"à partir de l'heure",dom:'à partir du jour',month:'à partir du mois',dow:'à partir du jour'},
+  dailyAt:t=>`Chaque jour à ${t}`,
+  everyDowAt:(n,t)=>`Chaque ${n} à ${t}`,
+  dowRangeAt:(a,b,t)=>`Du ${a} au ${b} à ${t}`,
+  weekListAt:(n,t)=>`Chaque semaine, ${n} à ${t}`,
+  monthlyAt:(c,t)=>`Le ${c} de chaque mois à ${t}`,
+  yearlyAt:(day,mon,t)=>`Le ${day} ${mon} à ${t}`,
+  atEveryHour:m=>`À la minute ${m} de chaque heure`,
+  everyMinIn:p=>`Chaque minute, aux heures ${p}`,
+  minParts:p=>`Aux minutes ${p}`,hourParts:p=>`Aux heures ${p}`,secParts:p=>`À la seconde ${p}`,
+  domRangePhrase:(a,b)=>`Du ${a} au ${b}`,
+  domAt:j=>`Le ${j}`,
+  monthRangePhrase:(a,b)=>`De ${a} à ${b}`,
+  monthIn:j=>`En ${j}`,
+  dowRangeAlone:(a,b)=>`Du ${a} au ${b}`,
+  dowOn:j=>`Le ${j}`,
+  and:'et',
+  domVal:n=>n===1?'1er':String(n),
+  domRangeVals:(a,b)=>`${a===1?'1er':a} au ${b}`
+ }
+},
+/* ---------- ESPAÑOL ---------- */
+es:{
+ locale:'es-ES',docTitle:'Cronotakt · Generador Cron',
+ tagline:'crear · entender · copiar expresiones cron',
+ kicker:'Cron · 5 campos · 4 idiomas',
+ h1:'Expresiones cron que de verdad se entienden.',
+ intro:'Cinco campos, un horario: construye tu expresión con clics, lee la explicación en lenguaje claro y previsualiza las próximas ejecuciones – todo en tu navegador.',
+ presets:'Ajustes rápidos',
+ secMode:'Activar campo de segundos (modo 6 campos)',
+ secModeHint:'Para Quartz, node-cron y similares – el cron estándar de Linux solo conoce 5 campos.',
+ fields:{sec:'Segundo',min:'Minuto',hour:'Hora',dom:'Día del mes',month:'Mes',dow:'Día de la semana'},
+ frange:{sec:'0–59',min:'0–59',hour:'0–23',dom:'1–31',month:'1–12 · JAN–DEC',dow:'0–7 · SUN–SAT'},
+ modes:{all:'Siempre *',single:'Valor fijo',step:'Cada N',range:'Rango',list:'Lista'},
+ from:'Inicio',every:'Intervalo',to:'a',
+ listPh:'p. ej. 0,15,30-45',listPreview:'Resulta',
+ listErr:'Entrada no válida. Permitido: números, rangos (a-b), pasos (a/b) – separados por comas.',
+ invalid:'Expresión no válida – revisa las entradas.',
+ allNote:'Cualquier valor → <code>*</code>',
+ result:'Resultado',next:'Próximas ejecuciones',
+ noRuns:'No se encontró ninguna ejecución en los próximos 4 años.',
+ cmdLabel:'Comando / script',cmdPh:'/ruta/al/script.sh',
+ copy:'Copiar',copied:'Copiado ✓',copyExpr:'Copiar expresión',reset:'Restablecer',
+ nextIn:'Próxima ejecución',
+ hintDomDow:'Ojo: si «día del mes» y «día de la semana» están restringidos a la vez, cron los une con O – no con Y.',
+ refTitle:'Sintaxis cron de un vistazo',
+ refC1:'Campo',refC2:'Valores permitidos',refC3:'Especiales',
+ refRows:[['Minuto','0–59','* , - /'],['Hora','0–23','* , - /'],['Día del mes','1–31','* , - /'],['Mes','1–12 o JAN–DEC','* , - /'],['Día de la semana','0–7 (0 y 7 = dom.) o SUN–SAT','* , - /']],
+ gloss:'* = cualquier valor · , = lista · - = rango · / = paso',
+ tips:[
+  '<code>crontab -e</code> abre tu crontab, <code>crontab -l</code> la muestra.',
+  'Si <b>día del mes</b> y <b>día de la semana</b> están definidos, cron usa <b>O</b> – la trampa clásica.',
+  'Atajos: <code>@yearly</code> <code>@monthly</code> <code>@weekly</code> <code>@daily</code> <code>@hourly</code> <code>@reboot</code>',
+  'Los nombres también valen: <code>JAN–DEC</code> para meses, <code>SUN–SAT</code> para días.',
+  'GitHub Actions ejecuta cron en <b>UTC</b> con 5 campos – ¡ojo con la zona horaria!',
+  'Quartz (Java) usa 6–7 campos y <code>?</code> en vez de <code>*</code> para los días.'
+ ],
+ footNote:'funciona 100 % en local · Referencia: cron Vixie/POSIX',
+ months:['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'],
+ dows:['domingo','lunes','martes','miércoles','jueves','viernes','sábado'],
+ presetsList:['Cada minuto','Cada 5 minutos','Cada hora en punto','Cada 2 horas','Diario 9:00','Diario medianoche','Cada 15 min · lun–vie 8–17','Laborables 9:00','Lunes 8:30','Fin de semana 10:00','Inicio de mes 0:00','Inicio de trimestre 6:00','Año nuevo 0:00','Nochebuena 4:00'],
+ d:{
+  everyMin:'Cada minuto',everySec:'Cada segundo',
+  nSec:n=>`Cada ${n} segundos`,nMin:n=>`Cada ${n} minutos`,nHour:n=>`Cada ${n} horas`,
+  fromWord:{sec:'desde el segundo',min:'desde el minuto',hour:'desde la hora',dom:'desde el día',month:'desde el mes',dow:'desde el día'},
+  dailyAt:t=>`Cada día a las ${t}`,
+  everyDowAt:(n,t)=>`Cada ${n} a las ${t}`,
+  dowRangeAt:(a,b,t)=>`De ${a} a ${b}, a las ${t}`,
+  weekListAt:(n,t)=>`Cada semana, ${n}, a las ${t}`,
+  monthlyAt:(c,t)=>`Los días ${c} de cada mes, a las ${t}`,
+  yearlyAt:(day,mon,t)=>`El ${day} de ${mon} a las ${t}`,
+  atEveryHour:m=>`En el minuto ${m} de cada hora`,
+  everyMinIn:p=>`Cada minuto, en las horas ${p}`,
+  minParts:p=>`En los minutos ${p}`,hourParts:p=>`En las horas ${p}`,secParts:p=>`En el segundo ${p}`,
+  domRangePhrase:(a,b)=>`Del día ${a} al ${b}`,
+  domAt:j=>`Los días ${j}`,
+  monthRangePhrase:(a,b)=>`De ${a} a ${b}`,
+  monthIn:j=>`En ${j}`,
+  dowRangeAlone:(a,b)=>`De ${a} a ${b}`,
+  dowOn:j=>`Los ${j}`,
+  and:'y',
+  domVal:n=>String(n),
+  domRangeVals:(a,b)=>`${a} al ${b}`
+ }
+}};
+
+/* ================= state ================= */
+const FDEF={sec:{min:0,max:59},min:{min:0,max:59},hour:{min:0,max:23},dom:{min:1,max:31},month:{min:1,max:12},dow:{min:0,max:7}};
+const FORDER=['sec','min','hour','dom','month','dow'];
+const FCOL={sec:'--c-sec',min:'--c-min',hour:'--c-hour',dom:'--c-dom',month:'--c-mon',dow:'--c-dow'};
+const MODES=['all','single','step','range','list'];
+let lang='de', nextTimes=[], lastExpr='';
+const state={secOn:false,f:{sec:'*',min:'*',hour:'*',dom:'*',month:'*',dow:'*'},cmd:'',cmdDefault:true};
+
+const $=s=>document.querySelector(s);
+const L=()=>I18N[lang];
+const pad=n=>String(n).padStart(2,'0');
+const cap=s=>s.charAt(0).toUpperCase()+s.slice(1);
+
+function detectLang(){
+  const saved=localStorage.getItem('cronotakt.lang');
+  if(saved&&I18N[saved])return saved;
+  const nav=(navigator.language||'de').slice(0,2).toLowerCase();
+  return I18N[nav]?nav:'de';
+}
+
+/* ================= parsing ================= */
+function valOf(tok,key){
+  tok=String(tok).trim().toUpperCase();
+  if(key==='month'){const i=MON3.indexOf(tok);if(i>-1)return i+1;}
+  if(key==='dow'){const i=DOW3.indexOf(tok);if(i>-1)return i;}
+  const n=+tok;
+  if(!Number.isInteger(n))throw 0;
+  if(key==='dow'&&n===7)return 0;
+  const f=FDEF[key];
+  if(n<f.min||n>=(key==='dow'?8:f.max+1))throw 0;
+  return n;
+}
+function parsePart(p,key){
+  p=p.trim();if(!p)throw 0;
+  if(p==='*')return{kind:'all'};
+  let step=null;
+  if(p.includes('/')){const[a,b]=p.split('/');step=+b;p=a;if(!Number.isInteger(step)||step<1)throw 0;if(p==='*')p=FDEF[key].min;}
+  if(p.includes('-')){
+    const[a,b]=p.split('-').map(x=>valOf(x,key));
+    if(a>b)throw 0;
+    return{kind:step!=null?'rangeStep':'range',a,b,step};
+  }
+  const v=valOf(p,key);
+  return step!=null?{kind:'step',a:v,step}:{kind:'single',v};
+}
+function parseField(str,key){
+  const out={star:false,parts:[],ok:true};
+  str=(str||'').trim();
+  if(!str){out.ok=false;return out;}
+  if(str==='*'){out.star=true;return out;}
+  try{out.parts=str.split(',').map(p=>parsePart(p,key));}
+  catch(e){out.ok=false;}
+  return out;
+}
+function parseAll(){const o={};for(const k of FORDER)o[k]=parseField(state.f[k],k);return o;}
+function expand(parsed,key){
+  const f=FDEF[key],set=new Set(),max=key==='dow'?6:f.max;
+  if(parsed.star){for(let i=f.min;i<=max;i++)set.add(i);return set;}
+  if(!parsed.ok)return set;
+  for(const p of parsed.parts){
+    if(p.kind==='all'){for(let i=f.min;i<=max;i++)set.add(i);}
+    else if(p.kind==='single')set.add(Math.min(p.v,max));
+    else if(p.kind==='range')for(let i=p.a;i<=Math.min(p.b,max);i++)set.add(i);
+    else if(p.kind==='step')for(let i=p.a;i<=max;i+=p.step)set.add(i);
+    else if(p.kind==='rangeStep')for(let i=p.a;i<=Math.min(p.b,max);i+=p.step)set.add(i);
+  }
+  return set;
+}
+
+/* ================= next runs ================= */
+function computeNext(P,count,withSec){
+  const sets={month:expand(P.month,'month'),dom:expand(P.dom,'dom'),dow:expand(P.dow,'dow'),hour:expand(P.hour,'hour'),min:expand(P.min,'min')};
+  const domR=!P.dom.star,dowR=!P.dow.star;
+  const hours=[...sets.hour].sort((a,b)=>a-b),mins=[...sets.min].sort((a,b)=>a-b);
+  let secs=[0];
+  if(withSec)secs=[...expand(P.sec,'sec')].sort((a,b)=>a-b);
+  const res=[],now=new Date();
+  const start=new Date(now.getTime());
+  if(withSec)start.setSeconds(start.getSeconds()+1,0);
+  else{start.setSeconds(0,0);start.setMinutes(start.getMinutes()+1);}
+  const end=new Date(now);end.setFullYear(end.getFullYear()+4);
+  const day=new Date(start);day.setHours(0,0,0,0);
+  const dayOK=d=>{
+    const dm=sets.dom.has(d.getDate()),wm=sets.dow.has(d.getDay());
+    return sets.month.has(d.getMonth()+1)&&((domR||dowR)?(dm||wm):(dm&&wm));
+  };
+  let guard=0;
+  while(day<=end&&res.length<count&&guard++<1700){
+    if(dayOK(day)){
+      outer:
+      for(const h of hours){
+        for(const mi of mins){
+          const base=new Date(day);base.setHours(h,mi,0,0);
+          if(base.getTime()+secs[secs.length-1]*1000<start.getTime())continue;
+          for(const s of secs){
+            const t=new Date(base);t.setSeconds(s);
+            if(t>=start){res.push(t);if(res.length>=count)break outer;}
+          }
+        }
+      }
+    }
+    day.setDate(day.getDate()+1);
+  }
+  return res;
+}
+
+/* ================= description ================= */
+function joinAnd(arr,w){if(arr.length<2)return arr.join('');return arr.slice(0,-1).join(', ')+` ${w} `+arr[arr.length-1];}
+function listTxt(key,P){
+  const D=L().d,mon=L().months,dow=L().dows;
+  const r=P[key].parts.map(p=>{
+    if(p.kind==='single')return fmtVal(key,p.v);
+    if(p.kind==='range')return fmtRange(key,p.a,p.b);
+    if(p.kind==='step')return`${p.a}/${p.step}`;
+    return`${p.a}-${p.b}/${p.step}`;
+  });
+  return joinAnd(r,D.and);
+  function fmtVal(k,v){
+    if(k==='month')return mon[v-1];
+    if(k==='dow')return dow[v];
+    if(k==='dom')return D.domVal(v);
+    return k==='hour'?pad(v):String(v);
+  }
+  function fmtRange(k,a,b){
+    if(k==='month')return`${mon[a-1]}–${mon[b-1]}`;
+    if(k==='dow')return`${dow[a]}–${dow[b]}`;
+    if(k==='dom')return D.domRangeVals(a,b);
+    return`${a}-${b}`;
+  }
+}
+function fromNote(key,p){
+  if((p.kind==='step'||p.kind==='rangeStep')&&p.a>FDEF[key].min)return` (${L().d.fromWord[key]} ${p.a})`;
+  return'';
+}
+function composeDescr(){
+  const D=L().d,P=parseAll(),w=state.secOn;
+  const R={};FORDER.forEach(k=>R[k]=!P[k].star);
+  const single=k=>R[k]&&P[k].parts.length===1&&P[k].parts[0].kind==='single';
+  const step1=k=>R[k]&&P[k].parts.length===1&&P[k].parts[0].kind==='step';
+  const cal=!R.dom&&!R.month&&!R.dow;
+  const jf=a=>cap(a.filter(Boolean).join(', '));
+
+  const secFrag=()=>{const p=P.sec.parts;
+    if(p.length===1&&p[0].kind==='step')return D.nSec(p[0].step)+fromNote('sec',p[0]);
+    return D.secParts(listTxt('sec',P));};
+  const domPhrase=()=>{const p=P.dom.parts;
+    if(p.length===1&&p[0].kind==='range')return D.domRangePhrase(D.domVal(p[0].a),D.domVal(p[0].b));
+    return D.domAt(listTxt('dom',P));};
+  const monPhrase=()=>{const p=P.month.parts;
+    if(p.length===1&&p[0].kind==='range')return D.monthRangePhrase(L().months[p[0].a-1],L().months[p[0].b-1]);
+    return D.monthIn(listTxt('month',P));};
+  const dowPhrase=()=>{const p=P.dow.parts;
+    if(p.length===1&&p[0].kind==='range')return D.dowRangeAlone(L().dows[p[0].a],L().dows[p[0].b]);
+    return D.dowOn(listTxt('dow',P));};
+  const calFrags=()=>[R.dom?domPhrase():null,R.month?monPhrase():null,R.dow?dowPhrase():null];
+  const dowTimeFrag=t=>{const p=P.dow.parts,d=L().dows;
+    if(p.length===1&&p[0].kind==='single')return D.everyDowAt(d[p[0].v],t);
+    if(p.length===1&&p[0].kind==='range')return D.dowRangeAt(d[p[0].a],d[p[0].b],t);
+    return D.weekListAt(joinAnd(p.map(x=>x.kind==='single'?d[x.v]:'…'),D.and),t);};
+
+  // seconds-only specials
+  if(w&&!R.min&&!R.hour&&cal){
+    if(!R.sec)return D.everySec;
+    return cap(secFrag());
+  }
+  if(!R.min&&!R.hour&&cal)return D.everyMin;
+
+  const frags=[];
+  if(w&&R.sec)frags.push(secFrag());
+
+  const time=(single('min')&&single('hour'))?pad(P.hour.parts[0].v)+':'+pad(P.min.parts[0].v):null;
+  if(time){
+    if(cal)return jf([...frags,D.dailyAt(time)]);
+    if(R.dow&&!R.dom&&!R.month)return jf([...frags,dowTimeFrag(time)]);
+    if(single('dom')&&single('month')&&!R.dow)
+      return jf([...frags,D.yearlyAt(D.domVal(P.dom.parts[0].v),L().months[P.month.parts[0].v-1],time)]);
+    if(R.dom&&!R.month&&!R.dow)return jf([...frags,D.monthlyAt(listTxt('dom',P),time)]);
+  }
+  if(single('min')&&!R.hour)return jf([...frags,D.atEveryHour(pad(P.min.parts[0].v)),...calFrags()]);
+  if(!R.min&&R.hour&&cal&&(!w||!R.sec))return jf([D.everyMinIn(listTxt('hour',P))]);
+
+  // generic
+  if(R.min){
+    if(step1('min'))frags.push(D.nMin(P.min.parts[0].step)+fromNote('min',P.min.parts[0]));
+    else frags.push(D.minParts(listTxt('min',P)));
+  }else if(R.hour)frags.push(D.everyMin);
+  if(R.hour){
+    if(step1('hour'))frags.push(D.nHour(P.hour.parts[0].step)+fromNote('hour',P.hour.parts[0]));
+    else frags.push(D.hourParts(listTxt('hour',P)));
+  }
+  frags.push(...calFrags());
+  if(!frags.length)return w?D.everySec:D.everyMin;
+  return jf(frags);
+}
+
+/* ================= presets ================= */
+const ICONS={
+ clock:'<circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/>',
+ sun:'<circle cx="12" cy="12" r="4"/><path d="M12 2.5v2.5M12 19v2.5M2.5 12H5M19 12h2.5M4.9 4.9l1.8 1.8M17.3 17.3l1.8 1.8M19.1 4.9l-1.8 1.8M6.7 17.3l-1.8 1.8"/>',
+ sunrise:'<path d="M12 3.5v4M5.2 10.2l1.6 1.6M18.8 10.2l-1.6 1.6M3 16h18M6.5 20h11"/><path d="M8 16a4 4 0 0 1 8 0"/>',
+ moon:'<path d="M20 13.5A8 8 0 1 1 10.5 4 6.5 6.5 0 0 0 20 13.5z"/>',
+ briefcase:'<rect x="3.5" y="7.5" width="17" height="12" rx="2"/><path d="M9 7.5V6a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v1.5M3.5 12.5h17"/>',
+ calendar:'<rect x="3.5" y="5" width="17" height="15.5" rx="2"/><path d="M3.5 10h17M8 2.8V6M16 2.8V6"/>',
+ star:'<path d="M12 3.2l2.6 5.4 5.9.8-4.3 4.1 1 5.9-5.2-2.8-5.2 2.8 1-5.9-4.3-4.1 5.9-.8z"/>',
+ gift:'<rect x="3.5" y="8.5" width="17" height="12" rx="1.5"/><path d="M12 8.5v12M3.5 12.5h17"/><path d="M12 8.5s-4.5.5-4.5-2.7C7.5 3.6 11 3.6 12 8.5zm0 0s4.5.5 4.5-2.7c0-2.2-3.5-2.2-4.5 2.7z"/>',
+ flag:'<path d="M5.5 21V4"/><path d="M5.5 4.8c4.5-2.6 8.5 2.6 13 0v8.4c-4.5 2.6-8.5-2.6-13 0"/>',
+ smile:'<circle cx="12" cy="12" r="8.5"/><path d="M8.5 14s1.2 1.8 3.5 1.8 3.5-1.8 3.5-1.8M9 9.5h.01M15 9.5h.01"/>',
+ repeat:'<path d="M17.5 2.5l3 3-3 3M4 11.5V9.5a4 4 0 0 1 4-4h12.5M6.5 21.5l-3-3 3-3M20 12.5v2a4 4 0 0 1-4 4H3.5"/>',
+ pulse:'<path d="M3 12h3.5l2.5-7 4 14 2.5-7H21"/>'
+};
+const PRESETS=[
+ {icon:'pulse',f:{}},
+ {icon:'clock',f:{min:'*/5'}},
+ {icon:'clock',f:{min:'0'}},
+ {icon:'repeat',f:{min:'0',hour:'*/2'}},
+ {icon:'sun',f:{min:'0',hour:'9'}},
+ {icon:'moon',f:{min:'0',hour:'0'}},
+ {icon:'repeat',f:{min:'*/15',hour:'8-17',dow:'1-5'}},
+ {icon:'briefcase',f:{min:'0',hour:'9',dow:'1-5'}},
+ {icon:'flag',f:{min:'30',hour:'8',dow:'1'}},
+ {icon:'smile',f:{min:'0',hour:'10',dow:'6,0'}},
+ {icon:'calendar',f:{min:'0',hour:'0',dom:'1'}},
+ {icon:'calendar',f:{min:'0',hour:'6',dom:'1',month:'1,4,7,10'}},
+ {icon:'star',f:{min:'0',hour:'0',dom:'1',month:'1'}},
+ {icon:'gift',f:{min:'0',hour:'4',dom:'24',month:'12'}}
+];
+
+/* ================= UI building ================= */
+function buildLangSw(){
+  const box=$('#langsw');box.innerHTML='';
+  for(const c of['de','en','fr','es']){
+    const b=document.createElement('button');
+    b.textContent=c.toUpperCase();
+    b.className=c===lang?'on':'';
+    b.onclick=()=>{if(c===lang)return;lang=c;localStorage.setItem('cronotakt.lang',c);applyLang();};
+    box.append(b);
+  }
+}
+function activeKeys(){return state.secOn?FORDER:FORDER.slice(1);}
+function exprString(){return activeKeys().map(k=>state.f[k]).join(' ');}
+function detectMode(str){
+  str=str.trim();
+  if(str==='*')return'all';
+  if(str.includes(','))return'list';
+  if(str.includes('/'))return'step';
+  if(str.includes('-'))return'range';
+  return'single';
+}
+function buildSlots(){
+  const box=$('#slots');box.innerHTML='';
+  for(const k of activeKeys()){
+    const d=document.createElement('div');
+    d.className='slot';d.style.setProperty('--fc',`var(${FCOL[k]})`);
+    d.title=L().fields[k];
+    d.innerHTML=`<span class="sv"></span><span class="sl">${L().fields[k]}</span>`;
+    d.onclick=()=>{const p=document.getElementById('pnl-'+k);if(p){p.scrollIntoView({behavior:'smooth',block:'center'});p.classList.remove('flash');void p.offsetWidth;p.classList.add('flash');}};
+    box.append(d);
+  }
+}
+function buildPresets(){
+  const row=$('#presetrow');row.innerHTML='';
+  PRESETS.forEach((p,i)=>{
+    const c=document.createElement('button');
+    c.className='chip';
+    c.innerHTML=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${ICONS[p.icon]}</svg>${L().presetsList[i]}`;
+    c.onclick=()=>{
+      if(PRESETS[i].f.sec&&!state.secOn){state.secOn=true;$('#secSwitch').checked=true;}
+      for(const k of FORDER)state.f[k]=PRESETS[i].f[k]||'*';
+      buildSlots();buildPanels();refresh();
+      c.classList.remove('hit');void c.offsetWidth;c.classList.add('hit');
+    };
+    row.append(c);
+  });
+}
+function buildRef(){
+  const tb=$('#reftbody');tb.innerHTML='';
+  for(const r of L().refRows){
+    const tr=document.createElement('tr');
+    tr.innerHTML=`<td>${r[0]}</td><td>${r[1]}</td><td>${r[2]}</td>`;
+    tb.append(tr);
+  }
+  const tips=$('#tips');tips.innerHTML='';
+  for(const t of L().tips){const li=document.createElement('li');li.innerHTML=t;tips.append(li);}
+}
+
+/* --- field panels --- */
+function buildPanels(){
+  const box=$('#panels');box.innerHTML='';
+  for(const k of activeKeys())box.append(makePanel(k));
+}
+function makePanel(key){
+  const f=FDEF[key],named=key==='month'||key==='dow';
+  const sec=document.createElement('section');
+  sec.className='fpanel';sec.id='pnl-'+key;
+  sec.style.setProperty('--fc',`var(${FCOL[key]})`);
+  sec.innerHTML=`
+    <div class="fhead"><span class="fdot"></span><h3>${L().fields[key]}</h3>
+      <span class="frange">${L().frange[key]}</span><code class="fbadge"></code></div>
+    <div class="fmodes"></div><div class="fbody"></div>`;
+  const modesEl=sec.querySelector('.fmodes');
+  for(const m of MODES){
+    const b=document.createElement('button');
+    b.textContent=L().modes[m];b.dataset.mode=m;
+    b.onclick=()=>{switchMode(key,m,sec);};
+    modesEl.append(b);
+  }
+  renderPanelBody(key,sec);
+  syncModeButtons(key,sec);
+  updateBadge(key,sec);
+  return sec;
+}
+function syncModeButtons(key,sec){
+  const mode=detectMode(state.f[key]);
+  sec.querySelectorAll('.fmodes button').forEach(b=>b.classList.toggle('on',b.dataset.mode===mode));
+}
+function updateBadge(key,sec){
+  sec.querySelector('.fbadge').textContent=state.f[key];
+}
+function switchMode(key,mode,sec){
+  const f=FDEF[key],cur=state.f[key];
+  if(detectMode(cur)===mode)return;
+  let next='*';
+  if(mode==='single')next=String(key==='dom'?'1':f.min);
+  if(mode==='step')next='*/5';
+  if(mode==='range')next=key==='hour'?'9-17':key==='dow'?'1-5':`${f.min}-${Math.min(f.min+10,key==='dow'?6:f.max)}`;
+  if(mode==='list'){
+    try{next=[...expand(parseField(cur,key),key)].sort((a,b)=>a-b).join(',');}catch(e){next='';}
+  }
+  state.f[key]=next;
+  renderPanelBody(key,sec);syncModeButtons(key,sec);updateBadge(key,sec);refresh();
+}
+function fld(label,el){const w=document.createElement('label');w.className='fld';const s=document.createElement('span');s.textContent=label;w.append(s,el);return w;}
+function numInput(val,min,max){
+  const i=document.createElement('input');i.type='number';i.min=min;i.max=max;i.value=val;
+  i.addEventListener('change',()=>{let v=Math.round(+i.value||min);v=Math.max(min,Math.min(max,v));i.value=v;});
+  return i;
+}
+function namedSelect(key,val){
+  const s=document.createElement('select');
+  if(key==='month'){
+    for(let m=1;m<=12;m++){const o=new Option(`${m} · ${L().months[m-1]}`,m);s.add(o);}
+    s.value=val||1;
+  }else{
+    for(let v=0;v<=7;v++){
+      const lbl=v===7?`7 · ${L().dows[0]} (=0)`:`${v} · ${L().dows[v]}`;
+      s.add(new Option(lbl,v));
+    }
+    s.value=val||0;
+  }
+  return s;
+}
+function renderPanelBody(key,sec){
+  const body=sec.querySelector('.fbody');body.innerHTML='';
+  const f=FDEF[key],named=key==='month'||key==='dow';
+  const mode=detectMode(state.f[key]);
+  const P=parseField(state.f[key],key);
+  const emit=()=>{updateBadge(key,sec);refresh();};
+
+  if(mode==='all'){
+    const n=document.createElement('div');n.className='fnote';n.innerHTML=L().allNote;body.append(n);
+    return;
+  }
+  if(mode==='single'){
+    const v=P.ok&&P.parts[0]&&P.parts[0].kind==='single'?P.parts[0].v:f.min;
+    const el=named?namedSelect(key,v):numInput(v,f.min,f.max);
+    el.addEventListener('input',()=>{state.f[key]=String(el.value);emit();});
+    body.append(fld(L().fields[key],el));return;
+  }
+  if(mode==='step'){
+    const p=P.ok&&P.parts[0]?P.parts[0]:{a:f.min,step:5};
+    const start=named?namedSelect(key,p.a):numInput(p.a,f.min,f.max);
+    const step=numInput(p.step||5,1,f.max);
+    start.addEventListener('input',()=>{state.f[key]=(+start.value===f.min)?`*/${step.value}`:`${start.value}/${step.value}`;emit();});
+    step.addEventListener('input',()=>{state.f[key]=(+start.value===f.min)?`*/${step.value}`:`${start.value}/${step.value}`;emit();});
+    body.append(fld(L().from,start),fld(L().every,step));return;
+  }
+  if(mode==='range'){
+    const p=P.ok&&P.parts[0]?P.parts[0]:{a:f.min,b:f.max};
+    const a=named?namedSelect(key,p.a):numInput(p.a,f.min,f.max);
+    const b=named?namedSelect(key,p.b):numInput(p.b,f.min,f.max);
+    const up=()=>{let x=+a.value,y=+b.value;if(x>y)[x,y]=[y,x];state.f[key]=`${x}-${y}`;emit();};
+    a.addEventListener('input',up);b.addEventListener('input',up);
+    const dash=document.createElement('span');dash.className='fnote';dash.textContent='–';
+    body.append(fld(L().from,a),dash,fld(L().to,b));return;
+  }
+  // list
+  const inp=document.createElement('input');inp.type='text';inp.className='txt';
+  inp.placeholder=L().listPh;inp.value=state.f[key]==='*'?'':state.f[key];
+  const err=document.createElement('div');err.className='ferr';err.hidden=true;err.textContent=L().listErr;
+  const prev=document.createElement('div');prev.className='fprev';
+  inp.addEventListener('input',()=>{
+    state.f[key]=inp.value.trim()||'*';
+    const pp=parseField(state.f[key],key);
+    inp.classList.toggle('bad',!pp.ok);err.hidden=pp.ok;
+    prev.innerHTML='';
+    if(pp.ok&&!pp.star){
+      const em=document.createElement('em');em.textContent=L().listPreview+':';prev.append(em);
+      [...expand(pp,key)].sort((a,b)=>a-b).slice(0,20).forEach(v=>{const b=document.createElement('b');b.textContent=v;prev.append(b);});
+    }
+    emit();
+  });
+  body.append(fld(L().modes.list,inp),err,prev);
+  // trigger once to show preview
+  if(P.ok&&!P.star)inp.dispatchEvent(new Event('input'));
+}
+
+/* ================= refresh ================= */
+function refresh(){
+  const P=parseAll(),keys=activeKeys();
+  const valid=keys.every(k=>P[k].ok);
+  // slots
+  document.querySelectorAll('#slots .slot').forEach((el,i)=>{
+    const k=keys[i],v=state.f[k],sv=el.querySelector('.sv');
+    if(sv.textContent!==v){
+      sv.textContent=v;
+      el.classList.toggle('long',v.length>6);
+      el.classList.remove('pop');void el.offsetWidth;el.classList.add('pop');
+    }
+    el.classList.toggle('bad',!P[k].ok);
+  });
+  // description
+  $('#desc').textContent=valid?composeDescr():L().invalid;
+  $('#warnInvalid').hidden=valid;
+  $('#warnDom').hidden=!(valid&&!P.dom.star&&!P.dow.star);
+  // next runs
+  nextTimes=valid?computeNext(P,7,state.secOn):[];
+  renderNext();
+  // cronline
+  $('#cronline').textContent=`${exprString()} ${$('#cmd').value||L().cmdPh}`;
+  lastExpr=exprString();
+}
+function renderNext(){
+  const ol=$('#nextlist');ol.innerHTML='';
+  const fmt=new Intl.DateTimeFormat(L().locale,{weekday:'short',day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit',second:state.secOn?'2-digit':undefined,hour12:false});
+  const rtf=new Intl.RelativeTimeFormat(L().locale,{numeric:'always'});
+  nextTimes.forEach((t,i)=>{
+    const li=document.createElement('li');li.style.animationDelay=(i*55)+'ms';
+    const s=Math.round((t-Date.now())/1000);
+    let rel;
+    if(s<60)rel=rtf.format(s,'second');
+    else if(s<5400)rel=rtf.format(Math.round(s/60),'minute');
+    else if(s<172800)rel=rtf.format(Math.round(s/3600),'hour');
+    else rel=rtf.format(Math.round(s/86400),'day');
+    li.innerHTML=`<i>${i+1}</i><div><b>${fmt.format(t)}</b><span>${rel}</span></div>`;
+    ol.append(li);
+  });
+  $('#nonext').hidden=!(nextTimes.length===0);
+}
+
+/* ================= language apply ================= */
+function applyLang(){
+  const T=L();
+  document.documentElement.lang=lang;
+  document.title=T.docTitle;
+  document.querySelectorAll('[data-i]').forEach(el=>{
+    const k=el.dataset.i;if(T[k]&&typeof T[k]==='string')el.textContent=T[k];
+  });
+  $('#warnDom').textContent=T.hintDomDow;
+  $('#warnInvalid').textContent=T.invalid;
+  $('#nonext').textContent=T.noRuns;
+  const cmd=$('#cmd');
+  cmd.placeholder=T.cmdPh;
+  if(state.cmdDefault)cmd.value='';
+  buildLangSw();buildSlots();buildPresets();buildPanels();buildRef();
+  refresh();
+}
+
+/* ================= copy ================= */
+async function copyText(txt,btn,label){
+  try{await navigator.clipboard.writeText(txt);}
+  catch(e){
+    const ta=document.createElement('textarea');ta.value=txt;document.body.append(ta);
+    ta.select();document.execCommand('copy');ta.remove();
+  }
+  const old=btn.textContent;
+  btn.textContent=L().copied;btn.classList.add('ok');
+  setTimeout(()=>{btn.textContent=old;btn.classList.remove('ok');},1400);
+}
+
+/* ================= ticker ================= */
+setInterval(()=>{
+  const now=new Date();
+  $('#clock').textContent=new Intl.DateTimeFormat(L().locale,{hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false}).format(now);
+  const cd=$('#countdown');
+  if(!nextTimes.length){cd.textContent='—';cd.classList.remove('hot');return;}
+  const diff=(nextTimes[0]-now)/1000;
+  if(diff<=0){refresh();return;}
+  if(diff<90){
+    const s=Math.ceil(diff);
+    cd.textContent=`${L().nextIn}: ${s} s`;
+    cd.classList.toggle('hot',s<=10);
+  }else{
+    const short=new Intl.DateTimeFormat(L().locale,{weekday:'short',day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit',hour12:false});
+    cd.textContent=`${L().nextIn}: ${short.format(nextTimes[0])}`;
+    cd.classList.remove('hot');
+  }
+},1000);
+
+/* ================= init ================= */
+lang=detectLang();
+$('#secSwitch').addEventListener('change',e=>{
+  state.secOn=e.target.checked;
+  buildSlots();buildPanels();refresh();
+});
+$('#btnCopyExpr').addEventListener('click',e=>copyText(exprString(),e.currentTarget));
+$('#btnCopyLine').addEventListener('click',e=>copyText($('#cronline').textContent,e.currentTarget));
+$('#btnReset').addEventListener('click',()=>{
+  state.secOn=false;$('#secSwitch').checked=false;
+  for(const k of FORDER)state.f[k]='*';
+  buildSlots();buildPanels();refresh();
+});
+$('#cmd').addEventListener('input',e=>{state.cmdDefault=!e.target.value;refresh();});
+
+applyLang();
+
+/* scroll reveal */
+const io=new IntersectionObserver(es=>es.forEach(x=>{if(x.isIntersecting){x.target.classList.add('in');io.unobserve(x.target);}}),{threshold:.12});
+document.querySelectorAll('.reveal').forEach(el=>io.observe(el));
+</script>
+</body>
+</html>
