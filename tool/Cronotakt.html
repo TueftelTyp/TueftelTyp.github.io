@@ -22,7 +22,6 @@ html{scroll-behavior:smooth}
 body{background:var(--bg);color:var(--tx);font:16px/1.55 var(--fb);overflow-x:hidden}
 ::selection{background:#ffc24b33}
 
-/* ---- ambient background ---- */
 .bg{position:fixed;inset:0;z-index:-1;overflow:hidden}
 .glow{position:absolute;width:60vmax;height:60vmax;border-radius:50%;filter:blur(90px);opacity:.5}
 .g1{background:radial-gradient(circle,#123039 0%,transparent 60%);top:-20vmax;left:-15vmax;animation:drift1 26s ease-in-out infinite alternate}
@@ -35,7 +34,6 @@ body{background:var(--bg);color:var(--tx);font:16px/1.55 var(--fb);overflow-x:hi
 
 .wrap{max-width:1180px;margin:0 auto;padding:0 20px}
 
-/* ---- topbar ---- */
 .top{position:sticky;top:0;z-index:50;background:rgba(11,21,26,.82);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
 .topin{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:12px 20px}
 .brand{display:flex;align-items:center;gap:11px}
@@ -49,7 +47,24 @@ body{background:var(--bg);color:var(--tx);font:16px/1.55 var(--fb);overflow-x:hi
 .langsw button:hover{color:var(--tx);background:rgba(255,255,255,.05)}
 .langsw button.on{background:var(--c-min);color:#1a1206}
 
-/* ---- hero ---- */
+/* ===== EMBED BUTTON & MODAL ===== */
+.btn-embed{background:transparent;border:1px solid var(--line2);color:var(--mut);font:600 .78rem var(--fd);padding:7px 12px;border-radius:10px;cursor:pointer;transition:.18s;display:inline-flex;align-items:center;gap:6px}
+.btn-embed:hover{color:var(--c-min);border-color:var(--c-min);transform:translateY(-1px)}
+.btn-embed svg{width:14px;height:14px}
+.modal-overlay{position:fixed;inset:0;z-index:1000;background:rgba(0,0,0,.75);backdrop-filter:blur(8px);display:none;align-items:center;justify-content:center;padding:20px}
+.modal-overlay.active{display:flex;animation:fadeIn .25s ease}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+.modal{background:var(--panel);border:1px solid var(--line2);border-radius:16px;max-width:640px;width:100%;padding:28px;box-shadow:0 20px 60px rgba(0,0,0,.6);animation:slideUp .3s ease;position:relative}
+@keyframes slideUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+.modal h3{font:700 1.25rem var(--fd);margin-bottom:8px;color:var(--c-min)}
+.modal p{color:var(--mut);font-size:.9rem;margin-bottom:18px;line-height:1.5}
+.modal-code{background:var(--ink);border:1px solid var(--line2);border-radius:10px;padding:14px;margin-bottom:16px;position:relative}
+.modal-code textarea{width:100%;background:transparent;border:0;color:var(--c-min);font:500 .8rem var(--fm);resize:vertical;min-height:110px;outline:none;line-height:1.6}
+.modal-code .copy-float{position:absolute;top:8px;right:8px}
+.modal-close{position:absolute;top:14px;right:14px;background:transparent;border:0;color:var(--dim);font-size:1.5rem;cursor:pointer;width:32px;height:32px;border-radius:8px;display:grid;place-items:center;transition:.18s;line-height:1}
+.modal-close:hover{background:rgba(255,255,255,.08);color:var(--tx)}
+.modal-actions{display:flex;justify-content:flex-end}
+
 .hero{padding:52px 0 8px}
 .kicker{font:600 .74rem var(--fm);letter-spacing:.22em;color:var(--c-min);text-transform:uppercase;margin-bottom:14px}
 h1{font:800 clamp(2rem,4.6vw,3.3rem)/1.08 var(--fd);letter-spacing:-.02em;max-width:20ch}
@@ -71,7 +86,6 @@ h1{font:800 clamp(2rem,4.6vw,3.3rem)/1.08 var(--fd);letter-spacing:-.02em;max-wi
 @keyframes blink{50%{opacity:.55}}
 .flex1{flex:1}
 
-/* ---- buttons ---- */
 .btn{font:600 .85rem var(--fd);border-radius:10px;padding:9px 16px;cursor:pointer;border:1px solid transparent;transition:.18s;display:inline-flex;align-items:center;gap:7px}
 .btn.primary{background:var(--c-min);color:#1a1206}
 .btn.primary:hover{transform:translateY(-2px);box-shadow:0 8px 20px rgba(255,194,75,.25);filter:brightness(1.06)}
@@ -80,7 +94,6 @@ h1{font:800 clamp(2rem,4.6vw,3.3rem)/1.08 var(--fd);letter-spacing:-.02em;max-wi
 .btn.sm{padding:5px 11px;font-size:.75rem;border-radius:8px}
 .btn.ok{background:var(--c-dom)!important;color:#08240f!important;border-color:transparent!important}
 
-/* ---- presets ---- */
 .presets{margin:38px 0 8px}
 h2{font:700 1.25rem var(--fd);letter-spacing:-.01em;margin-bottom:14px}
 .presetrow{display:flex;gap:10px;overflow-x:auto;padding:4px 2px 12px;scrollbar-width:thin}
@@ -90,11 +103,9 @@ h2{font:700 1.25rem var(--fd);letter-spacing:-.01em;margin-bottom:14px}
 .chip.hit{animation:chipflash .5s ease}
 @keyframes chipflash{30%{background:rgba(255,194,75,.25)}}
 
-/* ---- layout columns ---- */
 .cols{display:grid;grid-template-columns:minmax(0,1fr) 396px;gap:24px;margin-top:14px;align-items:start}
 .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:20px}
 
-/* ---- seconds switch ---- */
 .secswitch{display:flex;align-items:flex-start;gap:14px;margin-bottom:16px}
 .sw{position:relative;width:46px;height:26px;flex:0 0 auto;margin-top:2px}
 .sw input{position:absolute;inset:0;opacity:0;cursor:pointer;z-index:2}
@@ -105,7 +116,6 @@ h2{font:700 1.25rem var(--fd);letter-spacing:-.01em;margin-bottom:14px}
 .secswitch b{font:600 .95rem var(--fd)}
 .secswitch p{font-size:.8rem;color:var(--mut);margin-top:2px}
 
-/* ---- field panels ---- */
 .fpanel{background:var(--panel);border:1px solid var(--line);border-left:3px solid var(--fc);border-radius:14px;padding:18px 20px;margin-bottom:14px;transition:box-shadow .3s}
 .fpanel.flash{animation:flashB 1.1s ease}
 @keyframes flashB{0%,60%{box-shadow:0 0 0 3px var(--fc)}}
@@ -134,7 +144,6 @@ select{min-width:10rem;cursor:pointer}
 .fprev em{font-style:normal;font-size:.72rem;color:var(--dim);text-transform:uppercase;letter-spacing:.1em}
 .fprev b{font:500 .78rem var(--fm);color:var(--fc);background:rgba(255,255,255,.05);border-radius:6px;padding:2px 8px}
 
-/* ---- output card ---- */
 .out{position:sticky;top:84px}
 .out h2{margin-bottom:8px}
 .out h3{font:600 .72rem var(--fb);letter-spacing:.16em;text-transform:uppercase;color:var(--dim);margin:20px 0 10px}
@@ -153,7 +162,6 @@ select{min-width:10rem;cursor:pointer}
 .cronline{margin-top:10px;background:var(--ink);border:1px solid var(--line);border-radius:10px;padding:11px 12px;display:flex;align-items:center;gap:10px}
 .cronline code{flex:1;font:500 .82rem var(--fm);color:var(--c-min);word-break:break-all}
 
-/* ---- reference ---- */
 .ref{margin:52px 0 30px}
 .refgrid{display:grid;grid-template-columns:1.2fr 1fr;gap:24px;align-items:start}
 table{width:100%;border-collapse:collapse;background:var(--panel);border:1px solid var(--line);border-radius:14px;overflow:hidden;font-size:.85rem}
@@ -171,11 +179,33 @@ td:nth-child(3){font-family:var(--fm);color:var(--c-mon)}
 .tips b{color:var(--tx)}
 
 footer{border-top:1px solid var(--line);padding:22px 0 30px;margin-top:20px}
-footer .wrap{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;font-size:.78rem;color:var(--dim)}
+footer .wrap{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;font-size:.82rem;color:var(--dim);align-items:center}
 footer b{color:var(--mut);font-family:var(--fd)}
+footer .foot-left{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+footer a.ttl{color:var(--c-min);text-decoration:none;font-weight:600;font-family:var(--fd);border-bottom:1px dashed rgba(255,194,75,.4);padding-bottom:1px;transition:.18s}
+footer a.ttl:hover{color:#fff;border-bottom-color:var(--c-min);filter:brightness(1.15)}
+footer a.ttl svg{width:11px;height:11px;margin-left:3px;vertical-align:middle;opacity:.7}
+footer .syntax{font:500 .72rem var(--fm);color:var(--dim);letter-spacing:.1em}
 
 .reveal{opacity:0;transform:translateY(16px);transition:opacity .6s ease,transform .6s ease}
 .reveal.in{opacity:1;transform:none}
+
+/* ===== EMBED MODE ===== */
+body.embed-mode .top,
+body.embed-mode .ref,
+body.embed-mode .kicker,
+body.embed-mode .lead,
+body.embed-mode footer .syntax,
+body.embed-mode .bg,
+body.embed-mode .btn-embed,
+body.embed-mode .modal-overlay{display:none!important}
+body.embed-mode .hero{padding:24px 0 4px}
+body.embed-mode h1{font-size:clamp(1.4rem,3vw,2rem);max-width:100%}
+body.embed-mode .exprcard{margin-top:18px;padding:18px}
+body.embed-mode .presets{margin:22px 0 4px}
+body.embed-mode .cols{margin-top:6px}
+body.embed-mode .out{top:20px}
+body.embed-mode footer{padding:14px 0 18px;margin-top:10px}
 
 @media (max-width:1020px){
   .cols{grid-template-columns:1fr}
@@ -186,6 +216,7 @@ footer b{color:var(--mut);font-family:var(--fd)}
   .topin{flex-wrap:wrap}
   .clock{display:none}
   .exprbar .btn{flex:1;justify-content:center}
+  .modal{padding:20px}
 }
 @media (prefers-reduced-motion:reduce){
   *,*::before,*::after{animation:none!important;transition:none!important}
@@ -210,9 +241,29 @@ footer b{color:var(--mut);font-family:var(--fd)}
     <div class="topright">
       <span class="clock" id="clock">--:--:--</span>
       <div class="langsw" id="langsw" role="group" aria-label="Language"></div>
+      <button class="btn-embed" id="btnEmbed" title="Embed">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+        <span data-i="embedBtn">Embed</span>
+      </button>
     </div>
   </div>
 </header>
+
+<!-- Embed Modal -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal">
+    <button class="modal-close" id="modalClose" aria-label="Close">×</button>
+    <h3 data-i="embedTitle"></h3>
+    <p data-i="embedDesc"></p>
+    <div class="modal-code">
+      <textarea id="embedCode" readonly spellcheck="false"></textarea>
+      <button class="btn ghost sm copy-float" id="btnCopyEmbed" data-i="copy"></button>
+    </div>
+    <div class="modal-actions">
+      <button class="btn ghost" id="modalCloseBtn" data-i="close"></button>
+    </div>
+  </div>
+</div>
 
 <main class="wrap">
 
@@ -283,8 +334,14 @@ footer b{color:var(--mut);font-family:var(--fd)}
 
 <footer>
   <div class="wrap">
-    <span><b>Cronotakt</b> · <span data-i="footNote"></span></span>
-    <span>min · hour · dom · month · dow</span>
+    <span class="foot-left">
+      <b>Cronotakt</b>
+      <span>·</span>
+      <span>© <span id="year">2026</span></span>
+      <span data-i="footCrafted"></span>
+      <a class="ttl" href="https://tuefteltyp.github.io/index.html" target="_blank" rel="noopener">TüftelTyp<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17L17 7M8 7h9v9"/></svg></a>
+    </span>
+    <span class="syntax">min · hour · dom · month · dow</span>
   </div>
 </footer>
 
@@ -295,7 +352,6 @@ const DOW3=['SUN','MON','TUE','WED','THU','FRI','SAT'];
 const enOrd=n=>{const s=['th','st','nd','rd'],v=n%100;return n+(s[(v-20)%10]||s[v]||s[0]);};
 
 const I18N={
-/* ---------- DEUTSCH ---------- */
 de:{
  locale:'de-DE',docTitle:'Cronotakt · Cron-Generator',
  tagline:'Cron-Ausdrücke bauen · verstehen · kopieren',
@@ -331,7 +387,11 @@ de:{
   'GitHub Actions nutzt Cron in <b>UTC</b> mit 5 Feldern – Zeitzonen beachten!',
   'Quartz (Java) verlangt 6–7 Felder und <code>?</code> statt <code>*</code> für Tag/Wochentag.'
  ],
- footNote:'läuft 100 % lokal im Browser · Referenz: Vixie-/POSIX-Cron',
+ footCrafted:'gemacht von',
+ embedBtn:'Einbetten',
+ embedTitle:'Cronotakt einbetten',
+ embedDesc:'Kopiere diesen Code und füge ihn auf deiner Website ein. Der Generator erkennt die Browsersprache automatisch.',
+ close:'Schließen',
  months:['Januar','Februar','März','April','Mai','Juni','Juli','August','September','Oktober','November','Dezember'],
  dows:['Sonntag','Montag','Dienstag','Mittwoch','Donnerstag','Freitag','Samstag'],
  presetsList:['Jede Minute','Alle 5 Minuten','Jede volle Stunde','Alle 2 Stunden','Täglich 09:00','Täglich Mitternacht','Alle 15 Min · Mo–Fr 8–17','Wochentags 09:00','Montags 08:30','Wochenende 10:00','Monatsbeginn 00:00','Quartalsbeginn 06:00','Neujahr 00:00','Heiligabend 04:00'],
@@ -359,7 +419,6 @@ de:{
   domRangeVals:(a,b)=>`${a}.–${b}.`
  }
 },
-/* ---------- ENGLISH ---------- */
 en:{
  locale:'en-GB',docTitle:'Cronotakt · Cron Generator',
  tagline:'build · understand · copy cron expressions',
@@ -395,7 +454,11 @@ en:{
   'GitHub Actions runs cron in <b>UTC</b> with 5 fields – mind the timezone!',
   'Quartz (Java) needs 6–7 fields and <code>?</code> instead of <code>*</code> for day fields.'
  ],
- footNote:'runs 100 % locally in your browser · Reference: Vixie/POSIX cron',
+ footCrafted:'crafted by',
+ embedBtn:'Embed',
+ embedTitle:'Embed Cronotakt',
+ embedDesc:'Copy this code and paste it into your website. The generator automatically detects the browser language.',
+ close:'Close',
  months:['January','February','March','April','May','June','July','August','September','October','November','December'],
  dows:['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'],
  presetsList:['Every minute','Every 5 minutes','Every full hour','Every 2 hours','Daily 9:00','Daily midnight','Every 15 min · Mon–Fri 8–17','Weekdays 9:00','Mondays 8:30','Weekend 10:00','1st of month 00:00','Quarter start 6:00','New Year 00:00','Christmas Eve 4:00'],
@@ -423,13 +486,12 @@ en:{
   domRangeVals:(a,b)=>`${enOrd(a)}–${enOrd(b)}`
  }
 },
-/* ---------- FRANÇAIS ---------- */
 fr:{
  locale:'fr-FR',docTitle:'Cronotakt · Générateur Cron',
  tagline:'créer · comprendre · copier des expressions cron',
  kicker:'Cron · 5 champs · 4 langues',
  h1:'Des expressions cron vraiment compréhensibles.',
- intro:'Cinq champs, un planning : composez votre expression par clic, lisez l’explication en clair et prévisualisez les prochaines exécutions – tout se passe dans votre navigateur.',
+ intro:"Cinq champs, un planning : composez votre expression par clic, lisez l'explication en clair et prévisualisez les prochaines exécutions – tout se passe dans votre navigateur.",
  presets:'Préréglages rapides',
  secMode:'Activer le champ secondes (mode 6 champs)',
  secModeHint:'Pour Quartz, node-cron & Cie – le cron Linux standard ne connaît que 5 champs.',
@@ -447,19 +509,23 @@ fr:{
  copy:'Copier',copied:'Copié ✓',copyExpr:"Copier l'expression",reset:'Réinitialiser',
  nextIn:'Prochain lancement',
  hintDomDow:'Attention : si « jour du mois » et « jour de semaine » sont tous deux restreints, cron les combine avec OU – pas ET.',
- refTitle:'La syntaxe cron en un coup d’œil',
+ refTitle:"La syntaxe cron en un coup d'œil",
  refC1:'Champ',refC2:'Valeurs autorisées',refC3:'Spéciaux',
  refRows:[['Minute','0–59','* , - /'],['Heure','0–23','* , - /'],['Jour du mois','1–31','* , - /'],['Mois','1–12 ou JAN–DEC','* , - /'],['Jour de semaine','0–7 (0 & 7 = dim.) ou SUN–SAT','* , - /']],
  gloss:'* = toute valeur · , = liste · - = plage · / = pas',
  tips:[
-  '<code>crontab -e</code> ouvre votre crontab, <code>crontab -l</code> l’affiche.',
+  "<code>crontab -e</code> ouvre votre crontab, <code>crontab -l</code> l'affiche.",
   'Si <b>jour du mois</b> et <b>jour de semaine</b> sont définis, cron utilise <b>OU</b> – le piège classique.',
   'Raccourcis : <code>@yearly</code> <code>@monthly</code> <code>@weekly</code> <code>@daily</code> <code>@hourly</code> <code>@reboot</code>',
   'Les noms marchent aussi : <code>JAN–DEC</code> pour les mois, <code>SUN–SAT</code> pour les jours.',
   'GitHub Actions exécute cron en <b>UTC</b> avec 5 champs – attention au fuseau !',
   'Quartz (Java) demande 6–7 champs et <code>?</code> au lieu de <code>*</code> pour les jours.'
  ],
- footNote:'fonctionne 100 % en local · Référence : cron Vixie/POSIX',
+ footCrafted:'créé par',
+ embedBtn:'Intégrer',
+ embedTitle:'Intégrer Cronotakt',
+ embedDesc:'Copiez ce code et collez-le sur votre site. Le générateur détecte automatiquement la langue du navigateur.',
+ close:'Fermer',
  months:['janvier','février','mars','avril','mai','juin','juillet','août','septembre','octobre','novembre','décembre'],
  dows:['dimanche','lundi','mardi','mercredi','jeudi','vendredi','samedi'],
  presetsList:['Chaque minute','Toutes les 5 minutes','Chaque heure pile','Toutes les 2 heures','Chaque jour à 9 h','Chaque jour à minuit','Toutes les 15 min · lun–ven 8–17','Semaine à 9 h','Le lundi à 8 h 30','Week-end à 10 h','Début de mois 00 h','Début de trimestre 6 h','1er janvier 00 h','Réveillon de Noël 4 h'],
@@ -487,7 +553,6 @@ fr:{
   domRangeVals:(a,b)=>`${a===1?'1er':a} au ${b}`
  }
 },
-/* ---------- ESPAÑOL ---------- */
 es:{
  locale:'es-ES',docTitle:'Cronotakt · Generador Cron',
  tagline:'crear · entender · copiar expresiones cron',
@@ -523,7 +588,11 @@ es:{
   'GitHub Actions ejecuta cron en <b>UTC</b> con 5 campos – ¡ojo con la zona horaria!',
   'Quartz (Java) usa 6–7 campos y <code>?</code> en vez de <code>*</code> para los días.'
  ],
- footNote:'funciona 100 % en local · Referencia: cron Vixie/POSIX',
+ footCrafted:'hecho por',
+ embedBtn:'Incrustar',
+ embedTitle:'Incrustar Cronotakt',
+ embedDesc:'Copia este código y pégalo en tu sitio web. El generador detecta automáticamente el idioma del navegador.',
+ close:'Cerrar',
  months:['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'],
  dows:['domingo','lunes','martes','miércoles','jueves','viernes','sábado'],
  presetsList:['Cada minuto','Cada 5 minutos','Cada hora en punto','Cada 2 horas','Diario 9:00','Diario medianoche','Cada 15 min · lun–vie 8–17','Laborables 9:00','Lunes 8:30','Fin de semana 10:00','Inicio de mes 0:00','Inicio de trimestre 6:00','Año nuevo 0:00','Nochebuena 4:00'],
@@ -559,6 +628,7 @@ const FCOL={sec:'--c-sec',min:'--c-min',hour:'--c-hour',dom:'--c-dom',month:'--c
 const MODES=['all','single','step','range','list'];
 let lang='de', nextTimes=[], lastExpr='';
 const state={secOn:false,f:{sec:'*',min:'*',hour:'*',dom:'*',month:'*',dow:'*'},cmd:'',cmdDefault:true};
+const embedMode=(new URLSearchParams(location.search).get('embed')==='1')||(new URLSearchParams(location.search).get('embed')==='true');
 
 const $=s=>document.querySelector(s);
 const L=()=>I18N[lang];
@@ -566,6 +636,10 @@ const pad=n=>String(n).padStart(2,'0');
 const cap=s=>s.charAt(0).toUpperCase()+s.slice(1);
 
 function detectLang(){
+  if(embedMode){
+    const p=new URLSearchParams(location.search).get('lang');
+    if(p&&I18N[p])return p;
+  }
   const saved=localStorage.getItem('cronotakt.lang');
   if(saved&&I18N[saved])return saved;
   const nav=(navigator.language||'de').slice(0,2).toLowerCase();
@@ -712,7 +786,6 @@ function composeDescr(){
     if(p.length===1&&p[0].kind==='range')return D.dowRangeAt(d[p[0].a],d[p[0].b],t);
     return D.weekListAt(joinAnd(p.map(x=>x.kind==='single'?d[x.v]:'…'),D.and),t);};
 
-  // seconds-only specials
   if(w&&!R.min&&!R.hour&&cal){
     if(!R.sec)return D.everySec;
     return cap(secFrag());
@@ -733,7 +806,6 @@ function composeDescr(){
   if(single('min')&&!R.hour)return jf([...frags,D.atEveryHour(pad(P.min.parts[0].v)),...calFrags()]);
   if(!R.min&&R.hour&&cal&&(!w||!R.sec))return jf([D.everyMinIn(listTxt('hour',P))]);
 
-  // generic
   if(R.min){
     if(step1('min'))frags.push(D.nMin(P.min.parts[0].step)+fromNote('min',P.min.parts[0]));
     else frags.push(D.minParts(listTxt('min',P)));
@@ -782,6 +854,7 @@ const PRESETS=[
 /* ================= UI building ================= */
 function buildLangSw(){
   const box=$('#langsw');box.innerHTML='';
+  if(embedMode){box.style.display='none';return;}
   for(const c of['de','en','fr','es']){
     const b=document.createElement('button');
     b.textContent=c.toUpperCase();
@@ -937,7 +1010,6 @@ function renderPanelBody(key,sec){
     const dash=document.createElement('span');dash.className='fnote';dash.textContent='–';
     body.append(fld(L().from,a),dash,fld(L().to,b));return;
   }
-  // list
   const inp=document.createElement('input');inp.type='text';inp.className='txt';
   inp.placeholder=L().listPh;inp.value=state.f[key]==='*'?'':state.f[key];
   const err=document.createElement('div');err.className='ferr';err.hidden=true;err.textContent=L().listErr;
@@ -954,7 +1026,6 @@ function renderPanelBody(key,sec){
     emit();
   });
   body.append(fld(L().modes.list,inp),err,prev);
-  // trigger once to show preview
   if(P.ok&&!P.star)inp.dispatchEvent(new Event('input'));
 }
 
@@ -962,7 +1033,6 @@ function renderPanelBody(key,sec){
 function refresh(){
   const P=parseAll(),keys=activeKeys();
   const valid=keys.every(k=>P[k].ok);
-  // slots
   document.querySelectorAll('#slots .slot').forEach((el,i)=>{
     const k=keys[i],v=state.f[k],sv=el.querySelector('.sv');
     if(sv.textContent!==v){
@@ -972,14 +1042,11 @@ function refresh(){
     }
     el.classList.toggle('bad',!P[k].ok);
   });
-  // description
   $('#desc').textContent=valid?composeDescr():L().invalid;
   $('#warnInvalid').hidden=valid;
   $('#warnDom').hidden=!(valid&&!P.dom.star&&!P.dow.star);
-  // next runs
   nextTimes=valid?computeNext(P,7,state.secOn):[];
   renderNext();
-  // cronline
   $('#cronline').textContent=`${exprString()} ${$('#cmd').value||L().cmdPh}`;
   lastExpr=exprString();
 }
@@ -1019,8 +1086,7 @@ function applyLang(){
   refresh();
 }
 
-/* ================= copy ================= */
-async function copyText(txt,btn,label){
+async function copyText(txt,btn){
   try{await navigator.clipboard.writeText(txt);}
   catch(e){
     const ta=document.createElement('textarea');ta.value=txt;document.body.append(ta);
@@ -1052,6 +1118,9 @@ setInterval(()=>{
 
 /* ================= init ================= */
 lang=detectLang();
+if(embedMode)document.body.classList.add('embed-mode');
+document.getElementById('year').textContent=new Date().getFullYear();
+
 $('#secSwitch').addEventListener('change',e=>{
   state.secOn=e.target.checked;
   buildSlots();buildPanels();refresh();
@@ -1065,11 +1134,33 @@ $('#btnReset').addEventListener('click',()=>{
 });
 $('#cmd').addEventListener('input',e=>{state.cmdDefault=!e.target.value;refresh();});
 
+/* ===== EMBED MODAL ===== */
+const modalOverlay=$('#modalOverlay');
+const embedCode=$('#embedCode');
+const embedIframeCode=`<iframe src="${location.href.split('?')[0].split('#')[0]}?embed=1" style="width:100%;height:720px;border:0;border-radius:12px" loading="lazy"></iframe>`;
+
+function openModal(){
+  embedCode.value=embedIframeCode;
+  modalOverlay.classList.add('active');
+  setTimeout(()=>embedCode.select(),50);
+}
+function closeModal(){modalOverlay.classList.remove('active');}
+
+$('#btnEmbed').addEventListener('click',openModal);
+$('#modalClose').addEventListener('click',closeModal);
+$('#modalCloseBtn').addEventListener('click',closeModal);
+modalOverlay.addEventListener('click',e=>{if(e.target===modalOverlay)closeModal();});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal();});
+$('#btnCopyEmbed').addEventListener('click',e=>copyText(embedCode.value,e.currentTarget));
+
 applyLang();
 
-/* scroll reveal */
-const io=new IntersectionObserver(es=>es.forEach(x=>{if(x.isIntersecting){x.target.classList.add('in');io.unobserve(x.target);}}),{threshold:.12});
-document.querySelectorAll('.reveal').forEach(el=>io.observe(el));
+if(!embedMode){
+  const io=new IntersectionObserver(es=>es.forEach(x=>{if(x.isIntersecting){x.target.classList.add('in');io.unobserve(x.target);}}),{threshold:.12});
+  document.querySelectorAll('.reveal').forEach(el=>io.observe(el));
+}else{
+  document.querySelectorAll('.reveal').forEach(el=>el.classList.add('in'));
+}
 </script>
 </body>
 </html>
