@@ -1,0 +1,1110 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#0a1020" />
+  <meta
+    name="description"
+    content="NetCheckr – Website-Status, öffentliche IP-Adresse, Netzbetreiber und Internet-Speedtest."
+  />
+
+  <title>NetCheckr – Website Check & Speedtest</title>
+
+  <link
+    rel="icon"
+    type="image/svg+xml"
+    href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop stop-color='%2338bdf8'/%3E%3Cstop offset='1' stop-color='%2334d399'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='64' height='64' rx='16' fill='%230a1020'/%3E%3Ccircle cx='32' cy='32' r='20' fill='none' stroke='url(%23g)' stroke-width='5'/%3E%3Cpath d='M20 33h8l4-13 5 25 3-12h5' fill='none' stroke='%23f8fafc' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"
+  />
+
+  <style>
+    :root {
+      --bg: #0a1020;
+      --surface: rgba(18, 27, 52, 0.94);
+      --surface-soft: #0c1429;
+      --border: #29375d;
+      --border-soft: rgba(114, 143, 199, 0.18);
+      --text: #f0f5ff;
+      --muted: #9aa8ca;
+      --accent: #4ea6ff;
+      --success: #2dd4a0;
+      --danger: #fb7185;
+      --warning: #fbbf24;
+      --shadow: 0 18px 52px rgba(0, 0, 0, 0.38);
+      --radius: 18px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      color-scheme: dark;
+    }
+
+    body {
+      min-width: 320px;
+      min-height: 100vh;
+      margin: 0;
+      color: var(--text);
+      font-family:
+        Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+        "Segoe UI", sans-serif;
+      line-height: 1.45;
+      background:
+        radial-gradient(900px 520px at -8% -12%, #16295a, transparent 62%),
+        radial-gradient(760px 560px at 108% 0%, #123b4e, transparent 60%),
+        var(--bg);
+    }
+
+    button,
+    input {
+      font: inherit;
+    }
+
+    button {
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .app-header {
+      position: sticky;
+      z-index: 10;
+      top: 0;
+      border-bottom: 1px solid var(--border-soft);
+      background: rgba(10, 16, 32, 0.82);
+      backdrop-filter: blur(16px);
+    }
+
+    .header-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      width: min(100% - 2rem, 1000px);
+      margin: 0 auto;
+      padding: 1rem 0;
+      gap: 1rem;
+    }
+
+    .brand {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.7rem;
+      color: var(--text);
+      font-size: 1.18rem;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      text-decoration: none;
+    }
+
+    .brand-mark {
+      display: grid;
+      width: 34px;
+      height: 34px;
+      place-items: center;
+      border: 1px solid rgba(78, 166, 255, 0.6);
+      border-radius: 11px;
+      color: #dff4ff;
+      background:
+        linear-gradient(145deg, rgba(78, 166, 255, 0.34), rgba(45, 212, 160, 0.1)),
+        #101c38;
+      box-shadow: 0 0 20px rgba(78, 166, 255, 0.2);
+    }
+
+    .brand-mark svg {
+      width: 21px;
+      height: 21px;
+    }
+
+    .language-switch {
+      display: inline-flex;
+      padding: 0.22rem;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      background: rgba(12, 20, 41, 0.8);
+      gap: 0.12rem;
+    }
+
+    .language-switch button {
+      min-width: 38px;
+      padding: 0.32rem 0.48rem;
+      border: 0;
+      border-radius: 999px;
+      color: var(--muted);
+      background: transparent;
+      font-size: 0.78rem;
+      font-weight: 750;
+      cursor: pointer;
+    }
+
+    .language-switch button.active {
+      color: #071324;
+      background: var(--accent);
+    }
+
+    main {
+      display: grid;
+      width: min(100% - 2rem, 1000px);
+      margin: 0 auto;
+      padding: 1.35rem 0 2rem;
+      gap: 1rem;
+    }
+
+    .hero {
+      padding: 0.35rem 0 0.2rem;
+    }
+
+    .hero h1 {
+      margin: 0;
+      font-size: clamp(1.45rem, 3vw, 2rem);
+      line-height: 1.15;
+      letter-spacing: -0.045em;
+    }
+
+    .hero p {
+      margin: 0.42rem 0 0;
+      color: var(--muted);
+      font-size: 0.95rem;
+    }
+
+    .card {
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background:
+        linear-gradient(160deg, rgba(29, 42, 79, 0.52), transparent 38%),
+        var(--surface);
+      box-shadow: var(--shadow);
+    }
+
+    .card-inner {
+      padding: clamp(1rem, 3vw, 1.35rem);
+    }
+
+    .section-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 0.95rem;
+      gap: 1rem;
+    }
+
+    .section-title {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.55rem;
+      margin: 0;
+      font-size: 1.03rem;
+    }
+
+    .section-icon {
+      display: grid;
+      width: 30px;
+      height: 30px;
+      place-items: center;
+      border: 1px solid rgba(78, 166, 255, 0.26);
+      border-radius: 9px;
+      color: var(--accent);
+      background: rgba(78, 166, 255, 0.09);
+    }
+
+    .section-icon svg {
+      width: 17px;
+      height: 17px;
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      min-height: 25px;
+      padding: 0.22rem 0.55rem;
+      border: 1px solid rgba(78, 166, 255, 0.28);
+      border-radius: 999px;
+      color: var(--accent);
+      background: rgba(78, 166, 255, 0.09);
+      font-size: 0.73rem;
+      font-weight: 750;
+      white-space: nowrap;
+    }
+
+    .ip-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 0.7rem;
+    }
+
+    .ip-card {
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr) auto;
+      align-items: center;
+      min-height: 68px;
+      padding: 0.8rem 0.85rem;
+      border: 1px solid var(--border-soft);
+      border-radius: 13px;
+      background: rgba(7, 16, 35, 0.65);
+      gap: 0.7rem;
+    }
+
+    .ip-icon {
+      display: grid;
+      width: 31px;
+      height: 31px;
+      place-items: center;
+      border: 1px solid rgba(78, 166, 255, 0.22);
+      border-radius: 9px;
+      color: var(--accent);
+      background: rgba(78, 166, 255, 0.08);
+    }
+
+    .ip-icon svg {
+      width: 17px;
+      height: 17px;
+    }
+
+    .ip-label {
+      color: var(--muted);
+      font-size: 0.73rem;
+    }
+
+    .ip-value {
+      overflow: hidden;
+      margin-top: 0.14rem;
+      color: var(--text);
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 0.86rem;
+      font-weight: 750;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .copy-button {
+      display: grid;
+      width: 31px;
+      height: 31px;
+      place-items: center;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--muted);
+      background: transparent;
+      cursor: pointer;
+      transition: 0.15s ease;
+    }
+
+    .copy-button:hover:not(:disabled) {
+      border-color: var(--accent);
+      color: var(--accent);
+      background: rgba(78, 166, 255, 0.08);
+    }
+
+    .copy-button:disabled {
+      opacity: 0.38;
+      cursor: not-allowed;
+    }
+
+    .copy-button svg {
+      width: 16px;
+      height: 16px;
+    }
+
+    .form-row {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 0.65rem;
+    }
+
+    .url-input {
+      width: 100%;
+      min-width: 0;
+      height: 47px;
+      padding: 0 0.9rem;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      outline: none;
+      color: var(--text);
+      background: #091125;
+      font-size: 0.96rem;
+    }
+
+    .url-input::placeholder {
+      color: #7080aa;
+    }
+
+    .url-input:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(78, 166, 255, 0.14);
+    }
+
+    .button-primary {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 47px;
+      padding: 0.7rem 1rem;
+      border: 0;
+      border-radius: 12px;
+      color: #061226;
+      background: linear-gradient(180deg, #65b3ff, #378ce9);
+      box-shadow: 0 8px 23px rgba(55, 140, 233, 0.34);
+      font-weight: 800;
+      cursor: pointer;
+      transition: transform 0.14s ease, filter 0.14s ease, opacity 0.14s ease;
+    }
+
+    .button-primary:hover:not(:disabled) {
+      filter: brightness(1.06);
+      transform: translateY(-1px);
+    }
+
+    .button-primary:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    .result {
+      display: block;
+      min-height: 44px;
+      margin-top: 0.72rem;
+      padding: 0.65rem 0.76rem;
+      border: 1px solid var(--border-soft);
+      border-radius: 11px;
+      color: var(--muted);
+      background: var(--surface-soft);
+      font-size: 0.88rem;
+    }
+
+    .result strong {
+      color: var(--text);
+    }
+
+    .result.success {
+      border-color: rgba(45, 212, 160, 0.32);
+      color: var(--success);
+      background: rgba(45, 212, 160, 0.075);
+    }
+
+    .result.error {
+      border-color: rgba(251, 113, 133, 0.34);
+      color: var(--danger);
+      background: rgba(251, 113, 133, 0.07);
+    }
+
+    .result.warning {
+      border-color: rgba(251, 191, 36, 0.34);
+      color: var(--warning);
+      background: rgba(251, 191, 36, 0.07);
+    }
+
+    .result-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.75rem;
+    }
+
+    .result-title {
+      font-weight: 800;
+    }
+
+    .result-subtitle {
+      margin-top: 0.15rem;
+      color: var(--muted);
+      font-size: 0.78rem;
+    }
+
+    .status-code {
+      padding: 0.28rem 0.48rem;
+      border-radius: 8px;
+      color: var(--text);
+      background: rgba(255, 255, 255, 0.08);
+      font-size: 0.78rem;
+      font-variant-numeric: tabular-nums;
+      font-weight: 800;
+      white-space: nowrap;
+    }
+
+    .details-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      margin-top: 0.7rem;
+      gap: 0.7rem;
+    }
+
+    .detail {
+      min-width: 0;
+      padding: 0.72rem 0.8rem;
+      border: 1px solid var(--border-soft);
+      border-radius: 12px;
+      background: rgba(7, 16, 35, 0.54);
+    }
+
+    .detail-label {
+      color: var(--muted);
+      font-size: 0.73rem;
+    }
+
+    .detail-value {
+      overflow: hidden;
+      margin-top: 0.16rem;
+      color: var(--text);
+      font-size: 0.86rem;
+      font-weight: 700;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .speed-layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      align-items: center;
+      gap: 0.85rem;
+    }
+
+    .speed-layout .result {
+      margin-top: 0;
+    }
+
+    .speed-layout .button-primary {
+      min-width: 144px;
+    }
+
+    .metrics {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      margin-top: 0.95rem;
+      gap: 0.7rem;
+    }
+
+    .metric {
+      min-width: 0;
+      padding: 0.8rem 0.72rem;
+      border: 1px solid var(--border-soft);
+      border-radius: 13px;
+      background: rgba(7, 16, 35, 0.7);
+    }
+
+    .metric-label {
+      overflow: hidden;
+      color: var(--muted);
+      font-size: 0.71rem;
+      font-weight: 720;
+      letter-spacing: 0.055em;
+      text-overflow: ellipsis;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+
+    .metric-value {
+      overflow: hidden;
+      margin-top: 0.26rem;
+      color: var(--text);
+      font-size: clamp(1.03rem, 2.3vw, 1.3rem);
+      font-variant-numeric: tabular-nums;
+      font-weight: 800;
+      letter-spacing: -0.035em;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .metric-unit {
+      margin-top: 0.08rem;
+      color: var(--muted);
+      font-size: 0.72rem;
+    }
+
+    .connection-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      margin-top: 0.7rem;
+      gap: 0.7rem;
+    }
+
+    .connection-item {
+      min-width: 0;
+      padding: 0.74rem 0.8rem;
+      border: 1px solid var(--border-soft);
+      border-radius: 12px;
+      background: rgba(7, 16, 35, 0.54);
+    }
+
+    .connection-label {
+      color: var(--muted);
+      font-size: 0.74rem;
+    }
+
+    .connection-value {
+      overflow: hidden;
+      margin-top: 0.16rem;
+      color: var(--text);
+      font-size: 0.88rem;
+      font-weight: 700;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .server-line {
+      display: flex;
+      align-items: center;
+      min-height: 40px;
+      margin-top: 0.75rem;
+      padding: 0.56rem 0.72rem;
+      border: 1px solid var(--border-soft);
+      border-radius: 11px;
+      color: var(--muted);
+      background: rgba(7, 16, 35, 0.52);
+      font-size: 0.82rem;
+    }
+
+    .server-line strong {
+      margin-right: 0.32rem;
+      color: var(--text);
+    }
+
+    .history-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: 1rem;
+      gap: 0.7rem;
+    }
+
+    .history-head h3 {
+      margin: 0;
+      font-size: 0.92rem;
+    }
+
+    .button-text {
+      padding: 0.28rem;
+      border: 0;
+      color: var(--muted);
+      background: transparent;
+      font-size: 0.77rem;
+      cursor: pointer;
+    }
+
+    .button-text:hover {
+      color: var(--danger);
+    }
+
+    .history-list {
+      display: grid;
+      margin: 0.58rem 0 0;
+      padding: 0;
+      gap: 0.5rem;
+      list-style: none;
+    }
+
+    .history-item {
+      display: grid;
+      grid-template-columns: minmax(110px, 1.15fr) minmax(0, 1.85fr);
+      align-items: center;
+      padding: 0.66rem 0.72rem;
+      border: 1px solid var(--border-soft);
+      border-radius: 11px;
+      background: rgba(7, 16, 35, 0.53);
+      gap: 0.65rem;
+    }
+
+    .history-date {
+      color: var(--text);
+      font-size: 0.79rem;
+      font-variant-numeric: tabular-nums;
+      font-weight: 700;
+    }
+
+    .history-server {
+      overflow: hidden;
+      margin-top: 0.1rem;
+      color: var(--muted);
+      font-size: 0.7rem;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .history-values {
+      display: flex;
+      justify-content: flex-end;
+      color: var(--text);
+      font-size: 0.77rem;
+      font-variant-numeric: tabular-nums;
+      gap: 0.65rem;
+      white-space: nowrap;
+    }
+
+    .history-empty {
+      padding: 0.75rem;
+      border: 1px dashed var(--border);
+      border-radius: 11px;
+      color: var(--muted);
+      font-size: 0.82rem;
+      text-align: center;
+    }
+
+    footer {
+      width: min(100% - 2rem, 1000px);
+      margin: 0 auto;
+      padding: 0 0 1.8rem;
+      color: #8190b6;
+      font-size: 0.75rem;
+      text-align: center;
+    }
+
+    @media (max-width: 700px) {
+      .ip-grid,
+      .metrics {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-width: 530px) {
+      .header-inner {
+        padding: 0.8rem 0;
+      }
+
+      main {
+        width: min(100% - 1.1rem, 1000px);
+        padding-top: 0.95rem;
+      }
+
+      .ip-grid,
+      .form-row,
+      .speed-layout,
+      .details-grid,
+      .connection-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .speed-layout .button-primary {
+        width: 100%;
+      }
+
+      .history-item {
+        grid-template-columns: 1fr;
+        gap: 0.36rem;
+      }
+
+      .history-values {
+        justify-content: flex-start;
+        flex-wrap: wrap;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <header class="app-header">
+    <div class="header-inner">
+      <a class="brand" href="#" aria-label="NetCheckr Start">
+        <span class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1">
+            <path d="M3 12h4l2-6 4 13 2-7h6" stroke-linecap="round" stroke-linejoin="round"></path>
+          </svg>
+        </span>
+        <span>NetCheckr</span>
+      </a>
+
+      <div class="language-switch" aria-label="Sprache auswählen">
+        <button type="button" class="active" data-lang="de">DE</button>
+        <button type="button" data-lang="en">EN</button>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero">
+      <h1 data-i18n="heroTitle">Website prüfen. Verbindung messen.</h1>
+      <p data-i18n="heroText">URL eingeben oder einen Speedtest starten.</p>
+    </section>
+
+    <section class="card" aria-labelledby="ip-title">
+      <div class="card-inner">
+        <div class="section-head">
+          <h2 id="ip-title" class="section-title">
+            <span class="section-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9">
+                <path d="M3.5 12a8.5 8.5 0 1 0 17 0 8.5 8.5 0 0 0-17 0Z"></path>
+                <path d="M3.8 12h16.4M12 3.5c2.2 2.3 3.25 5.13 3.25 8.5S14.2 18.2 12 20.5C9.8 18.2 8.75 15.37 8.75 12S9.8 5.8 12 3.5Z"></path>
+              </svg>
+            </span>
+            <span data-i18n="ipTitle">Deine öffentliche IP</span>
+          </h2>
+          <span class="pill" data-i18n="ipBadge">Öffentlich</span>
+        </div>
+
+        <div class="ip-grid">
+          <div class="ip-card">
+            <span class="ip-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9">
+                <path d="M4 7.5h16M4 16.5h16M7.5 4v16M16.5 4v16"></path>
+              </svg>
+            </span>
+
+            <div>
+              <div class="ip-label" data-i18n="ipv4Label">Öffentliche IPv4</div>
+              <div id="ipv4Value" class="ip-value" data-i18n="detecting">Wird ermittelt …</div>
+            </div>
+
+            <button
+              id="copyIpv4Button"
+              class="copy-button"
+              type="button"
+              disabled
+              aria-label="IPv4 kopieren"
+              title="IPv4 kopieren"
+            >
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9">
+                <rect x="8" y="8" width="11" height="11" rx="2"></rect>
+                <path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"></path>
+              </svg>
+            </button>
+          </div>
+
+          <div class="ip-card">
+            <span class="ip-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9">
+                <path d="M4 7.5h16M4 16.5h16M7.5 4v16M16.5 4v16"></path>
+              </svg>
+            </span>
+
+            <div>
+              <div class="ip-label" data-i18n="ipv6Label">Öffentliche IPv6</div>
+              <div id="ipv6Value" class="ip-value" data-i18n="detecting">Wird ermittelt …</div>
+            </div>
+
+            <button
+              id="copyIpv6Button"
+              class="copy-button"
+              type="button"
+              disabled
+              aria-label="IPv6 kopieren"
+              title="IPv6 kopieren"
+            >
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9">
+                <rect x="8" y="8" width="11" height="11" rx="2"></rect>
+                <path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"></path>
+              </svg>
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="card" aria-labelledby="website-title">
+      <div class="card-inner">
+        <div class="section-head">
+          <h2 id="website-title" class="section-title">
+            <span class="section-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9">
+                <circle cx="12" cy="12" r="8.5"></circle>
+                <path d="M3.8 12h16.4M12 3.5c2.1 2.2 3.15 5.04 3.15 8.5S14.1 18.3 12 20.5C9.9 18.3 8.85 15.46 8.85 12S9.9 5.7 12 3.5Z"></path>
+              </svg>
+            </span>
+            <span data-i18n="websiteTitle">Website-Check</span>
+          </h2>
+          <span class="pill" data-i18n="httpBadge">HTTP Status</span>
+        </div>
+
+        <div class="form-row">
+          <input
+            id="urlInput"
+            class="url-input"
+            type="text"
+            inputmode="url"
+            autocomplete="url"
+            placeholder="example.com"
+            aria-label="Website URL"
+          />
+          <button id="checkButton" class="button-primary" type="button" data-i18n="checkButton">
+            Prüfen
+          </button>
+        </div>
+
+        <div id="websiteResult" class="result" aria-live="polite" data-i18n="websiteIdle">
+          URL eingeben und prüfen.
+        </div>
+      </div>
+    </section>
+
+    <section class="card" aria-labelledby="speedtest-title">
+      <div class="card-inner">
+        <div class="section-head">
+          <h2 id="speedtest-title" class="section-title">
+            <span class="section-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9">
+                <path d="M4 17a8 8 0 1 1 16 0"></path>
+                <path d="m12 13 4-4"></path>
+                <path d="M12 17h.01"></path>
+              </svg>
+            </span>
+            <span data-i18n="speedtestTitle">Speedtest</span>
+          </h2>
+          <span class="pill" data-i18n="autoBadge">Auto-Server</span>
+        </div>
+
+        <div class="speed-layout">
+          <div id="speedtestStatus" class="result" aria-live="polite" data-i18n="speedtestIdle">
+            Bereit zum Start.
+          </div>
+
+          <button id="speedtestButton" class="button-primary" type="button" data-i18n="speedtestButton">
+            Speedtest starten
+          </button>
+        </div>
+
+        <div class="metrics">
+          <div class="metric">
+            <div class="metric-label" data-i18n="pingLabel">Ping</div>
+            <div id="pingValue" class="metric-value">–</div>
+            <div class="metric-unit">ms</div>
+          </div>
+
+          <div class="metric">
+            <div class="metric-label" data-i18n="jitterLabel">Jitter</div>
+            <div id="jitterValue" class="metric-value">–</div>
+            <div class="metric-unit">ms</div>
+          </div>
+
+          <div class="metric">
+            <div class="metric-label" data-i18n="downloadLabel">Download</div>
+            <div id="downloadValue" class="metric-value">–</div>
+            <div class="metric-unit">Mbit/s</div>
+          </div>
+
+          <div class="metric">
+            <div class="metric-label" data-i18n="uploadLabel">Upload</div>
+            <div id="uploadValue" class="metric-value">–</div>
+            <div class="metric-unit">Mbit/s</div>
+          </div>
+        </div>
+
+        <div class="connection-grid">
+          <div class="connection-item">
+            <div class="connection-label" data-i18n="providerLabel">Netzbetreiber</div>
+            <div id="providerValue" class="connection-value" data-i18n="detecting">
+              Wird ermittelt …
+            </div>
+          </div>
+
+          <div class="connection-item">
+            <div class="connection-label" data-i18n="asnLabel">Netzwerk / ASN</div>
+            <div id="asnValue" class="connection-value">–</div>
+          </div>
+        </div>
+
+        <div id="serverInfo" class="server-line" aria-live="polite" data-i18n="serverDetecting">
+          Server wird ermittelt …
+        </div>
+
+        <div class="history-head">
+          <h3 data-i18n="historyTitle">Letzte Tests</h3>
+          <button id="clearHistoryButton" class="button-text" type="button" data-i18n="clearHistory">
+            Verlauf löschen
+          </button>
+        </div>
+
+        <ul id="historyList" class="history-list" aria-live="polite"></ul>
+      </div>
+    </section>
+  </main>
+
+  <footer data-i18n="footerText">
+    Ergebnisse und Verlauf bleiben auf diesem Gerät gespeichert.
+  </footer>
+
+  <script>
+    "use strict";
+
+    const translations = {
+      de: {
+        heroTitle: "Website prüfen. Verbindung messen.",
+        heroText: "URL eingeben oder einen Speedtest starten.",
+        ipTitle: "Deine öffentliche IP",
+        ipBadge: "Öffentlich",
+        ipv4Label: "Öffentliche IPv4",
+        ipv6Label: "Öffentliche IPv6",
+        copyIpv4: "IPv4 kopieren",
+        copyIpv6: "IPv6 kopieren",
+        copied: "Kopiert",
+        noIpv6: "Keine IPv6 verfügbar",
+        ipUnavailable: "Nicht verfügbar",
+        websiteTitle: "Website-Check",
+        httpBadge: "HTTP Status",
+        checkButton: "Prüfen",
+        websiteIdle: "URL eingeben und prüfen.",
+        websiteChecking: "Website wird geprüft …",
+        websiteOnline: "Website ist erreichbar",
+        websiteOffline: "Website ist nicht erreichbar",
+        websiteUnknown: "Status im Browser nicht lesbar",
+        speedtestTitle: "Speedtest",
+        autoBadge: "Auto-Server",
+        speedtestButton: "Speedtest starten",
+        speedtestIdle: "Bereit zum Start.",
+        speedtestDetecting: "Server wird ausgewählt …",
+        speedtestPing: "Ping wird gemessen …",
+        speedtestDownload: "Download wird gemessen …",
+        speedtestUpload: "Upload wird gemessen …",
+        speedtestDone: "Test abgeschlossen.",
+        speedtestError: "Speedtest fehlgeschlagen.",
+        pingLabel: "Ping",
+        jitterLabel: "Jitter",
+        downloadLabel: "Download",
+        uploadLabel: "Upload",
+        providerLabel: "Netzbetreiber",
+        asnLabel: "Netzwerk / ASN",
+        detecting: "Wird ermittelt …",
+        serverDetecting: "Server wird ermittelt …",
+        serverLabel: "Server:",
+        historyTitle: "Letzte Tests",
+        clearHistory: "Verlauf löschen",
+        historyEmpty: "Noch keine Tests vorhanden.",
+        footerText: "Ergebnisse und Verlauf bleiben auf diesem Gerät gespeichert.",
+        unknown: "Unbekannt",
+        timeout: "Zeitüberschreitung",
+        corsNetwork: "CORS oder Netzwerkfehler"
+      },
+      en: {
+        heroTitle: "Check websites. Measure your connection.",
+        heroText: "Enter a URL or start a speed test.",
+        ipTitle: "Your public IP",
+        ipBadge: "Public",
+        ipv4Label: "Public IPv4",
+        ipv6Label: "Public IPv6",
+        copyIpv4: "Copy IPv4",
+        copyIpv6: "Copy IPv6",
+        copied: "Copied",
+        noIpv6: "No IPv6 available",
+        ipUnavailable: "Not available",
+        websiteTitle: "Website Check",
+        httpBadge: "HTTP Status",
+        checkButton: "Check",
+        websiteIdle: "Enter a URL and check it.",
+        websiteChecking: "Checking website …",
+        websiteOnline: "Website is reachable",
+        websiteOffline: "Website is not reachable",
+        websiteUnknown: "Status cannot be read in browser",
+        speedtestTitle: "Speedtest",
+        autoBadge: "Auto Server",
+        speedtestButton: "Start Speedtest",
+        speedtestIdle: "Ready to start.",
+        speedtestDetecting: "Selecting server …",
+        speedtestPing: "Measuring ping …",
+        speedtestDownload: "Measuring download …",
+        speedtestUpload: "Measuring upload …",
+        speedtestDone: "Test completed.",
+        speedtestError: "Speedtest failed.",
+        pingLabel: "Ping",
+        jitterLabel: "Jitter",
+        downloadLabel: "Download",
+        uploadLabel: "Upload",
+        providerLabel: "Network provider",
+        asnLabel: "Network / ASN",
+        detecting: "Detecting …",
+        serverDetecting: "Detecting server …",
+        serverLabel: "Server:",
+        historyTitle: "Recent tests",
+        clearHistory: "Clear history",
+        historyEmpty: "No tests yet.",
+        footerText: "Results and history remain stored on this device.",
+        unknown: "Unknown",
+        timeout: "Timed out",
+        corsNetwork: "CORS or network error"
+      }
+    };
+
+    const STORAGE_KEY = "netcheckr_speedtest_history_v4";
+    const HISTORY_LIMIT = 8;
+
+    let currentLanguage = "de";
+    let detectedServer = null;
+    let networkInfo = null;
+    let publicIpv4 = "";
+    let publicIpv6 = "";
+
+    const elements = {
+      urlInput: document.getElementById("urlInput"),
+      checkButton: document.getElementById("checkButton"),
+      websiteResult: document.getElementById("websiteResult"),
+
+      ipv4Value: document.getElementById("ipv4Value"),
+      ipv6Value: document.getElementById("ipv6Value"),
+      copyIpv4Button: document.getElementById("copyIpv4Button"),
+      copyIpv6Button: document.getElementById("copyIpv6Button"),
+
+      speedtestButton: document.getElementById("speedtestButton"),
+      speedtestStatus: document.getElementById("speedtestStatus"),
+      pingValue: document.getElementById("pingValue"),
+      jitterValue: document.getElementById("jitterValue"),
+      downloadValue: document.getElementById("downloadValue"),
+      uploadValue: document.getElementById("uploadValue"),
+
+      providerValue: document.getElementById("providerValue"),
+      asnValue: document.getElementById("asnValue"),
+      serverInfo: document.getElementById("serverInfo"),
+
+      historyList: document.getElementById("historyList"),
+      clearHistoryButton: document.getElementById("clearHistoryButton"),
+      languageButtons: [...document.querySelectorAll("[data-lang]")]
+    };
+
+    function t(key) {
+      return translations[currentLanguage][key] ?? key;
+    }
+
+    function escapeHtml(value) {
+      return String(value).replace(/[&<>"']/g, character => ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#039;"
+      }[character]));
+    }
+
+    function setLanguage(language) {
+      if (!translations[language]) return;
+
+      currentLanguage = language;
+      document.documentElement.lang = language;
+
+      document.querySelectorAll("[data-i18n]").forEach(element => {
+        const key = element.dataset.i18n;
+        if (translations[language][key]) {
+          element.textContent = translations[language][key];
+        }
+      });
+
+      elements.languageButtons.forEach(button => {
+        button.classList.toggle("active", button.dataset.lang === language);
+      });
+
+      elements.copyIpv4Button.title = t("copyIpv4");
+      elements.copyIpv4Button.setAttribute("aria-label", t("copyIpv4"));
+      elements.copyIpv6Button.title = t("copyIpv6");
+      elements.copyIpv6Button.setAttribute("aria-label", t("copyIpv6"));
+
+      if (detectedServer) renderServerInfo(detectedServer);
+      if (networkInfo) renderNetworkInfo(networkInfo);
+
+      renderPublicIpValues();
+      renderHistory();
+    }
+
+    elements.languageButtons.forEach(button => {
+      button.addEventListener("click", () => setLanguage(button.dataset.lang));
+    });
+
+    function setResult(element, text, type = "") {
+      element.textContent = text;
+      element.className = "result";
+      if (type) element.classList.add(type);
+    }
+
+    function normalizeUrl(value) {
+      const raw = value.trim();
+      if (!raw) return "";
+      return /^https?:\/\//i.test(raw) ? raw : `https://${raw}`;
+    }
+
+    function isValidIpv4(value) {
+      return /^(?:(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)\.){3}(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)$/.test(value);
+    }
+
+    function isValidIpv6(value) {
+      return value.includes(":
