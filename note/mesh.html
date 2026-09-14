@@ -149,6 +149,7 @@
             <li><a href="#montage">Montage &amp; Wetterfestigkeit</a></li>
             <li><a href="#strom">Stromversorgung</a></li>
             <li><a href="#konfig">Konfiguration (DE / EU868)</a></li>
+            <li><a href="#remoteadmin">Remote Admin</a></li>
             <li><a href="#kosten">Kostenübersicht</a></li>
         </ol>
     </div>
@@ -321,7 +322,37 @@
         <tr><td>AGC Reset</td><td>4 s</td><td>Wichtig bei Dual-Setup</td></tr>
     </table>
 
-    <h3>Frequenz-Trennung</h3>
+    
+    <h3 id="remoteadmin">Remote Admin (Meshtastic)</h3>
+    <div class="tip">
+        <strong>Wozu?</strong> Remote Admin erlaubt es, den Node ber das Mesh-Netz selbst zu konfigurieren, ohne direkt per Bluetooth, WiFi oder USB verbunden zu sein. Praktisch, wenn der Repeater auf dem Dach montiert ist.
+    </div>
+    <h4>Aktivierung</h4>
+    <ol>
+        <li>Mit dem Node verbinden (Bluetooth, WiFi oder USB).</li>
+        <li>In der App unter <strong>Settings → Radio → Security</strong> oder <strong>LoRa → Admin</strong> die Option <strong>Remote Admin</strong> aktivieren.</li>
+        <li>Optional: Ein <strong>Admin-Kanal</strong> oder eine <strong>Admin-Session</strong> mit Passwort/PSK einrichten, falls verfgbar.</li>
+        <li>Einstellungen speichern und den Node neu starten.</li>
+    </ol>
+    <h4>Nutzung</h4>
+    <ul>
+        <li>In der App einen anderen Node im Mesh auswhlen, der den Remote-Admin-fhigen Repeater erreichen kann.</li>
+        <li>ber <strong>Remote Admin</strong> oder <strong>Node-Verwaltung</strong> den gewnschten Repeater auswhlen.</li>
+        <li>Konfigurationsnderungen (Region, Preset, TX Power, Hop Limit, etc.) vornehmen und an den Repeater senden.</li>
+        <li>Der Repeater bernimmt die Einstellungen und besttigt (sofern erreichbar).</li>
+    </ul>
+    <div class="warning">
+        <strong>Sicherheit:</strong> Remote Admin sollte nur in einem gesicherten Mesh mit aktivierter Verschlsselung (PSK) verwendet werden. Ohne Verschlsselung knnten andere Nutzer im Mesh Ihre Konfiguration ndern oder auslesen.
+    </div>
+    <h3>Remote Admin (MeshCore)</h3>
+    <p>MeshCore untersttzt Remote-Konfiguration primr ber die CLI (seriell/USB) oder ber ein separates Management-Interface, falls vom Repeater-Betreiber eingerichtet. Eine direkte "Remote Admin"-Option wie in Meshtastic gibt es in der Standard-App nicht.</p>
+    <ul>
+        <li>Fur lokale Verwaltung: CLI ber USB/Seriell nutzen (siehe Abschnitt 10).</li>
+        <li>Fur entfernte Verwaltung: Ein separates Management-System (z. B. SSH, Web-Interface oder ein dediziertes MeshCore-Tool) muss vom Betreiber eingerichtet werden.</li>
+        <li>nderungen an Regions, Scopes oder Flood-Einstellungen erfordern in der Regel direkten Zugriff oder ein vom Betreiber bereitgestelltes Remote-Tool.</li>
+    </ul>
+
+<h3>Frequenz-Trennung</h3>
     <table>
         <tr><th>Node</th><th>Frequenz</th><th>Abstand</th></tr>
         <tr><td>Meshtastic</td><td>869.525 MHz</td><td rowspan="2"><strong>93 kHz</strong> – sauber getrennt</td></tr>
@@ -332,7 +363,128 @@
     </div>
 
     <!-- 9. KOSTEN -->
-    <h2 id="kosten">9. Kostenübersicht (2 Nodes)</h2>
+    
+    <!-- 9. ANTENNEN -->
+    <h2 id="antennen">9. Antennen: Repeater und Companion</h2>
+    <div class="tip">
+        <strong>Grundregel:</strong> Bei 868 MHz ist eine saubere, vertikale Rundstrahlantenne mit möglichst freier Sicht meist wichtiger als maximaler Gewinn. Eine schlechte oder falsch abgestimmte 8-dBi-Antenne kann schlechter funktionieren als eine gute 3–5-dBi-Antenne.
+    </div>
+    <table>
+        <tr><th>Gerat / Standort</th><th>Empfehlung</th><th>Warum</th></tr>
+        <tr><td>Repeater auf Dach oder Mast</td><td>Vertikale 1/2- oder 5/8-Wellen-Glasfaserantenne, etwa 3–6 dBi, fur 868 MHz abgestimmt</td><td>Guter Kompromiss aus Reichweite, vertikalem Offnungswinkel und Rundumabdeckung</td></tr>
+        <tr><td>Sehr hoher Standort / Hgel</td><td>5–8 dBi nur bei flachem, freiem Gelande und guter Montage</td><td>Mehr Gewinn bndelt die Abstrahlung starker in der Horizontalen; nahe oder tiefer gelegene Teilnehmer konnen schlechter versorgt werden</td></tr>
+        <tr><td>Companion am Haus, im Fahrzeug oder mobil</td><td>Kurze, robuste 1/4-Wellen- oder 1/2-Wellen-Antenne mit ca. 2–3 dBi</td><td>Breiteres Abstrahlverhalten und unkritischer bei wechselnder Lage</td></tr>
+        <tr><td>Indoor / Testaufbau</td><td>Mitgelieferte Rubber-Duck-Antenne</td><td>Zum Testen geeignet, aber nicht als dauerhafte Dachantenne</td></tr>
+    </table>
+    <h3>Auswahl-Checkliste</h3>
+    <ul>
+        <li>Die Antenne muss ausdrcklich fur 868 MHz beziehungsweise den Bereich 869,4–869,65 MHz geeignet sein.</li>
+        <li>Der Anschluss muss zum Wio-SX1262 passen; bei SMA, RP-SMA oder IPEX/U.FL sind passende Adapter und moglichst wenige bergange zu verwenden.</li>
+        <li>Die angegebene Impedanz muss 50 Ohm betragen. Eine CB-, WLAN- oder beliebige 433-MHz-Antenne ist kein Ersatz.</li>
+        <li>Das Datenblatt sollte Gewinn, VSWR beziehungsweise Rckflussdampfung und die zulassige Leistung nennen. Ein VSWR von hochstens etwa 1,5:1 im genutzten Bereich ist ein sinnvoller Zielwert.</li>
+        <li>Koaxkabel kurz halten. Bei 868 MHz sind LMR-240 oder besseres Kabel sinnvoll; dnnes langes RG-174 kann einen großen Teil des Antennengewinns wieder verlieren.</li>
+        <li>Die Antenne senkrecht montieren, mit Abstand zu Metall, Dachrinne und Mast. Der Mast sollte nicht direkt parallel am strahlenden Teil der Antenne liegen.</li>
+    </ul>
+    <div class="warning">
+        <strong>Wichtig zur Leistung:</strong> Die zulassige Sendeleistung bezieht sich auf die abgestrahlte Leistung, nicht nur auf den Wert in der Firmware. Antennengewinn und Kabelverluste mssen bercksichtigt werden. Nicht einfach eine hohe Antenne an 22 dBm betreiben, ohne die EIRP/ERP-Vorgaben und das Datenblatt des Gerats zu prfen.
+    </div>
+    <h3>Duale Montage</h3>
+    <ul>
+        <li>Fur zwei gleichzeitig aktive Nodes sind getrennte, vertikal angeordnete Antennen mit moglichst großem Abstand besser als zwei unmittelbar nebeneinander montierte Antennen.</li>
+        <li>Mindestens etwa 50 cm Abstand ist ein guter praktischer Startpunkt; mehr Abstand und eine Abschirmung beziehungsweise ein Hohlraumfilter konnen bei hoher Sendeleistung helfen.</li>
+        <li>Die Frequenzen der beiden Systeme mssen zueinander passen. Unterschiedliche Frequenzen reduzieren Kollisionen, verhindern aber keine bersteuerung des Empfangs bei zu geringer Antennenentfernung.</li>
+        <li>Nach der Montage RSSI, SNR, Paketverlust und Temperatur mehrere Stunden bis Tage beobachten. Eine hohere RSSI-Zahl ist nicht automatisch besser, wenn gleichzeitig viele Pakete verloren gehen.</li>
+    </ul>
+
+    <!-- 10. REGIONEN UND SCOPES -->
+    <h2 id="regionen">10. Regionen und Scopes (MeshCore)</h2>
+    <p>Bei MeshCore sind <strong>Regions</strong> und <strong>Scopes</strong> ein zusatzliches, logisches System, um den Traffic im Netz zu begrenzen und die Kommunikation regional zu halten. Sie ersetzen nicht die regulatorische Funkregion (EU_868, EU_433), sondern erganzen sie.</p>
+    <div class="tip">
+        <strong>Kurz gesagt:</strong> <code>EU_868</code> ist die Funkregion (Frequenz, Duty Cycle, Leistung). <code>de</code>, <code>de-rp</code> und ahnliche Codes sind MeshCore-Regions/Scopes, die festlegen, wie weit Nachrichten im Mesh weitergeleitet werden.
+    </div>
+    <h3>Funktionsprinzip</h3>
+    <ul>
+        <li><strong>Regions auf Repeatern:</strong> Der Repeater-Betreiber tragt ein, welche Regions sein Repeater bedient (z. B. <code>europe</code>, <code>de</code>, <code>de-rp</code>).</li>
+        <li><strong>Scopes auf Nachrichten:</strong> Der Nutzer wahlt beim Senden einen Scope (z. B. <code>de-rp</code>), der den gewnschten geografischen Reichweitenwunsch ausdrckt.</li>
+        <li><strong>Exaktes Matching:</strong> Ein Repeater leitet eine Nachricht nur weiter, wenn der Scope exakt einer seiner konfigurierten Regions entspricht (ohne Hierarchie gibt es kein Teilmatch).</li>
+        <li><strong>Wildcard <code>*</code>:</strong> Nachrichten ohne Scope werden von allen Repeatern dank der Wildcard-Region <code>*</code> weitergeleitet.</li>
+    </ul>
+    <h3>Basis-Regions fur Deutschland</h3>
+    <table>
+        <tr><th>Region Code</th><th>Region</th><th>Beispiele</th></tr>
+        <tr><td><code>europe</code></td><td>Europa</td><td>Groer Fallback-Scope fur grenzberschreitende Kommunikation</td></tr>
+        <tr><td><code>de</code></td><td>Deutschland</td><td>Deutschlandweite Nachrichten</td></tr>
+        <tr><td><code>de-bw</code></td><td>Baden-Wrttemberg</td><td>Stuttgart, Karlsruhe, Freiburg</td></tr>
+        <tr><td><code>de-by</code></td><td>Bayern</td><td>Mnchen, Nrnberg, Augsburg</td></tr>
+        <tr><td><code>de-be</code></td><td>Berlin</td><td>Berlin</td></tr>
+        <tr><td><code>de-bb</code></td><td>Brandenburg</td><td>Potsdam, Cottbus, Frankfurt (Oder)</td></tr>
+        <tr><td><code>de-hb</code></td><td>Bremen</td><td>Bremen, Bremerhaven</td></tr>
+        <tr><td><code>de-hh</code></td><td>Hamburg</td><td>Hamburg</td></tr>
+        <tr><td><code>de-he</code></td><td>Hessen</td><td>Frankfurt, Wiesbaden, Kassel</td></tr>
+        <tr><td><code>de-mv</code></td><td>Mecklenburg-Vorpommern</td><td>Rostock, Schwerin, Stralsund</td></tr>
+        <tr><td><code>de-ni</code></td><td>Niedersachsen</td><td>Hannover, Braunschweig, Oldenburg</td></tr>
+        <tr><td><code>de-nw</code></td><td>Nordrhein-Westfalen</td><td>Koln, Dsseldorf, Dortmund</td></tr>
+        <tr><td><code>de-rp</code></td><td>Rheinland-Pfalz</td><td>Mainz, Koblenz, Trier</td></tr>
+        <tr><td><code>de-sl</code></td><td>Saarland</td><td>Saarbrcken</td></tr>
+        <tr><td><code>de-sn</code></td><td>Sachsen</td><td>Dresden, Leipzig, Chemnitz</td></tr>
+        <tr><td><code>de-st</code></td><td>Sachsen-Anhalt</td><td>Magdeburg, Halle</td></tr>
+        <tr><td><code>de-sh</code></td><td>Schleswig-Holstein</td><td>Kiel, Lbeck, Flensburg</td></tr>
+        <tr><td><code>de-th</code></td><td>Thringen</td><td>Erfurt, Jena, Weimar</td></tr>
+    </table>
+    <h3>Zonen und lokale Regions</h3>
+    <ul>
+        <li><code>de-nord</code> – Hamburg, Bremen, Schleswig-Holstein, Mecklenburg-Vorpommern, Niedersachsen</li>
+        <li><code>de-ost</code> – Berlin, Brandenburg, Sachsen, Sachsen-Anhalt, Thringen und Teile von Mecklenburg-Vorpommern</li>
+        <li><code>de-sued</code> – Bayern, Baden-Wrttemberg sowie angrenzende Teile von Hessen und Rheinland-Pfalz</li>
+        <li><code>de-west</code> – Hessen, Nordrhein-Westfalen, Rheinland-Pfalz, Saarland und angrenzende Bereiche</li>
+        <li><code>de-mitte</code> – berlappungszone fur mitteldeutsche Grenzbereiche</li>
+    </ul>
+    <p>Fur rein lokale Tests gibt es auerdem <code>local</code> bzw. <code>lokal</code>. Diese Regions drfen auf keinem Repeater konfiguriert sein, sonst wrden lokale Testnachrichten ungewollt weitergeleitet.</p>
+    <h3>Repeater-Konfiguration (CLI)</h3>
+    <ol>
+        <li>Mit der CLI auf Ihren Repeater verbinden (USB/Seriell oder Remote-Login).</li>
+        <li>Die Basis-Regions hinzufgen: <code>region put europe</code> und <code>region put de</code>.</li>
+        <li>Ihr Bundesland oder Ihre Zone mit Hierarchie hinzufgen: <code>region put de-rp de</code> oder z. B. <code>region put de-west de</code>.</li>
+        <li>Flood fur die bentigten Regions aktivieren: <code>region allowf europe</code>, <code>region allowf de</code> und Ihre lokale Auswahl.</li>
+        <li>Mit <code>region save</code> speichern.</li>
+    </ol>
+    <h4>Beispiel-Konfiguration (Rheinland-Pfalz)</h4>
+    <pre><code>region put europe
+region put de
+region put de-rp de
+region allowf europe
+region allowf de
+region allowf de-rp
+region save</code></pre>
+    <div class="warning">
+        <strong>Wichtig:</strong> Prfen Sie, ob jeder Befehl mit <code>OK</code> bestatigt wird. Kontrollieren Sie mit <code>region</code> oder <code>region list allowed</code>, ob alles korrekt eingetragen ist. Die Hierarchie (<code>region put de-rp de</code>) verknpft <code>de-rp</code> als Kind mit <code>de</code>. <code>region save</code> ist notig, damit die Konfiguration einen Neustart berlebt.
+    </div>
+    <h3>Technische Spezifikationen</h3>
+    <ul>
+        <li><strong>Maximale Lange:</strong> 30 Bytes (UTF-8) pro Region-Name</li>
+        <li><strong>Erlaubte Zeichen:</strong> Nur Kleinbuchstaben (a-z), Zahlen (0-9) und <code>-</code> (Bindestrich)</li>
+        <li><strong>Maximum Regions:</strong> 32 Regions pro Repeater. Beim Auto-Discover konnen nur 172 Zeichen bertragen werden. Halten Sie die Anzahl und Namen so klein wie moglich!</li>
+        <li><strong>Eindeutigkeit:</strong> Region-Namen mssen im Netz eindeutig sein</li>
+    </ul>
+    <div class="tip">
+        <strong>Fur Bassenheim (Rheinland-Pfalz):</strong> Eine sinnvolle Basis-Konfiguration ist <code>europe</code>, <code>de</code> und <code>de-rp</code> (ggf. mit <code>de-west</code> als Zone). In der App den Scope per Auto-Discover aus der Umgebung bernehmen lassen, damit nur Regions angezeigt und genutzt werden, die in Ihrer Umgebung tatsachlich vorhanden sind.
+    </div>
+
+    <!-- 11. RECHT UND PRAKTIK -->
+    <h2 id="praxis">11. Praxiswerte und rechtliche Hinweise</h2>
+    <table>
+        <tr><th>Parameter</th><th>Empfehlung fur Deutschland</th><th>Hinweis</th></tr>
+        <tr><td>Region</td><td><strong>EU_868</strong></td><td>Fur das 868-MHz-Wio-SX1262 am Standort Bassenheim</td></tr>
+        <tr><td>Frequenzbereich</td><td>869,40–869,65 MHz</td><td>Der Meshtastic-EU_868-Bereich; nicht pauschal den gesamten 863–870-MHz-Bereich verwenden</td></tr>
+        <tr><td>Duty Cycle</td><td>Maximal 10 % im rollierenden 1-Stunden-Fenster</td><td>Das Gerat stoppt beziehungsweise begrenzt bertragungen nach Erreichen des Limits</td></tr>
+        <tr><td>TX Power</td><td>Nur so hoch wie notig; Antennengewinn und Kabelverluste einrechnen</td><td>Die Firmware-Anzeige allein ist nicht die gesamte abgestrahlte Leistung</td></tr>
+        <tr><td>Preset</td><td>Long Fast als gemeinsamer Ausgangspunkt; EU-kompatibles Narrow-Preset nur, wenn alle Teilnehmer es nutzen</td><td>Preset bestimmt Bandbreite, Spreading Factor und Datenrate</td></tr>
+        <tr><td>Hop Limit</td><td>3–5 als Startwert</td><td>Mehr Hops erhohen Airtime und nicht automatisch die Reichweite</td></tr>
+        <tr><td>Repeater-Rolle</td><td>Nur einplanen, wenn hoher Standort, gute Antenne und zuverlassige Stromversorgung vorhanden sind</td><td>Ein schlechter Repeater kann Airtime verbrauchen, ohne die Abdeckung zu verbessern</td></tr>
+    </table>
+    <p class="small">Die technischen Grenzwerte und Firmware-Optionen konnen sich andern. Vor dem Betrieb die aktuelle Meshtastic-Dokumentation sowie die deutschen Vorgaben der Bundesnetzagentur prfen; diese HTML ersetzt keine Funk- oder Elektrofachberatung.</p>
+
+    <h2 id="kosten">12. Kostenübersicht (2 Nodes)</h2>
     <table class="cost-table">
         <tr><th>Posten</th><th>Preis (pro Node)</th><th>Gesamt (2×)</th></tr>
         <tr><td>XIAO ESP32-S3 + Wio-SX1262</td><td>~30–35 €</td><td>~60–70 €</td></tr>
@@ -349,7 +501,7 @@
     </div>
 
     <footer>
-        Zusammenstellung aus Chat-Gespräch · September 2026 · Alle Angaben ohne Gewähr
+        Zusammenstellung aus Chat-Gespräch · September 2026 · Aktualisiert um Antennen-, Regions/Scopes- und Remote-Admin-Hinweise · Alle Angaben ohne Gewähr
     </footer>
 
 </div>
