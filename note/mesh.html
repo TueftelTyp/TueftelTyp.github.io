@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="content-width, initial-scale=1.0">
+    <title>LoRa Mesh Repeater – Meshtastic & MeshCore auf dem Dach</title>
+    <style>
+        :root {
+            --bg: #0f172a;
+            --card: #1e293b;
+            --border: #334155;
+            --text: #e2e8f0;
+            --muted: #94a3b8;
+            --accent: #38bdf8;
+            --accent2: #a78bfa;
+            --green: #4ade80;
+            --yellow: #fbbf24;
+            --red: #f87171;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+            padding: 2rem;
+        }
+        .container { max-width: 900px; margin: 0 auto; }
+        h1 {
+            font-size: 1.8rem;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(135deg, var(--accent), var(--accent2));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .subtitle { color: var(--muted); margin-bottom: 2rem; font-size: 0.95rem; }
+        h2 {
+            font-size: 1.3rem;
+            color: var(--accent);
+            margin: 2rem 0 1rem;
+            padding-bottom: 0.3rem;
+            border-bottom: 1px solid var(--border);
+        }
+        h3 { font-size: 1.05rem; color: var(--accent2); margin: 1.2rem 0 0.5rem; }
+        p, li { font-size: 0.95rem; }
+        ul, ol { padding-left: 1.5rem; margin: 0.5rem 0; }
+        li { margin-bottom: 0.3rem; }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1rem 0;
+            font-size: 0.88rem;
+        }
+        th, td {
+            padding: 0.6rem 0.8rem;
+            border: 1px solid var(--border);
+            text-align: left;
+        }
+        th { background: var(--card); color: var(--accent); font-weight: 600; }
+        tr:nth-child(even) { background: rgba(255,255,255,0.02); }
+        .card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 1.2rem 1.5rem;
+            margin: 1rem 0;
+        }
+        .card h3 { margin-top: 0; }
+        .tag {
+            display: inline-block;
+            padding: 0.15rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+        .tag-green { background: rgba(74,222,128,0.15); color: var(--green); }
+        .tag-yellow { background: rgba(251,191,36,0.15); color: var(--yellow); }
+        .tag-red { background: rgba(248,113,113,0.15); color: var(--red); }
+        .tag-blue { background: rgba(56,189,248,0.15); color: var(--accent); }
+        .tag-purple { background: rgba(167,139,250,0.15); color: var(--accent2); }
+        .diagram {
+            background: #0a0f1a;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1.5rem;
+            font-family: 'Courier New', monospace;
+            font-size: 0.85rem;
+            line-height: 1.5;
+            overflow-x: auto;
+            margin: 1rem 0;
+            white-space: pre;
+        }
+        .warning {
+            border-left: 3px solid var(--yellow);
+            padding: 0.8rem 1rem;
+            margin: 1rem 0;
+            background: rgba(251,191,36,0.05);
+            border-radius: 0 6px 6px 0;
+        }
+        .tip {
+            border-left: 3px solid var(--green);
+            padding: 0.8rem 1rem;
+            margin: 1rem 0;
+            background: rgba(74,222,128,0.05);
+            border-radius: 0 6px 6px 0;
+        }
+        .cost-table td:last-child { text-align: right; }
+        .toc {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 1.2rem 1.5rem;
+            margin-bottom: 2rem;
+        }
+        .toc h3 { margin-top: 0; color: var(--text); }
+        .toc ol { counter-reset: toc-counter; list-style: none; padding-left: 0; }
+        .toc li { counter-increment: toc-counter; margin: 0.3rem 0; }
+        .toc li::before {
+            content: counter(toc-counter) ". ";
+            color: var(--accent);
+            font-weight: 600;
+        }
+        .toc a { color: var(--text); text-decoration: none; }
+        .toc a:hover { color: var(--accent); }
+        footer {
+            margin-top: 3rem;
+            padding-top: 1rem;
+            border-top: 1px solid var(--border);
+            color: var(--muted);
+            font-size: 0.8rem;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+
+    <h1>LoRa Mesh Repeater – Meshtastic &amp; MeshCore</h1>
+    <p class="subtitle">Dual-Node-Setup auf dem Dach mit Seeed XIAO ESP32-S3 + Wio-SX1262 · Stand: September 2026</p>
+
+    <div class="toc">
+        <h3>Inhaltsverzeichnis</h3>
+        <ol>
+            <li><a href="#vergleich">Meshtastic vs. MeshCore</a></li>
+            <li><a href="#beides">Beide gleichzeitig nutzen?</a></li>
+            <li><a href="#mast">Dual-Repeater auf einem Mast</a></li>
+            <li><a href="#ausblick">Welches System setzt sich durch?</a></li>
+            <li><a href="#hardware">Hardware &amp; Antennen</a></li>
+            <li><a href="#montage">Montage &amp; Wetterfestigkeit</a></li>
+            <li><a href="#strom">Stromversorgung</a></li>
+            <li><a href="#konfig">Konfiguration (DE / EU868)</a></li>
+            <li><a href="#kosten">Kostenübersicht</a></li>
+        </ol>
+    </div>
+
+    <!-- 1. VERGLEICH -->
+    <h2 id="vergleich">1. Meshtastic vs. MeshCore</h2>
+    <table>
+        <tr><th>Faktor</th><th>Meshtastic</th><th>MeshCore</th></tr>
+        <tr><td>Community (Discord)</td><td>~50.000</td><td>~6.000</td></tr>
+        <tr><td>Aktive Nodes/Tag</td><td>~8.500+</td><td>~4.500</td></tr>
+        <tr><td>Routing</td><td>Flooding (max. 7 Hops)</td><td>Source Routing (bis 64 Hops)</td></tr>
+        <tr><td>Stärke</td><td>Einfach, mobil, große Community</td><td>Skalierbar, effizient, zuverlässig</td></tr>
+        <tr><td>Schwäche</td><td>Skaliert schlecht bei 500+ Knoten</td><td>Jünger, Infrastruktur nötig, Freemium</td></tr>
+    </table>
+    <div class="card">
+        <h3>Wann welches?</h3>
+        <ul>
+            <li><span class="tag tag-blue">Meshtastic</span> → Mobilität, Ad-hoc, sofortige Teilnahme, Ad-hoc-Gruppen, Telemetrie</li>
+            <li><span class="tag tag-purple">MeshCore</span> → Statische Netzwerke, Farm/Tal/Stadt, hohe Zuverlässigkeit, geplante Infrastruktur</li>
+        </ul>
+    </div>
+
+    <!-- 2. BEIDE NUTZEN -->
+    <h2 id="beides">2. Beide gleichzeitig nutzen?</h2>
+    <ul>
+        <li><strong>Gleiches Gerät:</strong> Nein – nur eine Firmware gleichzeitig, aber jederzeit umflashbar.</li>
+        <li><strong>Zwei Geräte:</strong> Ja – ein Node pro System, parallel betreibbar.</li>
+        <li><strong>Interoperabilität:</strong> <span class="tag tag-red">Nein</span> – Die Netze sind nicht kompatibel.</li>
+        <li><strong>Interferenz:</strong> Bei gleicher Frequenz stören sich die Nodes gegenseitig. Unterschiedliche Slots/Frequenzen nutzen.</li>
+    </ul>
+
+    <!-- 3. MAST -->
+    <h2 id="mast">3. Dual-Repeater auf einem Mast</h2>
+    <div class="warning">
+        <strong>Kritischer Punkt: Antennenabstand</strong><br>
+        Mindestens <strong>33 cm</strong> (1 λ bei 868 MHz), besser <strong>50–66 cm</strong> (2 λ).
+        Weniger als 33 cm degradiert beide Knoten stark.
+    </div>
+
+    <h3>Empfohlene Anordnung</h3>
+    <div class="diagram">
+  ┌──────────────────┐
+  │   Antenne 2      │  ← MeshCore (oben)
+  │   5.8 dBi        │
+  │      │           │
+  │   ┌──┴──┐        │
+  │   │Node2│        │  ← IP65-Gehäuse
+  │   └──┬──┘        │
+  │      │           │
+  │  ~50-66 cm       │  ← Mindestabstand
+  │      │           │
+  │   ┌──┴──┐        │
+  │   │Node1│        │  ← IP65-Gehäuse
+  │   └──┬──┘        │
+  │      │           │
+  │   Antenne 1      │  ← Meshtastic (unten)
+  │   5.8 dBi        │
+  └──────────────────┘
+       │
+    Mast + Erdung</div>
+
+    <h3>Wichtige Maßnahmen</h3>
+    <table>
+        <tr><th>Maßnahme</th><th>Warum</th></tr>
+        <tr><td>Vertikal stapeln (nicht nebeneinander)</td><td>Endfire-Nullen → beste Isolation</td></tr>
+        <tr><td>Unterschiedliche Frequenz-Slots</td><td>Reduziert Kollisionswahrscheinlichkeit</td></tr>
+        <tr><td>AGC Reset = 4 s (MeshCore)</td><td>Verhindert, dass RX durch TX des anderen „taub" wird</td></tr>
+        <tr><td>Hohlraumfilter (optional)</td><td>Extra Isolation bei knappem Abstand</td></tr>
+        <tr><td>Kurze Coax-Strecken</td><td>Verluste bei 868 MHz</td></tr>
+    </table>
+
+    <!-- 4. AUSBLICK -->
+    <h2 id="ausblick">4. Welches System setzt sich durch?</h2>
+    <div class="card">
+        <h3>Kurz- &amp; mittelfristig (1–5 Jahre): Meshtastic gewinnt</h3>
+        <p>Netzwerkeffekt: Wer ein Gerät kauft, will <em>sofort</em> Leute erreichen. Meshtastic ist in DE noch dichter vertreten.</p>
+    </div>
+    <div class="card">
+        <h3>Langfristig: Koexistenz</h3>
+        <ul>
+            <li><strong>Meshtastic</strong> = „TCP/IP" des LoRa-Mesh – Default für Einzelnutzer &amp; mobile Nutzung</li>
+            <li><strong>MeshCore</strong> = „BGP" – für dichte, geplante Infrastruktur-Netze</li>
+        </ul>
+    </div>
+    <h3>Risiken für MeshCore</h3>
+    <ul>
+        <li>Team-Split 2025 (bremst Entwicklung)</li>
+        <li>Freemium-Modell (~10 $ für manche App-Funktionen)</li>
+        <li>Krypto-Kritik (AES-128-ECB, 2-Byte-HMAC)</li>
+    </ul>
+
+    <!-- 5. HARDWARE -->
+    <h2 id="hardware">5. Hardware &amp; Antennen</h2>
+    <h3>Board</h3>
+    <p><strong>Seeed Studio XIAO ESP32-S3 + Wio-SX1262 Kit</strong> (~30–35 €) – stapelbar, unterstützt beide Firmwares.</p>
+
+    <h3>Antennen</h3>
+    <table>
+        <tr><th>Antenne</th><th>Gain</th><th>Eignung</th></tr>
+        <tr><td>Mitgeliefert (Rubber, 70 mm)</td><td>2 dBi</td><td><span class="tag tag-red">Nur Bench-Test</span></td></tr>
+        <tr><td>Fiberglass 360 mm, magnetisch</td><td>3 dBi</td><td><span class="tag tag-yellow">Gut, kein Bohren</span></td></tr>
+        <tr><td><strong>RF Explorer 800 mm</strong></td><td><strong>5.8 dBi</strong></td><td><span class="tag tag-green">Standard für Repeater</span></td></tr>
+        <tr><td>RF Explorer 1300 mm</td><td>8 dBi</td><td>Nur für Mast/Hügel</td></tr>
+    </table>
+
+    <h3>Firmware flashen</h3>
+    <table>
+        <tr><th>Node</th><th>Firmware</th><th>Flasher</th></tr>
+        <tr><td>Node 1 (Meshtastic)</td><td>Meshtastic</td><td>flasher.meshtastic.org → „Seeed XIAO S3" → Full Erase</td></tr>
+        <tr><td>Node 2 (MeshCore)</td><td>MeshCore Repeater</td><td>flash.meshtastic.org → Community → „Xiao S3 Wio" → Repeater → <strong>merged.bin</strong></td></tr>
+    </table>
+    <div class="warning">
+        <strong>MeshCore:</strong> Immer die <strong>merged</strong> Firmware flashen, sonst verliert das Gerät Einstellungen nach Stromausfall.
+    </div>
+
+    <!-- 6. MONTAGE -->
+    <h2 id="montage">6. Montage &amp; Wetterfestigkeit</h2>
+    <ul>
+        <li><strong>IP65-Gehäuse</strong> (Hammond, Polycarbonat) – je eines pro Node</li>
+        <li><strong>Gummimanschetten</strong> an den Kabeldurchführungen</li>
+        <li><strong>Silikagel-Beutel</strong> in jedes Gehäuse (Kondensat)</li>
+        <li><strong>Weißes Gehäuse</strong> oder Schattierung (kein direktes Sonnenlicht)</li>
+        <li><strong>Blitzschutz:</strong> Überpotentialausgleich (OPA) am Mast, Erdung des Mastfußes</li>
+        <li><strong>UV-beständiges Coax</strong> (LMR-240 oder besser)</li>
+    </ul>
+
+    <!-- 7. STROM -->
+    <h2 id="strom">7. Stromversorgung</h2>
+    <table>
+        <tr><th>Option</th><th>Pro</th><th>Contra</th></tr>
+        <tr><td><strong>Solar + Akku</strong> (10 W + 5000 mAh)</td><td>Unabhängig</td><td>Kosten, Wartung</td></tr>
+        <tr><td>PoE / 5 V DC über Coax-Shield</td><td>Stabil</td><td>Kabellegung nötig</td></tr>
+        <tr><td>USB-C über lange Leitung</td><td>Einfach</td><td>Spannungsabfall, nicht wetterfest</td></tr>
+    </table>
+    <div class="tip">
+        <strong>Empfehlung für Dauerbetrieb:</strong> Kleine Solar-Unit (5–10 W Panel + 18650-Bank + MPPT) pro Node, oder gemeinsames 5 V / 2 A Netzteil mit PoE-Injektor.
+    </div>
+
+    <!-- 8. KONFIGURATION -->
+    <h2 id="konfig">8. Konfiguration (Deutschland / EU868)</h2>
+
+    <h3>Meshtastic-Node</h3>
+    <table>
+        <tr><th>Parameter</th><th>Wert</th><th>Hinweis</th></tr>
+        <tr><td>Region</td><td><strong>EU_868</strong></td><td>Pflicht (ETSI)</td></tr>
+        <tr><td>Modem-Preset</td><td><strong>Long Fast</strong></td><td>869.525 MHz</td></tr>
+        <tr><td>TX Power</td><td>22 dBm</td><td>≤ 27 dBm EIRP</td></tr>
+        <tr><td>Duty Cycle</td><td>10 % (Override aus)</td><td>ETSI EN 300 220</td></tr>
+        <tr><td>Hop Limit</td><td>3</td><td></td></tr>
+        <tr><td>RX Boosted Gain</td><td>An</td><td>Bessere Sensitivität</td></tr>
+        <tr><td>Rolle</td><td>Router / Client Base</td><td>Für Repeater</td></tr>
+        <tr><td>Kanal</td><td>LongFast (Public)</td><td>Öffentliches Netz</td></tr>
+        <tr><td>Remote Admin</td><td>Aktivieren</td><td>Neu-Konfiguration per Mesh</td></tr>
+    </table>
+
+    <h3>MeshCore-Node</h3>
+    <table>
+        <tr><th>Parameter</th><th>Wert</th><th>Hinweis</th></tr>
+        <tr><td>Preset</td><td><strong>EU/UK (Narrow)</strong></td><td>⚠️ Einziges Preset für DE-Netz</td></tr>
+        <tr><td>Frequenz</td><td>869.618 MHz</td><td>Automatisch via Preset</td></tr>
+        <tr><td>Bandbreite</td><td>62,5 kHz</td><td>Schmal, störfest</td></tr>
+        <tr><td>Spreading Factor</td><td>8</td><td>Kompromiss</td></tr>
+        <tr><td>TX Power</td><td>22 dBm</td><td>Standard</td></tr>
+        <tr><td>Duty Cycle</td><td><strong>10 %</strong></td><td>⚠️ Default 50 % – manuell setzen!</td></tr>
+        <tr><td>Advert Interval (Flood)</td><td>≥ 24 h (1440 min)</td><td>Reduziert Airtime</td></tr>
+        <tr><td>Advert Interval (0-Hop)</td><td>0 (deaktiviert)</td><td>Spart Airtime</td></tr>
+        <tr><td>Loop Detect</td><td>moderate</td><td>Verhindert Schleifen</td></tr>
+        <tr><td>Region/Scope</td><td>Bundesland (z. B. <code>de-bb</code>)</td><td>Nicht <code>de</code> oder <code>europe</code></td></tr>
+        <tr><td>Name</td><td>Z. B. <code>RPT-Berlin-Dahlem</code></td><td>Klar erkennbar</td></tr>
+        <tr><td>AGC Reset</td><td>4 s</td><td>Wichtig bei Dual-Setup</td></tr>
+    </table>
+
+    <h3>Frequenz-Trennung</h3>
+    <table>
+        <tr><th>Node</th><th>Frequenz</th><th>Abstand</th></tr>
+        <tr><td>Meshtastic</td><td>869.525 MHz</td><td rowspan="2"><strong>93 kHz</strong> – sauber getrennt</td></tr>
+        <tr><td>MeshCore</td><td>869.618 MHz</td></tr>
+    </table>
+    <div class="tip">
+        <strong>Keine zusätzlichen Offsets nötig</strong> – die Presets liefern schon unterschiedliche Frequenzen. Der Antennenabstand (≥ 50 cm) bleibt trotzdem wichtig wegen der empfangsseitigen Sättigung.
+    </div>
+
+    <!-- 9. KOSTEN -->
+    <h2 id="kosten">9. Kostenübersicht (2 Nodes)</h2>
+    <table class="cost-table">
+        <tr><th>Posten</th><th>Preis (pro Node)</th><th>Gesamt (2×)</th></tr>
+        <tr><td>XIAO ESP32-S3 + Wio-SX1262</td><td>~30–35 €</td><td>~60–70 €</td></tr>
+        <tr><td>RF Explorer 5.8 dBi Antenne</td><td>~20 €</td><td>~40 €</td></tr>
+        <tr><td>LMR-240 Coax (2 m)</td><td>~8 €</td><td>~16 €</td></tr>
+        <tr><td>IP65-Gehäuse</td><td>~10–15 €</td><td>~20–30 €</td></tr>
+        <tr><td>Solar-Unit (optional)</td><td>~25–40 €</td><td>~50–80 €</td></tr>
+        <tr><th>Gesamt (ohne Solar)</th><th></th><th><strong>~140–160 €</strong></th></tr>
+        <tr><th>Gesamt (mit Solar)</th><th></th><th><strong>~190–240 €</strong></th></tr>
+    </table>
+
+    <div class="tip">
+        <strong>Tipp vor der Montage:</strong> Beide Nodes erst auf dem Boden mit den finalen Antennen aufstellen und 1–2 Tage testen (RSSI/SNR in den Apps prüfen). Erst wenn die Werte stimmen, aufs Dach.
+    </div>
+
+    <footer>
+        Zusammenstellung aus Chat-Gespräch · September 2026 · Alle Angaben ohne Gewähr
+    </footer>
+
+</div>
+</body>
+</html>   
