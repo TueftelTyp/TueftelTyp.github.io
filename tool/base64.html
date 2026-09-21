@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Image to Base64 Converter</title>
+  <title>Image and Base64 Converter</title>
 
   <style>
     :root {
@@ -42,8 +42,8 @@
     }
 
     h2 {
-      font-size: 1.1rem;
       margin-top: 0;
+      font-size: 1.15rem;
     }
 
     p {
@@ -56,6 +56,31 @@
       border-radius: 12px;
       padding: 20px;
       margin-bottom: 20px;
+    }
+
+    .tabs {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 20px;
+    }
+
+    .tab-button {
+      background: var(--panel-2);
+      color: var(--muted);
+    }
+
+    .tab-button.active {
+      background: var(--accent);
+      color: #06111f;
+    }
+
+    .tab-content {
+      display: none;
+    }
+
+    .tab-content.active {
+      display: block;
     }
 
     .drop-zone {
@@ -75,8 +100,8 @@
 
     .drop-zone strong {
       display: block;
-      font-size: 1.2rem;
       margin-bottom: 8px;
+      font-size: 1.2rem;
     }
 
     input[type="file"] {
@@ -153,9 +178,9 @@
     }
 
     .status {
-      color: var(--muted);
-      margin-top: 12px;
       min-height: 1.4em;
+      margin-top: 12px;
+      color: var(--muted);
     }
 
     .result {
@@ -174,8 +199,42 @@
 
     .preview {
       display: block;
-      max-width: 260px;
-      max-height: 180px;
+      max-width: 400px;
+      max-height: 300px;
+      object-fit: contain;
+      margin: 15px 0;
+      padding: 5px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      background:
+        linear-gradient(45deg, #303640 25%, transparent 25%),
+        linear-gradient(-45deg, #303640 25%, transparent 25%),
+        linear-gradient(45deg, transparent 75%, #303640 75%),
+        linear-gradient(-45deg, transparent 75%, #303640 75%);
+      background-size: 20px 20px;
+      background-position: 0 0, 0 10px, 10px -10px, -10px 0;
+    }
+
+    .meta,
+    .hint {
+      color: var(--muted);
+      font-size: 0.85rem;
+    }
+
+    .empty {
+      padding: 20px;
+      color: var(--muted);
+      text-align: center;
+    }
+
+    .decode-preview {
+      display: none;
+      max-width: 500px;
+      max-height: 400px;
+      margin: 20px 0;
+      padding: 5px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
       object-fit: contain;
       background:
         linear-gradient(45deg, #303640 25%, transparent 25%),
@@ -184,27 +243,6 @@
         linear-gradient(-45deg, transparent 75%, #303640 75%);
       background-size: 20px 20px;
       background-position: 0 0, 0 10px, 10px -10px, -10px 0;
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      padding: 5px;
-      margin-bottom: 12px;
-    }
-
-    .meta {
-      color: var(--muted);
-      font-size: 0.85rem;
-      margin-bottom: 10px;
-    }
-
-    .empty {
-      color: var(--muted);
-      text-align: center;
-      padding: 20px;
-    }
-
-    .hint {
-      font-size: 0.85rem;
-      color: var(--muted);
     }
 
     footer {
@@ -234,95 +272,171 @@
 
 <body>
   <main class="container">
-    <h1>Image to Base64 Converter</h1>
+    <h1>Image and Base64 Converter</h1>
 
     <p>
-      Convert images to Base64 data URLs directly in your browser.
-      Your files are not uploaded to a server.
+      Convert images to Base64 data URLs or convert Base64 data back into images.
+      All processing happens directly in your browser.
     </p>
 
-    <section class="panel">
-      <div id="dropZone" class="drop-zone">
-        <strong>Drop images here</strong>
-        <span>or click to select files</span>
-        <input id="fileInput" type="file" accept="image/*" multiple>
+    <nav class="tabs" aria-label="Converter tabs">
+      <button class="tab-button active" data-tab="imageToBase64">
+        Image → Base64
+      </button>
+
+      <button class="tab-button" data-tab="base64ToImage">
+        Base64 → Image
+      </button>
+    </nav>
+
+    <!-- Image to Base64 -->
+    <section id="imageToBase64" class="tab-content active">
+      <div class="panel">
+        <div id="dropZone" class="drop-zone">
+          <strong>Drop images here</strong>
+          <span>or click to select files</span>
+          <input
+            id="fileInput"
+            type="file"
+            accept="image/*"
+            multiple
+          >
+        </div>
+
+        <div class="options">
+          <label>
+            Output format
+            <select id="format">
+              <option value="original">Keep original format</option>
+              <option value="image/jpeg">JPEG</option>
+              <option value="image/png">PNG</option>
+              <option value="image/webp">WebP</option>
+            </select>
+          </label>
+
+          <label>
+            Maximum width in pixels
+            <input
+              id="maxWidth"
+              type="number"
+              min="1"
+              placeholder="Original size"
+            >
+          </label>
+
+          <label>
+            Maximum height in pixels
+            <input
+              id="maxHeight"
+              type="number"
+              min="1"
+              placeholder="Original size"
+            >
+          </label>
+
+          <label>
+            JPEG/WebP quality:
+            <span id="qualityValue">90%</span>
+            <input
+              id="quality"
+              type="range"
+              min="1"
+              max="100"
+              value="90"
+            >
+          </label>
+        </div>
+
+        <div class="button-row">
+          <button id="convertButton">
+            Convert images
+          </button>
+
+          <button id="downloadAllButton" class="secondary">
+            Download all as TXT
+          </button>
+
+          <button id="clearButton" class="danger">
+            Clear all
+          </button>
+        </div>
+
+        <div id="status" class="status"></div>
       </div>
 
-      <div class="options">
-        <label>
-          Output format
-          <select id="format">
-            <option value="original">Keep original format</option>
-            <option value="image/jpeg">JPEG</option>
-            <option value="image/png">PNG</option>
-            <option value="image/webp">WebP</option>
-          </select>
-        </label>
+      <div class="panel">
+        <h2>Results</h2>
 
-        <label>
-          Maximum width in pixels
-          <input
-            id="maxWidth"
-            type="number"
-            min="1"
-            placeholder="Original size"
-          >
-        </label>
-
-        <label>
-          Maximum height in pixels
-          <input
-            id="maxHeight"
-            type="number"
-            min="1"
-            placeholder="Original size"
-          >
-        </label>
-
-        <label>
-          JPEG/WebP quality:
-          <span id="qualityValue">90%</span>
-          <input
-            id="quality"
-            type="range"
-            min="1"
-            max="100"
-            value="90"
-          >
-        </label>
+        <div id="results">
+          <div class="empty">
+            No images converted yet.
+          </div>
+        </div>
       </div>
 
-      <div class="button-row">
-        <button id="convertButton">Convert images</button>
-        <button id="downloadAllButton" class="secondary">
-          Download all as TXT
-        </button>
-        <button id="clearButton" class="danger">
-          Clear all
-        </button>
-      </div>
+      <div class="panel">
+        <h2>Usage examples</h2>
 
-      <div id="status" class="status"></div>
+        <p class="hint">HTML image:</p>
+        <textarea readonly>&lt;img src="data:image/jpeg;base64,..." alt="Image"&gt;</textarea>
+
+        <p class="hint">HTML favicon:</p>
+        <textarea readonly>&lt;link rel="icon" type="image/png" href="data:image/png;base64,..."&gt;</textarea>
+
+        <p class="hint">CSS background image:</p>
+        <textarea readonly>background-image: url("data:image/png;base64,...");</textarea>
+      </div>
     </section>
 
-    <section class="panel">
-      <h2>Results</h2>
-      <div id="results">
-        <div class="empty">No images converted yet.</div>
+    <!-- Base64 to Image -->
+    <section id="base64ToImage" class="tab-content">
+      <div class="panel">
+        <h2>Convert Base64 to Image</h2>
+
+        <p class="hint">
+          Paste a complete data URL or Base64 code without the prefix.
+        </p>
+
+        <textarea
+          id="base64Input"
+          placeholder="data:image/png;base64,iVBORw0KGgo...&#10;&#10;or only:&#10;iVBORw0KGgo..."
+        ></textarea>
+
+        <div class="button-row">
+          <button id="decodeButton">
+            Convert to image
+          </button>
+
+          <button id="copyBase64Button" class="secondary">
+            Copy input
+          </button>
+
+          <button id="clearBase64Button" class="danger">
+            Clear
+          </button>
+        </div>
+
+        <div id="decodeStatus" class="status"></div>
+
+        <img
+          id="decodedImage"
+          class="decode-preview"
+          alt="Decoded image preview"
+        >
+
+        <div class="button-row">
+          <a
+            id="downloadDecoded"
+            class="button-link"
+            download="decoded-image"
+            style="display: none;"
+          >
+            <button type="button">
+              Download image
+            </button>
+          </a>
+        </div>
       </div>
-    </section>
-
-    <section class="panel">
-      <h2>Usage examples</h2>
-
-      <p class="hint">HTML image:</p>
-      <textarea readonly>&lt;img src="data:image/jpeg;base64,..." alt="Image"&gt;</textarea>
-
-      <p class="hint">HTML favicon:</p>
-      <textarea readonly>&lt;link rel="icon" type="image/png" href="data:image/png;base64,..."&gt;</textarea>
-
-      <p class="hint">CSS background image:</p>
-      <textarea readonly>background-image: url("data:image/png;base64,...");</textarea>
     </section>
   </main>
 
@@ -340,28 +454,85 @@
   </footer>
 
   <script>
-    const dropZone = document.getElementById("dropZone");
-    const fileInput = document.getElementById("fileInput");
-    const convertButton = document.getElementById("convertButton");
+    const currentYear =
+      document.getElementById("currentYear");
+
+    currentYear.textContent =
+      new Date().getFullYear();
+
+    /*
+     * Tab navigation
+     */
+    const tabButtons =
+      document.querySelectorAll(".tab-button");
+
+    const tabContents =
+      document.querySelectorAll(".tab-content");
+
+    tabButtons.forEach(button => {
+      button.addEventListener("click", () => {
+        const targetId =
+          button.getAttribute("data-tab");
+
+        tabButtons.forEach(item => {
+          item.classList.remove("active");
+        });
+
+        tabContents.forEach(item => {
+          item.classList.remove("active");
+        });
+
+        button.classList.add("active");
+        document.getElementById(targetId)
+          .classList.add("active");
+      });
+    });
+
+    /*
+     * Image to Base64
+     */
+    const dropZone =
+      document.getElementById("dropZone");
+
+    const fileInput =
+      document.getElementById("fileInput");
+
+    const convertButton =
+      document.getElementById("convertButton");
+
     const downloadAllButton =
       document.getElementById("downloadAllButton");
-    const clearButton = document.getElementById("clearButton");
-    const results = document.getElementById("results");
-    const status = document.getElementById("status");
-    const formatSelect = document.getElementById("format");
-    const maxWidthInput = document.getElementById("maxWidth");
-    const maxHeightInput = document.getElementById("maxHeight");
-    const qualityInput = document.getElementById("quality");
-    const qualityValue = document.getElementById("qualityValue");
-    const currentYear = document.getElementById("currentYear");
+
+    const clearButton =
+      document.getElementById("clearButton");
+
+    const results =
+      document.getElementById("results");
+
+    const status =
+      document.getElementById("status");
+
+    const formatSelect =
+      document.getElementById("format");
+
+    const maxWidthInput =
+      document.getElementById("maxWidth");
+
+    const maxHeightInput =
+      document.getElementById("maxHeight");
+
+    const qualityInput =
+      document.getElementById("quality");
+
+    const qualityValue =
+      document.getElementById("qualityValue");
 
     let selectedFiles = [];
     let convertedResults = [];
 
-    currentYear.textContent = new Date().getFullYear();
-
     qualityInput.addEventListener("input", () => {
-      qualityValue.textContent = qualityInput.value + "%";
+      qualityValue.textContent =
+        qualityInput.value + "%";
     });
 
     dropZone.addEventListener("click", () => {
@@ -398,13 +569,9 @@
 
       selectedFiles.push(...imageFiles);
 
-      if (imageFiles.length) {
-        status.textContent =
-          `${imageFiles.length} image(s) added.`;
-      } else {
-        status.textContent =
-          "No valid image files selected.";
-      }
+      status.textContent = imageFiles.length
+        ? `${imageFiles.length} image(s) added.`
+        : "No valid image files selected.";
     }
 
     convertButton.addEventListener("click", async () => {
@@ -420,12 +587,14 @@
 
       for (const file of selectedFiles) {
         try {
-          const converted = await convertImage(file);
+          const converted =
+            await convertImage(file);
 
           convertedResults.push(converted);
           renderResult(converted);
         } catch (error) {
           console.error(error);
+
           status.textContent =
             `Could not convert: ${file.name}`;
         }
@@ -436,7 +605,8 @@
     });
 
     async function convertImage(file) {
-      const originalDataUrl = await readFileAsDataURL(file);
+      const originalDataUrl =
+        await readFileAsDataURL(file);
 
       const outputFormat =
         formatSelect.value === "original"
@@ -457,7 +627,8 @@
         };
       }
 
-      const image = await loadImage(originalDataUrl);
+      const image =
+        await loadImage(originalDataUrl);
 
       let width = image.naturalWidth;
       let height = image.naturalHeight;
@@ -474,30 +645,42 @@
         maxHeight / height
       );
 
-      width = Math.max(1, Math.round(width * scale));
-      height = Math.max(1, Math.round(height * scale));
+      width =
+        Math.max(1, Math.round(width * scale));
 
-      const canvas = document.createElement("canvas");
+      height =
+        Math.max(1, Math.round(height * scale));
+
+      const canvas =
+        document.createElement("canvas");
 
       canvas.width = width;
       canvas.height = height;
 
-      const context = canvas.getContext("2d");
+      const context =
+        canvas.getContext("2d");
 
       if (outputFormat === "image/jpeg") {
         context.fillStyle = "#ffffff";
         context.fillRect(0, 0, width, height);
       }
 
-      context.drawImage(image, 0, 0, width, height);
+      context.drawImage(
+        image,
+        0,
+        0,
+        width,
+        height
+      );
 
       const quality =
         Number(qualityInput.value) / 100;
 
-      const dataUrl = canvas.toDataURL(
-        outputFormat,
-        quality
-      );
+      const dataUrl =
+        canvas.toDataURL(
+          outputFormat,
+          quality
+        );
 
       return {
         name: file.name,
@@ -531,38 +714,54 @@
     }
 
     function renderResult(item) {
-      const wrapper = document.createElement("article");
+      const wrapper =
+        document.createElement("article");
+
       wrapper.className = "result";
 
-      const image = document.createElement("img");
+      const image =
+        document.createElement("img");
+
       image.className = "preview";
       image.src = item.dataUrl;
       image.alt = item.name;
 
-      const header = document.createElement("div");
+      const header =
+        document.createElement("div");
+
       header.className = "result-header";
 
-      const title = document.createElement("strong");
+      const title =
+        document.createElement("strong");
+
       title.textContent = item.name;
 
-      const copyButton = document.createElement("button");
+      const copyButton =
+        document.createElement("button");
+
       copyButton.className = "secondary";
       copyButton.textContent = "Copy data URL";
 
       copyButton.addEventListener("click", async () => {
-        await navigator.clipboard.writeText(item.dataUrl);
+        await navigator.clipboard.writeText(
+          item.dataUrl
+        );
 
         copyButton.textContent = "Copied!";
 
         setTimeout(() => {
-          copyButton.textContent = "Copy data URL";
+          copyButton.textContent =
+            "Copy data URL";
         }, 1500);
       });
 
       header.append(title, copyButton);
 
-      const meta = document.createElement("div");
+      const meta =
+        document.createElement("div");
+
       meta.className = "meta";
+
       meta.textContent =
         `${item.mime}` +
         (item.width
@@ -570,15 +769,22 @@
           : "") +
         ` • ${formatBytes(item.dataUrl.length)}`;
 
-      const fullLabel = document.createElement("p");
-      fullLabel.className = "hint";
-      fullLabel.textContent = "Complete data URL:";
+      const fullLabel =
+        document.createElement("p");
 
-      const fullOutput = document.createElement("textarea");
+      fullLabel.className = "hint";
+      fullLabel.textContent =
+        "Complete data URL:";
+
+      const fullOutput =
+        document.createElement("textarea");
+
       fullOutput.value = item.dataUrl;
       fullOutput.readOnly = true;
 
-      const base64Label = document.createElement("p");
+      const base64Label =
+        document.createElement("p");
+
       base64Label.className = "hint";
       base64Label.textContent =
         "Base64 only, without the prefix:";
@@ -586,15 +792,22 @@
       const prefix =
         `data:${item.mime};base64,`;
 
-      const base64Only = document.createElement("textarea");
-      base64Only.value = item.dataUrl.startsWith(prefix)
-        ? item.dataUrl.substring(prefix.length)
-        : item.dataUrl;
+      const base64Only =
+        document.createElement("textarea");
+
+      base64Only.value =
+        item.dataUrl.startsWith(prefix)
+          ? item.dataUrl.substring(prefix.length)
+          : item.dataUrl;
+
       base64Only.readOnly = true;
 
-      const downloadButton = document.createElement("button");
+      const downloadButton =
+        document.createElement("button");
+
       downloadButton.className = "secondary";
-      downloadButton.textContent = "Download as TXT";
+      downloadButton.textContent =
+        "Download as TXT";
 
       downloadButton.addEventListener("click", () => {
         downloadText(
@@ -625,11 +838,10 @@
         return;
       }
 
-      const content = convertedResults
-        .map(item => {
+      const content =
+        convertedResults.map(item => {
           return `--- ${item.name} ---\n${item.dataUrl}`;
-        })
-        .join("\n\n");
+        }).join("\n\n");
 
       downloadText(
         "converted-images.txt",
@@ -648,12 +860,16 @@
     });
 
     function downloadText(filename, content) {
-      const blob = new Blob([content], {
-        type: "text/plain;charset=utf-8"
-      });
+      const blob =
+        new Blob([content], {
+          type: "text/plain;charset=utf-8"
+        });
 
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement("a");
+      const url =
+        URL.createObjectURL(blob);
+
+      const link =
+        document.createElement("a");
 
       link.href = url;
       link.download = filename;
@@ -673,6 +889,108 @@
 
       return (bytes / 1024 / 1024).toFixed(1) + " MB";
     }
+
+    /*
+     * Base64 to Image
+     */
+    const base64Input =
+      document.getElementById("base64Input");
+
+    const decodeButton =
+      document.getElementById("decodeButton");
+
+    const copyBase64Button =
+      document.getElementById("copyBase64Button");
+
+    const clearBase64Button =
+      document.getElementById("clearBase64Button");
+
+    const decodeStatus =
+      document.getElementById("decodeStatus");
+
+    const decodedImage =
+      document.getElementById("decodedImage");
+
+    const downloadDecoded =
+      document.getElementById("downloadDecoded");
+
+    decodeButton.addEventListener("click", () => {
+      let value =
+        base64Input.value.trim();
+
+      if (!value) {
+        decodeStatus.textContent =
+          "Please paste a Base64 value first.";
+        return;
+      }
+
+      value = value.replace(/\s/g, "");
+
+      let dataUrl = value;
+      let extension = "png";
+
+      if (!value.startsWith("data:image/")) {
+        dataUrl =
+          "data:image/png;base64," + value;
+      }
+
+      const match =
+        dataUrl.match(/^data:image\/([^;]+);base64,/i);
+
+      if (match) {
+        extension = match[1]
+          .replace("jpeg", "jpg")
+          .toLowerCase();
+      }
+
+      decodedImage.onload = () => {
+        decodedImage.style.display = "block";
+
+        downloadDecoded.href = dataUrl;
+        downloadDecoded.download =
+          `decoded-image.${extension}`;
+
+        downloadDecoded.style.display =
+          "inline-block";
+
+        decodeStatus.textContent =
+          "Image decoded successfully.";
+      };
+
+      decodedImage.onerror = () => {
+        decodedImage.style.display = "none";
+        downloadDecoded.style.display = "none";
+
+        decodeStatus.textContent =
+          "The value is not a valid image Base64 code.";
+      };
+
+      decodedImage.src = dataUrl;
+    });
+
+    copyBase64Button.addEventListener("click", async () => {
+      const value =
+        base64Input.value.trim();
+
+      if (!value) {
+        decodeStatus.textContent =
+          "There is no input to copy.";
+        return;
+      }
+
+      await navigator.clipboard.writeText(value);
+
+      decodeStatus.textContent =
+        "Input copied to clipboard.";
+    });
+
+    clearBase64Button.addEventListener("click", () => {
+      base64Input.value = "";
+      decodedImage.removeAttribute("src");
+      decodedImage.style.display = "none";
+      downloadDecoded.style.display = "none";
+      decodeStatus.textContent = "";
+    });
   </script>
 </body>
 </html>
