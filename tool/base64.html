@@ -296,6 +296,13 @@
       color: var(--accent);
       font-size: 0.85rem;
     }
+
+    .result-copy-feedback {
+      min-height: 1.3em;
+      margin-top: 6px;
+      color: var(--accent);
+      font-size: 0.85rem;
+    }
   </style>
 </head>
 
@@ -906,6 +913,13 @@
       fullOutput.value = item.dataUrl;
       fullOutput.readOnly = true;
 
+      const fullFeedback =
+        document.createElement("div");
+
+      fullFeedback.className = "result-copy-feedback";
+
+      setupResultCopy(fullOutput, fullFeedback);
+
       const base64Label =
         document.createElement("p");
 
@@ -925,6 +939,13 @@
           : item.dataUrl;
 
       base64Only.readOnly = true;
+
+      const base64Feedback =
+        document.createElement("div");
+
+      base64Feedback.className = "result-copy-feedback";
+
+      setupResultCopy(base64Only, base64Feedback);
 
       const downloadButton =
         document.createElement("button");
@@ -946,13 +967,47 @@
         meta,
         fullLabel,
         fullOutput,
+        fullFeedback,
         base64Label,
         base64Only,
+        base64Feedback,
         document.createElement("br"),
         downloadButton
       );
 
       results.appendChild(wrapper);
+    }
+
+    // Copy-on-click helper for result textareas
+    function setupResultCopy(textarea, feedback) {
+      let timeoutId = null;
+
+      const copyText = async () => {
+        const text = textarea.value;
+
+        if (!text) return;
+
+        try {
+          await navigator.clipboard.writeText(text);
+
+          feedback.textContent = "Copied to clipboard.";
+
+          if (timeoutId) {
+            clearTimeout(timeoutId);
+          }
+
+          timeoutId = setTimeout(() => {
+            feedback.textContent = "";
+          }, 1600);
+        } catch {
+          feedback.textContent = "Copy failed. Please copy manually.";
+        }
+      };
+
+      textarea.addEventListener("click", copyText);
+      textarea.addEventListener("focus", () => {
+        textarea.select();
+      });
     }
 
     downloadAllButton.addEventListener("click", () => {
