@@ -3671,5 +3671,18 @@
     "featured": false,
     "icon": "R",
     "source": ""
+  },
+  {
+    "name": "Rezise Pixel",
+    "description": "Simple Image-Editor",
+    "url": "https://www.resizepixel.com/",
+    "category": "Design",
+    "tags": [
+      "editor",
+      "image"      
+    ],
+    "featured": false,
+    "icon": "P",
+    "source": ""
   }
 ]
