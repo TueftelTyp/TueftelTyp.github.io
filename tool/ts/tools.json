@@ -3659,5 +3659,17 @@
     "featured": false,
     "icon": "C",
     "source": "https://github.com/champagnewiki/champagne-wiki"
+  },
+  {
+    "name": "Raycast Icon Maker",
+    "description": "Simple and free Icon Maker",
+    "url": "https://ray.so/icon",
+    "category": "Design",
+    "tags": [
+      "icon-maker"
+    ],
+    "featured": false,
+    "icon": "R",
+    "source": ""
   }
 ]
