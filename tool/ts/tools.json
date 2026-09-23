@@ -15,6 +15,21 @@
     "source": "https://github.com/excalidraw/excalidraw"
   },
   {
+    "name": "M3E Canvas",
+    "description": "A browser-based UI prototyping tool for designing Material 3 Expressive app screens, linking interactive flows, and generating prompts for AI coding tools.",
+    "url": "https://lnkiai.github.io/m3e-canvas/",
+    "category": "Development",
+    "tags": [
+      "#mobile",
+      "app",
+      "prototype",
+      "designer"
+    ],
+    "featured": true,
+    "icon": "M",
+    "source": "https://github.com/lnkiai/m3e-canvas"
+  },
+  {
     "name": "CryptPad",
     "description": "Collaborative office suite, end-to-end encrypted and open-source.",
     "url": "https://cryptpad.fr",
