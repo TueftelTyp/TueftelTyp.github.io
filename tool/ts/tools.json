@@ -15,6 +15,21 @@
     "source": "https://github.com/excalidraw/excalidraw"
   },
   {
+    "name": "Sunasty",
+    "description": "162+ tools for files, dates, calculations and code.",
+    "url": "https://sunasty.com",
+    "category": "Productivity",
+    "tags": [
+      "video",
+      "audio",
+      "media",
+      "tool"
+    ],
+    "featured": false,
+    "icon": "S",
+    "source": ""
+  },
+  {
     "name": "OpenMedia Tools",
     "description": "Video, audio, images, PDFs, and AI for conversion, editing, and processing",
     "url": "https://openmedia.tools/",
