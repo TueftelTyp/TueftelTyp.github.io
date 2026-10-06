@@ -15,6 +15,21 @@
     "source": "https://github.com/excalidraw/excalidraw"
   },
   {
+    "name": "OpenMedia Tools",
+    "description": "Video, audio, images, PDFs, and AI for conversion, editing, and processing",
+    "url": "https://openmedia.tools/",
+    "category": "Productivity",
+    "tags": [
+      "video",
+      "audio",
+      "media",
+      "editor"
+    ],
+    "featured": false,
+    "icon": "O",
+    "source": ""
+  },
+  {
     "name": "OpenReel Video",
     "description": "Video editor with an AI agent built into the timeline.",
     "url": "https://openreel.video",
