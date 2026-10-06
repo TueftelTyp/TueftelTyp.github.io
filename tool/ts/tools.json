@@ -15,6 +15,21 @@
     "source": "https://github.com/excalidraw/excalidraw"
   },
   {
+    "name": "OpenReel Video",
+    "description": "Video editor with an AI agent built into the timeline.",
+    "url": "https://openreel.video",
+    "category": "Productivity",
+    "tags": [
+      "video",
+      "edit",
+      "social media",
+      "ai"
+    ],
+    "featured": false,
+    "icon": "O",
+    "source": "https://github.com/Augani/openreel-video"
+  },
+  {
     "name": "M3E Canvas",
     "description": "A browser-based UI prototyping tool for designing Material 3 Expressive app screens, linking interactive flows, and generating prompts for AI coding tools.",
     "url": "https://lnkiai.github.io/m3e-canvas/",
