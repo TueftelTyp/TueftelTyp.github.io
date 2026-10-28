@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Prompt Library</title>
+<style>
+  :root {
+    color-scheme: light dark;
+    --bg: #f4f6f8;
+    --panel: #ffffff;
+    --panel-2: #eef1f4;
+    --text: #1c2128;
+    --muted: #5c6672;
+    --border: #d8dee5;
+    --accent: #2f6fed;
+    --accent-text: #ffffff;
+    --code-bg: #f7f8fa;
+    --shadow: 0 8px 24px rgba(20, 30, 45, .08);
+  }
+
+  html[data-theme="dark"] {
+    --bg: #101216;
+    --panel: #181d24;
+    --panel-2: #20262f;
+    --text: #f1f3f5;
+    --muted: #a9b2bd;
+    --border: #2c333d;
+    --accent: #4d8bff;
+    --accent-text: #0b1220;
+    --code-bg: #12161c;
+    --shadow: 0 10px 30px rgba(0, 0, 0, .35);
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    min-height: 100vh;
+    background: var(--bg);
+    color: var(--text);
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+    transition: background .2s ease, color .2s ease;
+  }
+
+  .container {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 32px 20px 60px;
+  }
+
+  header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 28px;
+  }
+
+  h1 {
+    margin: 0;
+    font-size: clamp(1.5rem, 4vw, 2.2rem);
+    letter-spacing: -.02em;
+  }
+
+  .subtitle {
+    margin: 6px 0 0;
+    color: var(--muted);
+    font-size: .95rem;
+  }
+
+  .theme-toggle {
+    border: 1px solid var(--border);
+    background: var(--panel);
+    color: var(--text);
+    padding: 10px 14px;
+    border-radius: 10px;
+    font-size: .9rem;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: transform .15s ease, border-color .15s ease;
+  }
+
+  .theme-toggle:hover { transform: translateY(-1px); }
+
+  .card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    box-shadow: var(--shadow);
+    padding: 22px;
+    margin-bottom: 24px;
+  }
+
+  .card h2 {
+    margin: 0 0 8px;
+    font-size: 1.2rem;
+  }
+
+  .card p {
+    margin: 0 0 16px;
+    color: var(--muted);
+    line-height: 1.5;
+  }
+
+  .code-wrap {
+    position: relative;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+    background: var(--code-bg);
+  }
+
+  pre {
+    margin: 0;
+    padding: 18px;
+    padding-bottom: 58px;
+    overflow: auto;
+    max-height: 460px;
+    font-family: ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", monospace;
+    font-size: .84rem;
+    line-height: 1.55;
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+
+  .copy-btn {
+    position: absolute;
+    right: 12px;
+    bottom: 12px;
+    border: 0;
+    background: var(--accent);
+    color: var(--accent-text);
+    padding: 9px 14px;
+    border-radius: 9px;
+    font-size: .82rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: opacity .15s ease, transform .15s ease;
+  }
+
+  .copy-btn:hover { transform: translateY(-1px); }
+  .copy-btn.copied { opacity: .85; }
+
+  .toast {
+    position: fixed;
+    left: 50%;
+    bottom: 24px;
+    transform: translateX(-50%) translateY(20px);
+    background: var(--panel-2);
+    color: var(--text);
+    border: 1px solid var(--border);
+    padding: 10px 16px;
+    border-radius: 999px;
+    font-size: .88rem;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity .2s ease, transform .2s ease;
+    z-index: 10;
+  }
+
+  .toast.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+
+  @media (max-width: 620px) {
+    header { flex-direction: column; align-items: flex-start; }
+    .theme-toggle { align-self: flex-end; }
+  }
+</style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div>
+        <h1>Prompt Library</h1>
+        <p class="subtitle">Copy ready-to-use prompts for code testing and repair.</p>
+      </div>
+      <button id="themeToggle" class="theme-toggle" type="button">Toggle theme</button>
+    </header>
+
+    <section class="card">
+      <h2>Detailed test &amp; repair prompt</h2>
+      <p>Use this for complete programs or larger code projects.</p>
+
+      <div class="code-wrap">
+        <pre id="prompt1">Du bist ein erfahrener, sorgfältiger Softwareentwickler und Qualitätssicherungs-Experte.
+
+Deine Aufgabe ist es, das angegebene Programm bzw. den angegebenen Code vollständig zu prüfen, zu korrigieren und erst danach auszugeben.
+
+## Vorgehen
+
+1. **Analyse**
+   - Analysiere zuerst den gesamten Code.
+   - Prüfe die Anforderungen, den Programmablauf, alle Funktionen, Variablen, Klassen, Schnittstellen, Abhängigkeiten und Konfigurationen.
+   - Identifiziere mögliche Fehler, Unstimmigkeiten, unvollständige Stellen, logische Fehler, tote Codepfade, fehlende Fehlerbehandlungen und potenzielle Sicherheitsrisiken.
+
+2. **Testen**
+   - Führe eine vollständige Prüfung durch, als würdest du das Programm tatsächlich ausführen.
+   - Teste den normalen Ablauf sowie Grenzfälle, ungültige Eingaben, leere Werte, fehlende Dateien, Netzwerkfehler, Berechtigungsprobleme und unerwartete Benutzereingaben.
+   - Prüfe insbesondere:
+     - Syntaxfehler
+     - Laufzeitfehler
+     - Logikfehler
+     - Typfehler
+     - Null- bzw. undefinierte Werte
+     - Ressourcenlecks, z. B. nicht geschlossene Dateien, Prozesse oder Verbindungen
+     - Fehlerhafte Pfade, Dateinamen oder Zeichencodierungen
+     - Fehlerhafte Benutzereingaben
+     - Race Conditions und blockierende Abläufe
+     - Kompatibilität mit dem vorgesehenen Betriebssystem bzw. der Laufzeitumgebung
+     - Sicherheitsprobleme, z. B. Command Injection, Path Traversal, unsichere Verarbeitung von URLs, unsichere Dateioperationen oder Offenlegung sensibler Daten
+
+3. **Reparieren**
+   - Behebe jeden gefundenen Fehler direkt im Code.
+   - Erkläre kurz, welcher Fehler gefunden wurde und wie er behoben wurde.
+   - Entferne keinen benötigten Code und ändere keine Funktionalität, die nicht ausdrücklich repariert oder verbessert werden muss.
+   - Falls eine Annahme notwendig ist, dokumentiere sie klar im Code oder in einer kurzen Anmerkung.
+
+4. **Erneut testen**
+   - Teste den reparierten Code erneut vollständig.
+   - Wiederhole den Ablauf „testen → reparieren → erneut testen“, bis keine Fehler, Warnungen, Inkonsistenzen oder Sicherheitsprobleme mehr feststellbar sind.
+   - Betrachte den Code erst dann als fertig, wenn eine vollständige Prüfung ohne Beanstandung möglich ist.
+
+## Ausgaberegel
+
+- Gib den Code **nicht** aus, solange noch Fehler, Warnungen, logische Unstimmigkeiten, unklare Abläufe oder Sicherheitsrisiken bestehen.
+- Erst wenn alle Prüfungen erfolgreich abgeschlossen sind, gib den vollständigen, finalen Code aus.
+- Die Ausgabe muss vollständig sein: keine Platzhalter, kein „…“, keine ausgelassenen Abschnitte und keine unvollständigen Dateien.
+- Gib danach eine kurze Zusammenfassung aus mit:
+  1. Gefundene Probleme
+  2. Vorgenommene Korrekturen
+  3. Durchgeführte Prüfungen
+  4. Verbleibende Einschränkungen, falls zutreffend
+
+## Qualitätsanforderungen
+
+- Der Code muss sauber, lesbar, wartbar und robust sein.
+- Fehler müssen sinnvoll abgefangen werden, ohne das Programm stumm abstürzen zu lassen.
+- Sicherheitsrelevante Eingaben müssen validiert werden.
+- Externe Programme, Dateien oder Netzwerkzugriffe müssen sicher und mit angemessener Fehlerbehandlung verwendet werden.
+- Der Code soll möglichst plattformunabhängig sein, sofern nichts anderes verlangt wird.
+- Wenn das Programm eine Benutzeroberfläche hat, müssen Statusmeldungen, Fehlermeldungen und Sperrungen der Bedienelemente während längerer Aktionen berücksichtigt werden.
+
+Beginne jetzt mit der vollständigen Analyse und dem Test-Reparatur-Zyklus. Gib erst die finale, geprüfte Version aus, wenn keine Beanstandungen mehr bestehen.</pre>
+        <button class="copy-btn" data-target="prompt1" type="button">Copy</button>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>Short test &amp; repair prompt</h2>
+      <p>Use this for smaller snippets or quick code checks.</p>
+
+      <div class="code-wrap">
+        <pre id="prompt2">Prüfe den folgenden Code vollständig auf Syntaxfehler, Logikfehler, Laufzeitfehler, Sicherheitsprobleme, fehlende Fehlerbehandlungen und sonstige Unstimmigkeiten.
+
+Teste das Programm gedanklich vollständig, einschließlich normaler Fälle, Grenzfälle und fehlerhafter Eingaben.
+
+Wenn du Fehler findest, repariere sie und teste den Code erneut. Wiederhole diesen Zyklus so lange, bis keine Fehler, Warnungen, Inkonsistenzen oder Sicherheitsrisiken mehr vorhanden sind.
+
+Gib den Code erst aus, wenn er vollständig geprüft und fehlerfrei ist. Die Ausgabe muss vollständig sein, ohne Platzhalter oder ausgelassene Teile.
+
+Füge am Ende eine kurze Übersicht hinzu: gefundene Probleme, vorgenommene Korrekturen und durchgeführte Prüfungen.</pre>
+        <button class="copy-btn" data-target="prompt2" type="button">Copy</button>
+      </div>
+    </section>
+  </div>
+
+  <div id="toast" class="toast">Copied to clipboard</div>
+
+<script>
+  const html = document.documentElement;
+  const toggle = document.getElementById("themeToggle");
+  const toast = document.getElementById("toast");
+  let toastTimer;
+
+  function applyInitialTheme() {
+    const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+    html.dataset.theme = prefersDark ? "dark" : "light";
+  }
+
+  toggle.addEventListener("click", () => {
+    html.dataset.theme = html.dataset.theme === "dark" ? "light" : "dark";
+  });
+
+  function showToast(message) {
+    toast.textContent = message;
+    toast.classList.add("show");
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => toast.classList.remove("show"), 1800);
+  }
+
+  document.querySelectorAll(".copy-btn").forEach(button => {
+    button.addEventListener("click", async () => {
+      const target = document.getElementById(button.dataset.target);
+      const text = target.textContent;
+
+      try {
+        await navigator.clipboard.writeText(text);
+        button.textContent = "✓ Copied!";
+        button.classList.add("copied");
+        showToast("Prompt copied to clipboard");
+      } catch (error) {
+        target.select();
+        document.execCommand("copy");
+        button.textContent = "✓ Copied!";
+        button.classList.add("copied");
+        showToast("Prompt copied to clipboard");
+      }
+
+      setTimeout(() => {
+        button.textContent = "Copy";
+        button.classList.remove("copied");
+      }, 1800);
+    });
+  });
+
+  applyInitialTheme();
+</script>
+</body>
+</html>
