@@ -1,0 +1,503 @@
+
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mini Serial Monitor</title>
+<style>
+:root {
+  color-scheme: dark;
+  font-family: "Segoe UI", Arial, sans-serif;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: #111820; color: #e5edf5; }
+main { max-width: 1100px; margin: auto; padding: 22px; }
+header {
+  display: flex; justify-content: space-between;
+  align-items: center; gap: 15px; margin-bottom: 18px;
+}
+h2 { margin: 0; }
+.toolbar, .sendbar, .footer {
+  display: flex; gap: 10px; align-items: center;
+  flex-wrap: wrap; margin-bottom: 12px;
+}
+label { font-size: 13px; color: #bac8d7; }
+select, input, button {
+  padding: 11px; border: 1px solid #39495a;
+  border-radius: 7px; background: #202c39;
+  color: white; font: inherit;
+}
+button {
+  cursor: pointer; background: #2b73d6;
+  border-color: #2b73d6;
+}
+button:hover { filter: brightness(1.13); }
+button:disabled { opacity: .45; cursor: default; }
+button.secondary {
+  background: #273442; border-color: #39495a;
+}
+button:focus-visible, select:focus-visible,
+input:focus-visible {
+  outline: 2px solid #8bbcff; outline-offset: 2px;
+}
+#output {
+  display: block; width: 100%;
+  height: min(57vh, 560px); min-height: 230px;
+  resize: vertical; padding: 15px; margin-bottom: 12px;
+  border: 1px solid #364656; border-radius: 9px;
+  background: #0b1219; color: #8bedac;
+  font: 14px/1.6 Consolas, monospace;
+  white-space: pre; overflow: auto;
+}
+#message { flex: 1; min-width: 160px; }
+#status { font-size: 13px; color: #ff9c9c; }
+#status.connected { color: #80e9a4; }
+.small { color: #99aabb; font-size: 12px; }
+.check { display: flex; gap: 7px; align-items: center; }
+.check input { accent-color: #2b73d6; }
+@media (max-width: 600px) {
+  main { padding: 12px; }
+  header { flex-wrap: wrap; }
+  #output { height: 50vh; }
+}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <h2>Mini Serial Monitor</h2>
+  <select id="language" aria-label="Language">
+    <option value="de">Deutsch</option>
+    <option value="en">English</option>
+    <option value="fr">Français</option>
+    <option value="es">Español</option>
+  </select>
+</header>
+
+<div class="toolbar">
+  <label for="baud" data-i18n="baud">Baudrate</label>
+  <select id="baud">
+    <option>300</option><option>1200</option>
+    <option>2400</option><option>4800</option>
+    <option selected>9600</option>
+    <option>19200</option><option>38400</option>
+    <option>57600</option><option>74880</option>
+    <option>115200</option><option>230400</option>
+    <option>460800</option><option>921600</option>
+  </select>
+  <button id="connect" data-i18n="connect">COM-Port verbinden</button>
+  <button id="disconnect" class="secondary"
+    data-i18n="disconnect" disabled>Trennen</button>
+  <span id="status" role="status"></span>
+</div>
+
+<textarea id="output" readonly
+  aria-label="Serial output"></textarea>
+
+<div class="sendbar">
+  <input id="message" type="text"
+    data-placeholder="message"
+    placeholder="Befehl eingeben ...">
+  <select id="ending" aria-label="Line ending">
+    <option value="" data-i18n="none">Kein Zeilenende</option>
+    <option value="lf" selected>Newline (LF)</option>
+    <option value="cr">Carriage Return (CR)</option>
+    <option value="crlf">CR + LF</option>
+  </select>
+  <button id="send" data-i18n="send">Senden</button>
+</div>
+
+<div class="footer">
+  <button class="secondary" id="clear"
+    data-i18n="clear">Leeren</button>
+  <button class="secondary" id="save"
+    data-i18n="save">TXT speichern</button>
+  <label class="check">
+    <input type="checkbox" id="scroll" checked>
+    <span data-i18n="autoscroll">Auto-Scroll</span>
+  </label>
+  <label class="check">
+    <input type="checkbox" id="timestamp">
+    <span data-i18n="timestamp">Zeitstempel</span>
+  </label>
+</div>
+
+<div class="small" data-i18n="info">
+  8 Datenbits | Keine Parität | 1 Stoppbit | UTF-8 | Chrome / Edge
+</div>
+</main>
+
+<script>
+const $ = id => document.getElementById(id);
+
+// All interface translations are stored locally.
+const translations = {
+  de: {
+    baud: "Baudrate",
+    connect: "COM-Port verbinden",
+    disconnect: "Trennen",
+    disconnected: "Nicht verbunden",
+    connected: "Verbunden",
+    disconnecting: "Verbindung wird getrennt ...",
+    send: "Senden",
+    message: "Befehl eingeben ...",
+    none: "Kein Zeilenende",
+    clear: "Leeren",
+    save: "TXT speichern",
+    autoscroll: "Auto-Scroll",
+    timestamp: "Zeitstempel",
+    info: "8 Datenbits | Keine Parität | 1 Stoppbit | UTF-8 | Chrome / Edge",
+    selectPort: "Bitte zuerst einen COM-Port verbinden.",
+    unsupported: "Web Serial wird nicht unterstützt. Bitte Chrome oder Edge verwenden.",
+    unavailable: "Web Serial nicht verfügbar",
+    connectionError: "Verbindungsfehler",
+    sendError: "Sendefehler",
+    readError: "Lesefehler",
+    closeError: "Fehler beim Trennen",
+    logConnected: "VERBUNDEN",
+    logDisconnected: "GETRENNT"
+  },
+  en: {
+    baud: "Baud rate",
+    connect: "Connect COM port",
+    disconnect: "Disconnect",
+    disconnected: "Disconnected",
+    connected: "Connected",
+    disconnecting: "Disconnecting ...",
+    send: "Send",
+    message: "Enter command ...",
+    none: "No line ending",
+    clear: "Clear",
+    save: "Save TXT",
+    autoscroll: "Auto-scroll",
+    timestamp: "Timestamp",
+    info: "8 data bits | No parity | 1 stop bit | UTF-8 | Chrome / Edge",
+    selectPort: "Please connect a COM port first.",
+    unsupported: "Web Serial is not supported. Please use Chrome or Edge.",
+    unavailable: "Web Serial unavailable",
+    connectionError: "Connection error",
+    sendError: "Send error",
+    readError: "Read error",
+    closeError: "Disconnect error",
+    logConnected: "CONNECTED",
+    logDisconnected: "DISCONNECTED"
+  },
+  fr: {
+    baud: "Débit en bauds",
+    connect: "Connecter le port COM",
+    disconnect: "Déconnecter",
+    disconnected: "Déconnecté",
+    connected: "Connecté",
+    disconnecting: "Déconnexion ...",
+    send: "Envoyer",
+    message: "Saisir une commande ...",
+    none: "Aucune fin de ligne",
+    clear: "Effacer",
+    save: "Enregistrer TXT",
+    autoscroll: "Défilement auto",
+    timestamp: "Horodatage",
+    info: "8 bits de données | Sans parité | 1 bit d'arrêt | UTF-8 | Chrome / Edge",
+    selectPort: "Connectez d'abord un port COM.",
+    unsupported: "Web Serial non pris en charge. Utilisez Chrome ou Edge.",
+    unavailable: "Web Serial indisponible",
+    connectionError: "Erreur de connexion",
+    sendError: "Erreur d'envoi",
+    readError: "Erreur de lecture",
+    closeError: "Erreur de déconnexion",
+    logConnected: "CONNECTÉ",
+    logDisconnected: "DÉCONNECTÉ"
+  },
+  es: {
+    baud: "Velocidad en baudios",
+    connect: "Conectar puerto COM",
+    disconnect: "Desconectar",
+    disconnected: "Desconectado",
+    connected: "Conectado",
+    disconnecting: "Desconectando ...",
+    send: "Enviar",
+    message: "Introducir comando ...",
+    none: "Sin fin de línea",
+    clear: "Limpiar",
+    save: "Guardar TXT",
+    autoscroll: "Desplazamiento auto.",
+    timestamp: "Marca de tiempo",
+    info: "8 bits de datos | Sin paridad | 1 bit de parada | UTF-8 | Chrome / Edge",
+    selectPort: "Conecta primero un puerto COM.",
+    unsupported: "Web Serial no es compatible. Usa Chrome o Edge.",
+    unavailable: "Web Serial no disponible",
+    connectionError: "Error de conexión",
+    sendError: "Error de envío",
+    readError: "Error de lectura",
+    closeError: "Error al desconectar",
+    logConnected: "CONECTADO",
+    logDisconnected: "DESCONECTADO"
+  }
+};
+
+const supported = Object.keys(translations);
+const browserLanguage = navigator.language.split("-")[0];
+let lang = supported.includes(browserLanguage)
+  ? browserLanguage : "en";
+
+let port = null;
+let reader = null;
+let reading = false;
+let closing = false;
+let decoder = null;
+let pendingCR = false;
+let atLineStart = true;
+let statusKey = "disconnected";
+
+function t(key) {
+  return translations[lang][key] || key;
+}
+
+function applyLanguage() {
+  document.documentElement.lang = lang;
+  $("language").value = lang;
+
+  document.querySelectorAll("[data-i18n]").forEach(el => {
+    el.textContent = t(el.dataset.i18n);
+  });
+
+  document.querySelectorAll("[data-placeholder]").forEach(el => {
+    el.placeholder = t(el.dataset.placeholder);
+  });
+
+  $("status").textContent = t(statusKey);
+}
+
+$("language").addEventListener("change", e => {
+  lang = e.target.value;
+  applyLanguage();
+});
+
+function setStatus(key) {
+  statusKey = key;
+  $("status").textContent = t(key);
+
+  const connected = key === "connected";
+  $("status").classList.toggle("connected", connected);
+  $("connect").disabled = connected || closing;
+  $("disconnect").disabled = !connected || closing;
+  $("baud").disabled = connected || closing;
+}
+
+function stamp() {
+  const d = new Date();
+  return "[" + d.toLocaleTimeString(lang, {
+    hour12: false
+  }) + "." +
+    String(d.getMilliseconds()).padStart(3, "0") + "] ";
+}
+
+function append(text, normalize = true) {
+  if (normalize) {
+    // Convert CR, LF and CRLF to LF, including split packets.
+    if (pendingCR && text.startsWith("\n")) {
+      text = text.slice(1);
+    }
+
+    if (text.length) {
+      pendingCR = text.endsWith("\r");
+    }
+
+    text = text.replace(/\r\n|\r/g, "\n");
+  }
+
+  if (!text) return;
+
+  if ($("timestamp").checked) {
+    let result = "";
+    for (const char of text) {
+      if (atLineStart) {
+        result += stamp();
+        atLineStart = false;
+      }
+      result += char;
+      if (char === "\n") atLineStart = true;
+    }
+    text = result;
+  } else {
+    atLineStart = text.endsWith("\n");
+  }
+
+  const out = $("output");
+  out.value += text;
+
+  if (out.value.length > 500000) {
+    out.value = out.value.slice(-400000);
+  }
+
+  if ($("scroll").checked) {
+    out.scrollTop = out.scrollHeight;
+  }
+}
+
+async function readLoop() {
+  reading = true;
+  decoder = new TextDecoder("utf-8");
+
+  try {
+    while (port && port.readable) {
+      reader = port.readable.getReader();
+
+      try {
+        while (true) {
+          const {value, done} = await reader.read();
+          if (done) break;
+
+          if (value) {
+            append(decoder.decode(value, {stream: true}));
+          }
+        }
+      } finally {
+        reader.releaseLock();
+        reader = null;
+      }
+      break;
+    }
+
+    if (decoder) append(decoder.decode());
+  } catch (err) {
+    if (!closing) {
+      append("\n[" + t("readError") +
+        "] " + err.message + "\n", false);
+    }
+  } finally {
+    reading = false;
+    if (!closing) await disconnect();
+  }
+}
+
+async function connect() {
+  if (!("serial" in navigator)) {
+    alert(t("unsupported"));
+    return;
+  }
+
+  try {
+    port = await navigator.serial.requestPort();
+
+    await port.open({
+      baudRate: Number($("baud").value),
+      dataBits: 8,
+      stopBits: 1,
+      parity: "none",
+      flowControl: "none"
+    });
+
+    pendingCR = false;
+    decoder = null;
+    closing = false;
+
+    setStatus("connected");
+
+    append("\n[" + t("logConnected") + "] " +
+      $("baud").value + " Baud\n", false);
+
+    readLoop();
+  } catch (err) {
+    if (err.name !== "NotFoundError") {
+      alert(t("connectionError") + ": " + err.message);
+    }
+    if (port && !port.readable) port = null;
+  }
+}
+
+async function disconnect() {
+  if (closing) return;
+  closing = true;
+  setStatus("disconnecting");
+
+  try {
+    if (reader) await reader.cancel();
+
+    while (reading) {
+      await new Promise(resolve => setTimeout(resolve, 20));
+    }
+
+    if (port) {
+      await port.close();
+      port = null;
+    }
+
+    append("\n[" + t("logDisconnected") + "]\n", false);
+  } catch (err) {
+    append("\n[" + t("closeError") +
+      "] " + err.message + "\n", false);
+  } finally {
+    closing = false;
+    setStatus(port ? "connected" : "disconnected");
+  }
+}
+
+async function send() {
+  if (!port || !port.writable) {
+    alert(t("selectPort"));
+    return;
+  }
+
+  const endings = {
+    "": "",
+    lf: "\n",
+    cr: "\r",
+    crlf: "\r\n"
+  };
+
+  const text = $("message").value +
+    endings[$("ending").value];
+
+  let writer;
+  try {
+    writer = port.writable.getWriter();
+    await writer.write(new TextEncoder().encode(text));
+    $("message").value = "";
+    $("message").focus();
+  } catch (err) {
+    alert(t("sendError") + ": " + err.message);
+  } finally {
+    if (writer) writer.releaseLock();
+  }
+}
+
+$("connect").addEventListener("click", connect);
+$("disconnect").addEventListener("click", disconnect);
+$("send").addEventListener("click", send);
+
+$("message").addEventListener("keydown", e => {
+  if (e.key === "Enter") {
+    e.preventDefault();
+    send();
+  }
+});
+
+$("clear").addEventListener("click", () => {
+  $("output").value = "";
+  atLineStart = true;
+});
+
+$("save").addEventListener("click", () => {
+  const blob = new Blob([$("output").value], {
+    type: "text/plain;charset=utf-8"
+  });
+
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "serial-log.txt";
+  a.click();
+
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+});
+
+applyLanguage();
+
+if (!("serial" in navigator)) {
+  setStatus("unavailable");
+  $("connect").disabled = true;
+}
+</script>
+</body>
+</html>
